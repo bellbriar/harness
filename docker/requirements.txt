@@ -12,5 +12,5 @@ justhtml==3.13.0
 playwright==1.63.0
 pycparser==3.0
 pyee==13.0.1
-soupsieve==2.9.2
+soupsieve==3.0.3
 typing_extensions==4.16.0
