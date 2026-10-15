@@ -1,0 +1,2564 @@
+{
+ "about": "Facts the rulebook cites, from W3C's repositories; regenerate with tools/w3c_citations.py",
+ "sources": {
+  "wcag": {
+   "repo": "https://github.com/w3c/wcag",
+   "commit": "23bad5904949904275a08f1c6e395b78a02aa6f3",
+   "date": "2026-10-04"
+  },
+  "act_rules": {
+   "repo": "https://github.com/w3c/wcag-act-rules",
+   "commit": "f39b7f81cee60efe1f23205a893e031a7a02821b",
+   "date": "2026-10-08"
+  }
+ },
+ "criteria": {
+  "1.1.1": {
+   "slug": "non-text-content",
+   "title": "Non-text Content",
+   "level": "A",
+   "introduced": "2.0",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "non-text-content",
+    "2.2": "non-text-content"
+   },
+   "failures": [
+    "F3",
+    "F13",
+    "F20",
+    "F30",
+    "F38",
+    "F39",
+    "F65",
+    "F67",
+    "F71",
+    "F72"
+   ]
+  },
+  "1.2.1": {
+   "slug": "audio-only-and-video-only-prerecorded",
+   "title": "Audio-only and Video-only (Prerecorded)",
+   "level": "A",
+   "introduced": "2.0",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "audio-only-and-video-only-prerecorded",
+    "2.2": "audio-only-and-video-only-prerecorded"
+   },
+   "failures": [
+    "F30",
+    "F67"
+   ]
+  },
+  "1.2.2": {
+   "slug": "captions-prerecorded",
+   "title": "Captions (Prerecorded)",
+   "level": "A",
+   "introduced": "2.0",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "captions-prerecorded",
+    "2.2": "captions-prerecorded"
+   },
+   "failures": [
+    "F8",
+    "F75",
+    "F74"
+   ]
+  },
+  "1.2.3": {
+   "slug": "audio-description-or-media-alternative-prerecorded",
+   "title": "Audio Description or Media Alternative (Prerecorded)",
+   "level": "A",
+   "introduced": "2.0",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "audio-description-or-media-alternative-prerecorded",
+    "2.2": "audio-description-or-media-alternative-prerecorded"
+   },
+   "failures": []
+  },
+  "1.2.4": {
+   "slug": "captions-live",
+   "title": "Captions (Live)",
+   "level": "AA",
+   "introduced": "2.0",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "captions-live",
+    "2.2": "captions-live"
+   },
+   "failures": []
+  },
+  "1.2.5": {
+   "slug": "audio-description-prerecorded",
+   "title": "Audio Description (Prerecorded)",
+   "level": "AA",
+   "introduced": "2.0",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "audio-description-prerecorded",
+    "2.2": "audio-description-prerecorded"
+   },
+   "failures": [
+    "F113"
+   ]
+  },
+  "1.2.6": {
+   "slug": "sign-language-prerecorded",
+   "title": "Sign Language (Prerecorded)",
+   "level": "AAA",
+   "introduced": "2.0",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "sign-language-prerecorded",
+    "2.2": "sign-language-prerecorded"
+   },
+   "failures": []
+  },
+  "1.2.7": {
+   "slug": "extended-audio-description-prerecorded",
+   "title": "Extended Audio Description (Prerecorded)",
+   "level": "AAA",
+   "introduced": "2.0",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "extended-audio-description-prerecorded",
+    "2.2": "extended-audio-description-prerecorded"
+   },
+   "failures": []
+  },
+  "1.2.8": {
+   "slug": "media-alternative-prerecorded",
+   "title": "Media Alternative (Prerecorded)",
+   "level": "AAA",
+   "introduced": "2.0",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "media-alternative-prerecorded",
+    "2.2": "media-alternative-prerecorded"
+   },
+   "failures": [
+    "F74"
+   ]
+  },
+  "1.2.9": {
+   "slug": "audio-only-live",
+   "title": "Audio-only (Live)",
+   "level": "AAA",
+   "introduced": "2.0",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "audio-only-live",
+    "2.2": "audio-only-live"
+   },
+   "failures": []
+  },
+  "1.3.1": {
+   "slug": "info-and-relationships",
+   "title": "Info and Relationships",
+   "level": "A",
+   "introduced": "2.0",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "info-and-relationships",
+    "2.2": "info-and-relationships"
+   },
+   "failures": [
+    "F2",
+    "F33",
+    "F34",
+    "F42",
+    "F43",
+    "F46",
+    "F48",
+    "F90",
+    "F91",
+    "F92",
+    "F111"
+   ]
+  },
+  "1.3.2": {
+   "slug": "meaningful-sequence",
+   "title": "Meaningful Sequence",
+   "level": "A",
+   "introduced": "2.0",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "meaningful-sequence",
+    "2.2": "meaningful-sequence"
+   },
+   "failures": [
+    "F34",
+    "F33",
+    "F32",
+    "F49",
+    "F1"
+   ]
+  },
+  "1.3.3": {
+   "slug": "sensory-characteristics",
+   "title": "Sensory Characteristics",
+   "level": "A",
+   "introduced": "2.0",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "sensory-characteristics",
+    "2.2": "sensory-characteristics"
+   },
+   "failures": [
+    "F14",
+    "F26"
+   ]
+  },
+  "1.3.4": {
+   "slug": "orientation",
+   "title": "Orientation",
+   "level": "AA",
+   "introduced": "2.1",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "orientation",
+    "2.2": "orientation"
+   },
+   "failures": [
+    "F97",
+    "F100"
+   ]
+  },
+  "1.3.5": {
+   "slug": "identify-input-purpose",
+   "title": "Identify Input Purpose",
+   "level": "AA",
+   "introduced": "2.1",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "identify-input-purpose",
+    "2.2": "identify-input-purpose"
+   },
+   "failures": [
+    "F107"
+   ]
+  },
+  "1.3.6": {
+   "slug": "identify-purpose",
+   "title": "Identify Purpose",
+   "level": "AAA",
+   "introduced": "2.1",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "identify-purpose",
+    "2.2": "identify-purpose"
+   },
+   "failures": []
+  },
+  "1.4.1": {
+   "slug": "use-of-color",
+   "title": "Use of Color",
+   "level": "A",
+   "introduced": "2.0",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "use-of-color",
+    "2.2": "use-of-color"
+   },
+   "failures": [
+    "F13",
+    "F73",
+    "F81"
+   ]
+  },
+  "1.4.2": {
+   "slug": "audio-control",
+   "title": "Audio Control",
+   "level": "A",
+   "introduced": "2.0",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "audio-control",
+    "2.2": "audio-control"
+   },
+   "failures": [
+    "F23",
+    "F93"
+   ]
+  },
+  "1.4.3": {
+   "slug": "contrast-minimum",
+   "title": "Contrast (Minimum)",
+   "level": "AA",
+   "introduced": "2.0",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "contrast-minimum",
+    "2.2": "contrast-minimum"
+   },
+   "failures": [
+    "F24",
+    "F83"
+   ]
+  },
+  "1.4.4": {
+   "slug": "resize-text",
+   "title": "Resize Text",
+   "level": "AA",
+   "introduced": "2.0",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "resize-text",
+    "2.2": "resize-text"
+   },
+   "failures": [
+    "F69",
+    "F80",
+    "F94"
+   ]
+  },
+  "1.4.5": {
+   "slug": "images-of-text",
+   "title": "Images of Text",
+   "level": "AA",
+   "introduced": "2.0",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "images-of-text",
+    "2.2": "images-of-text"
+   },
+   "failures": []
+  },
+  "1.4.6": {
+   "slug": "contrast-enhanced",
+   "title": "Contrast (Enhanced)",
+   "level": "AAA",
+   "introduced": "2.0",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "contrast-enhanced",
+    "2.2": "contrast-enhanced"
+   },
+   "failures": [
+    "F24",
+    "F83"
+   ]
+  },
+  "1.4.7": {
+   "slug": "low-or-no-background-audio",
+   "title": "Low or No Background Audio",
+   "level": "AAA",
+   "introduced": "2.0",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "low-or-no-background-audio",
+    "2.2": "low-or-no-background-audio"
+   },
+   "failures": []
+  },
+  "1.4.8": {
+   "slug": "visual-presentation",
+   "title": "Visual Presentation",
+   "level": "AAA",
+   "introduced": "2.0",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "visual-presentation",
+    "2.2": "visual-presentation"
+   },
+   "failures": [
+    "F24",
+    "F88"
+   ]
+  },
+  "1.4.9": {
+   "slug": "images-of-text-no-exception",
+   "title": "Images of Text (No Exception)",
+   "level": "AAA",
+   "introduced": "2.0",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "images-of-text-no-exception",
+    "2.2": "images-of-text-no-exception"
+   },
+   "failures": []
+  },
+  "1.4.10": {
+   "slug": "reflow",
+   "title": "Reflow",
+   "level": "AA",
+   "introduced": "2.1",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "reflow",
+    "2.2": "reflow"
+   },
+   "failures": [
+    "F102"
+   ]
+  },
+  "1.4.11": {
+   "slug": "non-text-contrast",
+   "title": "Non-text Contrast",
+   "level": "AA",
+   "introduced": "2.1",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "non-text-contrast",
+    "2.2": "non-text-contrast"
+   },
+   "failures": [
+    "F78"
+   ]
+  },
+  "1.4.12": {
+   "slug": "text-spacing",
+   "title": "Text Spacing",
+   "level": "AA",
+   "introduced": "2.1",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "text-spacing",
+    "2.2": "text-spacing"
+   },
+   "failures": [
+    "F104"
+   ]
+  },
+  "1.4.13": {
+   "slug": "content-on-hover-or-focus",
+   "title": "Content on Hover or Focus",
+   "level": "AA",
+   "introduced": "2.1",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "content-on-hover-or-focus",
+    "2.2": "content-on-hover-or-focus"
+   },
+   "failures": [
+    "F95"
+   ]
+  },
+  "2.1.1": {
+   "slug": "keyboard",
+   "title": "Keyboard",
+   "level": "A",
+   "introduced": "2.0",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "keyboard",
+    "2.2": "keyboard"
+   },
+   "failures": [
+    "F54",
+    "F55",
+    "F42"
+   ]
+  },
+  "2.1.2": {
+   "slug": "no-keyboard-trap",
+   "title": "No Keyboard Trap",
+   "level": "A",
+   "introduced": "2.0",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "no-keyboard-trap",
+    "2.2": "no-keyboard-trap"
+   },
+   "failures": [
+    "F10"
+   ]
+  },
+  "2.1.3": {
+   "slug": "keyboard-no-exception",
+   "title": "Keyboard (No Exception)",
+   "level": "AAA",
+   "introduced": "2.0",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "keyboard-no-exception",
+    "2.2": "keyboard-no-exception"
+   },
+   "failures": []
+  },
+  "2.1.4": {
+   "slug": "character-key-shortcuts",
+   "title": "Character Key Shortcuts",
+   "level": "A",
+   "introduced": "2.1",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "character-key-shortcuts",
+    "2.2": "character-key-shortcuts"
+   },
+   "failures": [
+    "F99"
+   ]
+  },
+  "2.2.1": {
+   "slug": "timing-adjustable",
+   "title": "Timing Adjustable",
+   "level": "A",
+   "introduced": "2.0",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "timing-adjustable",
+    "2.2": "timing-adjustable"
+   },
+   "failures": [
+    "F40",
+    "F41",
+    "F58"
+   ]
+  },
+  "2.2.2": {
+   "slug": "pause-stop-hide",
+   "title": "Pause, Stop, Hide",
+   "level": "A",
+   "introduced": "2.0",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "pause-stop-hide",
+    "2.2": "pause-stop-hide"
+   },
+   "failures": [
+    "F16",
+    "F112",
+    "F50",
+    "F7"
+   ]
+  },
+  "2.2.3": {
+   "slug": "no-timing",
+   "title": "No Timing",
+   "level": "AAA",
+   "introduced": "2.0",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "no-timing",
+    "2.2": "no-timing"
+   },
+   "failures": []
+  },
+  "2.2.4": {
+   "slug": "interruptions",
+   "title": "Interruptions",
+   "level": "AAA",
+   "introduced": "2.0",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "interruptions",
+    "2.2": "interruptions"
+   },
+   "failures": [
+    "F40",
+    "F41"
+   ]
+  },
+  "2.2.5": {
+   "slug": "re-authenticating",
+   "title": "Re-authenticating",
+   "level": "AAA",
+   "introduced": "2.0",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "re-authenticating",
+    "2.2": "re-authenticating"
+   },
+   "failures": [
+    "F12"
+   ]
+  },
+  "2.2.6": {
+   "slug": "timeouts",
+   "title": "Timeouts",
+   "level": "AAA",
+   "introduced": "2.1",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "timeouts",
+    "2.2": "timeouts"
+   },
+   "failures": []
+  },
+  "2.3.1": {
+   "slug": "three-flashes-or-below-threshold",
+   "title": "Three Flashes or Below Threshold",
+   "level": "A",
+   "introduced": "2.0",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "three-flashes-or-below-threshold",
+    "2.2": "three-flashes-or-below-threshold"
+   },
+   "failures": []
+  },
+  "2.3.2": {
+   "slug": "three-flashes",
+   "title": "Three Flashes",
+   "level": "AAA",
+   "introduced": "2.0",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "three-flashes",
+    "2.2": "three-flashes"
+   },
+   "failures": []
+  },
+  "2.3.3": {
+   "slug": "animation-from-interactions",
+   "title": "Animation from Interactions",
+   "level": "AAA",
+   "introduced": "2.1",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "animation-from-interactions",
+    "2.2": "animation-from-interactions"
+   },
+   "failures": []
+  },
+  "2.4.1": {
+   "slug": "bypass-blocks",
+   "title": "Bypass Blocks",
+   "level": "A",
+   "introduced": "2.0",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "bypass-blocks",
+    "2.2": "bypass-blocks"
+   },
+   "failures": []
+  },
+  "2.4.2": {
+   "slug": "page-titled",
+   "title": "Page Titled",
+   "level": "A",
+   "introduced": "2.0",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "page-titled",
+    "2.2": "page-titled"
+   },
+   "failures": [
+    "F25"
+   ]
+  },
+  "2.4.3": {
+   "slug": "focus-order",
+   "title": "Focus Order",
+   "level": "A",
+   "introduced": "2.0",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "focus-order",
+    "2.2": "focus-order"
+   },
+   "failures": [
+    "F44",
+    "F85"
+   ]
+  },
+  "2.4.4": {
+   "slug": "link-purpose-in-context",
+   "title": "Link Purpose (In Context)",
+   "level": "A",
+   "introduced": "2.0",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "link-purpose-in-context",
+    "2.2": "link-purpose-in-context"
+   },
+   "failures": [
+    "F63",
+    "F89"
+   ]
+  },
+  "2.4.5": {
+   "slug": "multiple-ways",
+   "title": "Multiple Ways",
+   "level": "AA",
+   "introduced": "2.0",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "multiple-ways",
+    "2.2": "multiple-ways"
+   },
+   "failures": []
+  },
+  "2.4.6": {
+   "slug": "headings-and-labels",
+   "title": "Headings and Labels",
+   "level": "AA",
+   "introduced": "2.0",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "headings-and-labels",
+    "2.2": "headings-and-labels"
+   },
+   "failures": []
+  },
+  "2.4.7": {
+   "slug": "focus-visible",
+   "title": "Focus Visible",
+   "level": "AA",
+   "introduced": "2.0",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "focus-visible",
+    "2.2": "focus-visible"
+   },
+   "failures": [
+    "F55",
+    "F78"
+   ]
+  },
+  "2.4.8": {
+   "slug": "location",
+   "title": "Location",
+   "level": "AAA",
+   "introduced": "2.0",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "location",
+    "2.2": "location"
+   },
+   "failures": []
+  },
+  "2.4.9": {
+   "slug": "link-purpose-link-only",
+   "title": "Link Purpose (Link Only)",
+   "level": "AAA",
+   "introduced": "2.0",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "link-purpose-link-only",
+    "2.2": "link-purpose-link-only"
+   },
+   "failures": [
+    "F84",
+    "F89"
+   ]
+  },
+  "2.4.10": {
+   "slug": "section-headings",
+   "title": "Section Headings",
+   "level": "AAA",
+   "introduced": "2.0",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "section-headings",
+    "2.2": "section-headings"
+   },
+   "failures": []
+  },
+  "2.4.11": {
+   "slug": "focus-not-obscured-minimum",
+   "title": "Focus Not Obscured (Minimum)",
+   "level": "AA",
+   "introduced": "2.2",
+   "obsolete": false,
+   "understanding": {
+    "2.1": null,
+    "2.2": "focus-not-obscured-minimum"
+   },
+   "failures": [
+    "F110"
+   ]
+  },
+  "2.4.12": {
+   "slug": "focus-not-obscured-enhanced",
+   "title": "Focus Not Obscured (Enhanced)",
+   "level": "AAA",
+   "introduced": "2.2",
+   "obsolete": false,
+   "understanding": {
+    "2.1": null,
+    "2.2": "focus-not-obscured-enhanced"
+   },
+   "failures": []
+  },
+  "2.4.13": {
+   "slug": "focus-appearance",
+   "title": "Focus Appearance",
+   "level": "AAA",
+   "introduced": "2.2",
+   "obsolete": false,
+   "understanding": {
+    "2.1": null,
+    "2.2": "focus-appearance"
+   },
+   "failures": [
+    "F55",
+    "F78"
+   ]
+  },
+  "2.5.1": {
+   "slug": "pointer-gestures",
+   "title": "Pointer Gestures",
+   "level": "A",
+   "introduced": "2.1",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "pointer-gestures",
+    "2.2": "pointer-gestures"
+   },
+   "failures": [
+    "F105"
+   ]
+  },
+  "2.5.2": {
+   "slug": "pointer-cancellation",
+   "title": "Pointer Cancellation",
+   "level": "A",
+   "introduced": "2.1",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "pointer-cancellation",
+    "2.2": "pointer-cancellation"
+   },
+   "failures": [
+    "F101"
+   ]
+  },
+  "2.5.3": {
+   "slug": "label-in-name",
+   "title": "Label in Name",
+   "level": "A",
+   "introduced": "2.1",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "label-in-name",
+    "2.2": "label-in-name"
+   },
+   "failures": [
+    "F96",
+    "F111"
+   ]
+  },
+  "2.5.4": {
+   "slug": "motion-actuation",
+   "title": "Motion Actuation",
+   "level": "A",
+   "introduced": "2.1",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "motion-actuation",
+    "2.2": "motion-actuation"
+   },
+   "failures": [
+    "F106"
+   ]
+  },
+  "2.5.5": {
+   "slug": "target-size-enhanced",
+   "title": "Target Size (Enhanced)",
+   "level": "AAA",
+   "introduced": "2.1",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "target-size",
+    "2.2": "target-size-enhanced"
+   },
+   "failures": []
+  },
+  "2.5.6": {
+   "slug": "concurrent-input-mechanisms",
+   "title": "Concurrent Input Mechanisms",
+   "level": "AAA",
+   "introduced": "2.1",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "concurrent-input-mechanisms",
+    "2.2": "concurrent-input-mechanisms"
+   },
+   "failures": [
+    "F98"
+   ]
+  },
+  "2.5.7": {
+   "slug": "dragging-movements",
+   "title": "Dragging Movements",
+   "level": "AA",
+   "introduced": "2.2",
+   "obsolete": false,
+   "understanding": {
+    "2.1": null,
+    "2.2": "dragging-movements"
+   },
+   "failures": [
+    "F108"
+   ]
+  },
+  "2.5.8": {
+   "slug": "target-size-minimum",
+   "title": "Target Size (Minimum)",
+   "level": "AA",
+   "introduced": "2.2",
+   "obsolete": false,
+   "understanding": {
+    "2.1": null,
+    "2.2": "target-size-minimum"
+   },
+   "failures": []
+  },
+  "3.1.1": {
+   "slug": "language-of-page",
+   "title": "Language of Page",
+   "level": "A",
+   "introduced": "2.0",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "language-of-page",
+    "2.2": "language-of-page"
+   },
+   "failures": []
+  },
+  "3.1.2": {
+   "slug": "language-of-parts",
+   "title": "Language of Parts",
+   "level": "AA",
+   "introduced": "2.0",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "language-of-parts",
+    "2.2": "language-of-parts"
+   },
+   "failures": []
+  },
+  "3.1.3": {
+   "slug": "unusual-words",
+   "title": "Unusual Words",
+   "level": "AAA",
+   "introduced": "2.0",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "unusual-words",
+    "2.2": "unusual-words"
+   },
+   "failures": []
+  },
+  "3.1.4": {
+   "slug": "abbreviations",
+   "title": "Abbreviations",
+   "level": "AAA",
+   "introduced": "2.0",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "abbreviations",
+    "2.2": "abbreviations"
+   },
+   "failures": []
+  },
+  "3.1.5": {
+   "slug": "reading-level",
+   "title": "Reading Level",
+   "level": "AAA",
+   "introduced": "2.0",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "reading-level",
+    "2.2": "reading-level"
+   },
+   "failures": []
+  },
+  "3.1.6": {
+   "slug": "pronunciation",
+   "title": "Pronunciation",
+   "level": "AAA",
+   "introduced": "2.0",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "pronunciation",
+    "2.2": "pronunciation"
+   },
+   "failures": []
+  },
+  "3.2.1": {
+   "slug": "on-focus",
+   "title": "On Focus",
+   "level": "A",
+   "introduced": "2.0",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "on-focus",
+    "2.2": "on-focus"
+   },
+   "failures": [
+    "F55"
+   ]
+  },
+  "3.2.2": {
+   "slug": "on-input",
+   "title": "On Input",
+   "level": "A",
+   "introduced": "2.0",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "on-input",
+    "2.2": "on-input"
+   },
+   "failures": [
+    "F36",
+    "F37"
+   ]
+  },
+  "3.2.3": {
+   "slug": "consistent-navigation",
+   "title": "Consistent Navigation",
+   "level": "AA",
+   "introduced": "2.0",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "consistent-navigation",
+    "2.2": "consistent-navigation"
+   },
+   "failures": [
+    "F66"
+   ]
+  },
+  "3.2.4": {
+   "slug": "consistent-identification",
+   "title": "Consistent Identification",
+   "level": "AA",
+   "introduced": "2.0",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "consistent-identification",
+    "2.2": "consistent-identification"
+   },
+   "failures": [
+    "F31"
+   ]
+  },
+  "3.2.5": {
+   "slug": "change-on-request",
+   "title": "Change on Request",
+   "level": "AAA",
+   "introduced": "2.0",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "change-on-request",
+    "2.2": "change-on-request"
+   },
+   "failures": [
+    "F60",
+    "F61",
+    "F9",
+    "F22",
+    "F52",
+    "F40",
+    "F41"
+   ]
+  },
+  "3.2.6": {
+   "slug": "consistent-help",
+   "title": "Consistent Help",
+   "level": "A",
+   "introduced": "2.2",
+   "obsolete": false,
+   "understanding": {
+    "2.1": null,
+    "2.2": "consistent-help"
+   },
+   "failures": []
+  },
+  "3.3.1": {
+   "slug": "error-identification",
+   "title": "Error Identification",
+   "level": "A",
+   "introduced": "2.0",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "error-identification",
+    "2.2": "error-identification"
+   },
+   "failures": []
+  },
+  "3.3.2": {
+   "slug": "labels-or-instructions",
+   "title": "Labels or Instructions",
+   "level": "A",
+   "introduced": "2.0",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "labels-or-instructions",
+    "2.2": "labels-or-instructions"
+   },
+   "failures": [
+    "F82"
+   ]
+  },
+  "3.3.3": {
+   "slug": "error-suggestion",
+   "title": "Error Suggestion",
+   "level": "AA",
+   "introduced": "2.0",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "error-suggestion",
+    "2.2": "error-suggestion"
+   },
+   "failures": []
+  },
+  "3.3.4": {
+   "slug": "error-prevention-legal-financial-data",
+   "title": "Error Prevention (Legal, Financial, Data)",
+   "level": "AA",
+   "introduced": "2.0",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "error-prevention-legal-financial-data",
+    "2.2": "error-prevention-legal-financial-data"
+   },
+   "failures": []
+  },
+  "3.3.5": {
+   "slug": "help",
+   "title": "Help",
+   "level": "AAA",
+   "introduced": "2.0",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "help",
+    "2.2": "help"
+   },
+   "failures": []
+  },
+  "3.3.6": {
+   "slug": "error-prevention-all",
+   "title": "Error Prevention (All)",
+   "level": "AAA",
+   "introduced": "2.0",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "error-prevention-all",
+    "2.2": "error-prevention-all"
+   },
+   "failures": []
+  },
+  "3.3.7": {
+   "slug": "redundant-entry",
+   "title": "Redundant Entry",
+   "level": "A",
+   "introduced": "2.2",
+   "obsolete": false,
+   "understanding": {
+    "2.1": null,
+    "2.2": "redundant-entry"
+   },
+   "failures": []
+  },
+  "3.3.8": {
+   "slug": "accessible-authentication-minimum",
+   "title": "Accessible Authentication (Minimum)",
+   "level": "AA",
+   "introduced": "2.2",
+   "obsolete": false,
+   "understanding": {
+    "2.1": null,
+    "2.2": "accessible-authentication-minimum"
+   },
+   "failures": [
+    "F109"
+   ]
+  },
+  "3.3.9": {
+   "slug": "accessible-authentication-enhanced",
+   "title": "Accessible Authentication (Enhanced)",
+   "level": "AAA",
+   "introduced": "2.2",
+   "obsolete": false,
+   "understanding": {
+    "2.1": null,
+    "2.2": "accessible-authentication-enhanced"
+   },
+   "failures": [
+    "F109"
+   ]
+  },
+  "4.1.1": {
+   "slug": "parsing",
+   "title": "Parsing (Obsolete and removed)",
+   "level": null,
+   "introduced": "2.0",
+   "obsolete": true,
+   "understanding": {
+    "2.1": "parsing",
+    "2.2": "parsing"
+   },
+   "failures": [
+    "F70",
+    "F77"
+   ]
+  },
+  "4.1.2": {
+   "slug": "name-role-value",
+   "title": "Name, Role, Value",
+   "level": "A",
+   "introduced": "2.0",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "name-role-value",
+    "2.2": "name-role-value"
+   },
+   "failures": [
+    "F59",
+    "F15",
+    "F20",
+    "F42",
+    "F68",
+    "F79",
+    "F86",
+    "F89",
+    "F111"
+   ]
+  },
+  "4.1.3": {
+   "slug": "status-messages",
+   "title": "Status Messages",
+   "level": "AA",
+   "introduced": "2.1",
+   "obsolete": false,
+   "understanding": {
+    "2.1": "status-messages",
+    "2.2": "status-messages"
+   },
+   "failures": [
+    "F103"
+   ]
+  }
+ },
+ "act_rules": {
+  "5f99a7": {
+   "title": "ARIA attribute is defined in WAI-ARIA",
+   "status": "approved",
+   "conformance": [],
+   "secondary": [
+    "1.3.1",
+    "4.1.2"
+   ]
+  },
+  "6a7281": {
+   "title": "ARIA state or property has valid value",
+   "status": "approved",
+   "conformance": [],
+   "secondary": [
+    "1.3.1",
+    "4.1.2"
+   ]
+  },
+  "73f2c2": {
+   "title": "Autocomplete attribute has valid value",
+   "status": "approved",
+   "conformance": [
+    "1.3.5"
+   ],
+   "secondary": []
+  },
+  "97a4e1": {
+   "title": "Button has non-empty accessible name",
+   "status": "approved",
+   "conformance": [
+    "4.1.2"
+   ],
+   "secondary": []
+  },
+  "oj04fd": {
+   "title": "Element in sequential focus order has visible focus",
+   "status": "approved",
+   "conformance": [
+    "2.4.7"
+   ],
+   "secondary": []
+  },
+  "46ca7f": {
+   "title": "Element marked as decorative is not exposed",
+   "status": "approved",
+   "conformance": [],
+   "secondary": [
+    "1.1.1"
+   ]
+  },
+  "6cfa84": {
+   "title": "Element with aria-hidden has no content in sequential focus navigation",
+   "status": "approved",
+   "conformance": [
+    "4.1.2"
+   ],
+   "secondary": []
+  },
+  "de46e4": {
+   "title": "Element with lang attribute has valid language tag",
+   "status": "approved",
+   "conformance": [
+    "3.1.2"
+   ],
+   "secondary": []
+  },
+  "307n5z": {
+   "title": "Element with presentational children has no focusable content",
+   "status": "approved",
+   "conformance": [
+    "4.1.2"
+   ],
+   "secondary": []
+  },
+  "4e8ab6": {
+   "title": "Element with role attribute has required states and properties",
+   "status": "approved",
+   "conformance": [],
+   "secondary": [
+    "1.3.1",
+    "4.1.2"
+   ]
+  },
+  "e086e5": {
+   "title": "Form field has non-empty accessible name",
+   "status": "approved",
+   "conformance": [
+    "4.1.2"
+   ],
+   "secondary": [
+    "1.3.1",
+    "2.5.3"
+   ]
+  },
+  "a25f45": {
+   "title": "Headers attribute specified on a cell refers to cells in the same table element",
+   "status": "approved",
+   "conformance": [
+    "1.3.1"
+   ],
+   "secondary": []
+  },
+  "0va7u6": {
+   "title": "HTML images contain no text",
+   "status": "approved",
+   "conformance": [
+    "1.4.5"
+   ],
+   "secondary": [
+    "1.4.9"
+   ]
+  },
+  "b5c3f8": {
+   "title": "HTML page has lang attribute",
+   "status": "approved",
+   "conformance": [
+    "3.1.1"
+   ],
+   "secondary": []
+  },
+  "2779a5": {
+   "title": "HTML page has non-empty title",
+   "status": "approved",
+   "conformance": [
+    "2.4.2"
+   ],
+   "secondary": []
+  },
+  "bf051a": {
+   "title": "HTML page lang attribute has valid language tag",
+   "status": "approved",
+   "conformance": [
+    "3.1.1"
+   ],
+   "secondary": []
+  },
+  "c4a8a4": {
+   "title": "HTML page title is descriptive",
+   "status": "approved",
+   "conformance": [
+    "2.4.2"
+   ],
+   "secondary": []
+  },
+  "akn7bn": {
+   "title": "Iframe with interactive elements is not excluded from tab-order",
+   "status": "approved",
+   "conformance": [
+    "2.1.1",
+    "2.1.3"
+   ],
+   "secondary": []
+  },
+  "qt1vmo": {
+   "title": "Image accessible name is descriptive",
+   "status": "approved",
+   "conformance": [
+    "1.1.1"
+   ],
+   "secondary": []
+  },
+  "59796f": {
+   "title": "Image button has non-empty accessible name",
+   "status": "approved",
+   "conformance": [
+    "1.1.1",
+    "4.1.2"
+   ],
+   "secondary": []
+  },
+  "23a2a8": {
+   "title": "Image has non-empty accessible name",
+   "status": "approved",
+   "conformance": [
+    "1.1.1"
+   ],
+   "secondary": []
+  },
+  "24afc2": {
+   "title": "Important letter spacing in style attributes is wide enough",
+   "status": "approved",
+   "conformance": [
+    "1.4.12"
+   ],
+   "secondary": []
+  },
+  "78fd32": {
+   "title": "Important line height in style attributes is wide enough",
+   "status": "approved",
+   "conformance": [
+    "1.4.12"
+   ],
+   "secondary": []
+  },
+  "9e45ec": {
+   "title": "Important word spacing in style attributes is wide enough",
+   "status": "approved",
+   "conformance": [
+    "1.4.12"
+   ],
+   "secondary": []
+  },
+  "c487ae": {
+   "title": "Link has non-empty accessible name",
+   "status": "approved",
+   "conformance": [
+    "2.4.4",
+    "2.4.9",
+    "4.1.2"
+   ],
+   "secondary": [
+    "1.1.1"
+   ]
+  },
+  "m6b1q3": {
+   "title": "Menuitem has non-empty accessible name",
+   "status": "approved",
+   "conformance": [
+    "4.1.2"
+   ],
+   "secondary": []
+  },
+  "bc659a": {
+   "title": "Meta element has no refresh delay",
+   "status": "approved",
+   "conformance": [
+    "2.2.1"
+   ],
+   "secondary": [
+    "2.2.4",
+    "3.2.5"
+   ]
+  },
+  "bisz58": {
+   "title": "Meta element has no refresh delay (no exception)",
+   "status": "approved",
+   "conformance": [
+    "2.2.4",
+    "3.2.5"
+   ],
+   "secondary": [
+    "2.2.1"
+   ]
+  },
+  "b4f0c3": {
+   "title": "Meta viewport allows for zoom",
+   "status": "approved",
+   "conformance": [
+    "1.4.4"
+   ],
+   "secondary": [
+    "1.4.10"
+   ]
+  },
+  "8fc3b6": {
+   "title": "Object element rendering non-text content has non-empty accessible name",
+   "status": "approved",
+   "conformance": [
+    "1.1.1"
+   ],
+   "secondary": []
+  },
+  "b33eff": {
+   "title": "Orientation of the page is not restricted using CSS transforms",
+   "status": "approved",
+   "conformance": [
+    "1.3.4"
+   ],
+   "secondary": []
+  },
+  "674b10": {
+   "title": "Role attribute has valid value",
+   "status": "approved",
+   "conformance": [],
+   "secondary": [
+    "1.3.1",
+    "4.1.2"
+   ]
+  },
+  "0ssw9k": {
+   "title": "Scrollable content can be reached with sequential focus navigation",
+   "status": "approved",
+   "conformance": [
+    "2.1.1",
+    "2.1.3"
+   ],
+   "secondary": []
+  },
+  "2t702h": {
+   "title": "Summary element has non-empty accessible name",
+   "status": "approved",
+   "conformance": [
+    "4.1.2"
+   ],
+   "secondary": []
+  },
+  "7d6734": {
+   "title": "SVG element with explicit role has non-empty accessible name",
+   "status": "approved",
+   "conformance": [
+    "1.1.1"
+   ],
+   "secondary": []
+  },
+  "09o5cg": {
+   "title": "Text has enhanced contrast",
+   "status": "approved",
+   "conformance": [
+    "1.4.6"
+   ],
+   "secondary": [
+    "1.4.3"
+   ]
+  },
+  "afw4f7": {
+   "title": "Text has minimum contrast",
+   "status": "approved",
+   "conformance": [
+    "1.4.3"
+   ],
+   "secondary": [
+    "1.4.6"
+   ]
+  },
+  "kb1m8s": {
+   "title": "ARIA global properties not used where prohibited",
+   "status": "proposed",
+   "conformance": [],
+   "secondary": [
+    "1.3.1"
+   ]
+  },
+  "ff89c9": {
+   "title": "ARIA required context role",
+   "status": "proposed",
+   "conformance": [
+    "1.3.1"
+   ],
+   "secondary": []
+  },
+  "in6db8": {
+   "title": "ARIA required ID references exist",
+   "status": "deprecated",
+   "conformance": [],
+   "secondary": [
+    "1.3.1",
+    "4.1.2"
+   ]
+  },
+  "bc4a75": {
+   "title": "ARIA required owned elements",
+   "status": "proposed",
+   "conformance": [
+    "1.3.1"
+   ],
+   "secondary": []
+  },
+  "5c01ea": {
+   "title": "ARIA state or property is permitted",
+   "status": "proposed",
+   "conformance": [],
+   "secondary": [
+    "1.3.1",
+    "4.1.2"
+   ]
+  },
+  "e6952f": {
+   "title": "Attribute is not duplicated",
+   "status": "deprecated",
+   "conformance": [
+    "4.1.1"
+   ],
+   "secondary": []
+  },
+  "1a02b0": {
+   "title": "Audio and visuals of video element have transcript",
+   "status": "proposed",
+   "conformance": [
+    "1.2.8"
+   ],
+   "secondary": [
+    "1.2.1",
+    "1.3.1"
+   ]
+  },
+  "e7aa44": {
+   "title": "Audio element content has text alternative",
+   "status": "proposed",
+   "conformance": [
+    "1.2.1"
+   ],
+   "secondary": []
+  },
+  "2eb176": {
+   "title": "Audio element content has transcript",
+   "status": "proposed",
+   "conformance": [],
+   "secondary": []
+  },
+  "afb423": {
+   "title": "Audio element content is media alternative for text",
+   "status": "proposed",
+   "conformance": [],
+   "secondary": []
+  },
+  "80f0bf": {
+   "title": "Audio or video element avoids automatically playing audio",
+   "status": "proposed",
+   "conformance": [
+    "1.4.2"
+   ],
+   "secondary": []
+  },
+  "4c31df": {
+   "title": "Audio or video element that plays automatically has a control mechanism",
+   "status": "proposed",
+   "conformance": [],
+   "secondary": []
+  },
+  "aaa1bf": {
+   "title": "Audio or video element that plays automatically has no audio that lasts more than 3 seconds",
+   "status": "proposed",
+   "conformance": [],
+   "secondary": []
+  },
+  "3e12e1": {
+   "title": "Block of repeated content is collapsible",
+   "status": "proposed",
+   "conformance": [],
+   "secondary": []
+  },
+  "cf77f2": {
+   "title": "Bypass Blocks of Repeated Content",
+   "status": "proposed",
+   "conformance": [
+    "2.4.1"
+   ],
+   "secondary": []
+  },
+  "9bd38c": {
+   "title": "Content has alternative for visual reference",
+   "status": "proposed",
+   "conformance": [
+    "1.3.3"
+   ],
+   "secondary": []
+  },
+  "7677a9": {
+   "title": "Device motion based changes to the content can also be created from the user interface",
+   "status": "proposed",
+   "conformance": [
+    "2.5.4"
+   ],
+   "secondary": []
+  },
+  "c249d5": {
+   "title": "Device motion based changes to the content can be disabled",
+   "status": "proposed",
+   "conformance": [
+    "2.5.4"
+   ],
+   "secondary": []
+  },
+  "b40fd1": {
+   "title": "Document has a landmark with non-repeated content",
+   "status": "proposed",
+   "conformance": [],
+   "secondary": []
+  },
+  "ye5d6e": {
+   "title": "Document has an instrument to move focus to non-repeated content",
+   "status": "proposed",
+   "conformance": [],
+   "secondary": []
+  },
+  "047fe0": {
+   "title": "Document has heading for non-repeated content",
+   "status": "proposed",
+   "conformance": [],
+   "secondary": []
+  },
+  "36b590": {
+   "title": "Error message describes invalid form field value",
+   "status": "proposed",
+   "conformance": [
+    "3.3.1"
+   ],
+   "secondary": []
+  },
+  "80af7b": {
+   "title": "Focusable element has no keyboard trap",
+   "status": "proposed",
+   "conformance": [
+    "2.1.2"
+   ],
+   "secondary": []
+  },
+  "ebe86a": {
+   "title": "Focusable element has no keyboard trap via non-standard navigation",
+   "status": "proposed",
+   "conformance": [],
+   "secondary": []
+  },
+  "a1b64e": {
+   "title": "Focusable element has no keyboard trap via standard navigation",
+   "status": "proposed",
+   "conformance": [],
+   "secondary": []
+  },
+  "cc0f0a": {
+   "title": "Form field label is descriptive",
+   "status": "proposed",
+   "conformance": [
+    "2.4.6"
+   ],
+   "secondary": []
+  },
+  "ffd0e9": {
+   "title": "Heading has non-empty accessible name",
+   "status": "proposed",
+   "conformance": [],
+   "secondary": []
+  },
+  "b49b2e": {
+   "title": "Heading is descriptive",
+   "status": "proposed",
+   "conformance": [
+    "2.4.6"
+   ],
+   "secondary": []
+  },
+  "off6ek": {
+   "title": "HTML element language subtag matches language",
+   "status": "proposed",
+   "conformance": [
+    "3.1.2"
+   ],
+   "secondary": []
+  },
+  "5b7ae0": {
+   "title": "HTML page lang and xml:lang attributes have matching values",
+   "status": "deprecated",
+   "conformance": [
+    "3.1.1"
+   ],
+   "secondary": []
+  },
+  "ucwvc8": {
+   "title": "HTML page language subtag matches default language",
+   "status": "proposed",
+   "conformance": [
+    "3.1.1"
+   ],
+   "secondary": []
+  },
+  "3ea0c8": {
+   "title": "Id attribute value is unique",
+   "status": "deprecated",
+   "conformance": [
+    "4.1.1"
+   ],
+   "secondary": []
+  },
+  "cae760": {
+   "title": "Iframe element has non-empty accessible name",
+   "status": "proposed",
+   "conformance": [
+    "4.1.2"
+   ],
+   "secondary": []
+  },
+  "4b1c6c": {
+   "title": "Iframe elements with identical accessible names have equivalent purpose",
+   "status": "proposed",
+   "conformance": [
+    "4.1.2"
+   ],
+   "secondary": []
+  },
+  "9eb3f6": {
+   "title": "Image filename is accessible name for image",
+   "status": "deprecated",
+   "conformance": [
+    "1.1.1"
+   ],
+   "secondary": []
+  },
+  "e88epe": {
+   "title": "Image not in the accessibility tree is decorative",
+   "status": "proposed",
+   "conformance": [
+    "1.1.1"
+   ],
+   "secondary": []
+  },
+  "5effbb": {
+   "title": "Link in context is descriptive",
+   "status": "proposed",
+   "conformance": [
+    "2.4.4"
+   ],
+   "secondary": [
+    "2.4.9"
+   ]
+  },
+  "aizyf1": {
+   "title": "Link is descriptive",
+   "status": "proposed",
+   "conformance": [
+    "2.4.9"
+   ],
+   "secondary": []
+  },
+  "fd3a94": {
+   "title": "Links with identical accessible names and same context serve equivalent purpose",
+   "status": "proposed",
+   "conformance": [
+    "2.4.4"
+   ],
+   "secondary": [
+    "2.4.9"
+   ]
+  },
+  "b20e66": {
+   "title": "Links with identical accessible names have equivalent purpose",
+   "status": "proposed",
+   "conformance": [
+    "2.4.9"
+   ],
+   "secondary": []
+  },
+  "ffbc54": {
+   "title": "No keyboard shortcut uses only printable characters",
+   "status": "proposed",
+   "conformance": [
+    "2.1.4"
+   ],
+   "secondary": []
+  },
+  "d0f69e": {
+   "title": "Table header cell has assigned cells",
+   "status": "proposed",
+   "conformance": [
+    "1.3.1"
+   ],
+   "secondary": []
+  },
+  "efbfc7": {
+   "title": "Text content that changes automatically can be paused, stopped or hidden",
+   "status": "proposed",
+   "conformance": [
+    "2.2.2"
+   ],
+   "secondary": []
+  },
+  "eac66b": {
+   "title": "Video element auditory content has accessible alternative",
+   "status": "proposed",
+   "conformance": [
+    "1.2.2"
+   ],
+   "secondary": []
+  },
+  "f51b46": {
+   "title": "Video element auditory content has captions",
+   "status": "proposed",
+   "conformance": [],
+   "secondary": [
+    "1.2.1"
+   ]
+  },
+  "ab4d13": {
+   "title": "Video element content is media alternative for text",
+   "status": "proposed",
+   "conformance": [],
+   "secondary": []
+  },
+  "c5a4ea": {
+   "title": "Video element visual content has accessible alternative",
+   "status": "proposed",
+   "conformance": [
+    "1.2.3"
+   ],
+   "secondary": [
+    "1.2.5",
+    "1.2.8"
+   ]
+  },
+  "1ea59c": {
+   "title": "Video element visual content has audio description",
+   "status": "proposed",
+   "conformance": [],
+   "secondary": []
+  },
+  "f196ce": {
+   "title": "Video element visual content has description track",
+   "status": "deprecated",
+   "conformance": [],
+   "secondary": []
+  },
+  "1ec09b": {
+   "title": "Video element visual content has strict accessible alternative",
+   "status": "proposed",
+   "conformance": [
+    "1.2.5"
+   ],
+   "secondary": []
+  },
+  "c3232f": {
+   "title": "Video element visual-only content has accessible alternative",
+   "status": "proposed",
+   "conformance": [
+    "1.2.1"
+   ],
+   "secondary": []
+  },
+  "d7ba54": {
+   "title": "Video element visual-only content has audio track alternative",
+   "status": "proposed",
+   "conformance": [],
+   "secondary": []
+  },
+  "ac7dc6": {
+   "title": "Video element visual-only content has description track",
+   "status": "deprecated",
+   "conformance": [],
+   "secondary": []
+  },
+  "ee13b5": {
+   "title": "Video element visual-only content has transcript",
+   "status": "proposed",
+   "conformance": [],
+   "secondary": [
+    "1.2.1",
+    "1.3.1"
+   ]
+  },
+  "fd26cf": {
+   "title": "Video element visual-only content is media alternative for text",
+   "status": "proposed",
+   "conformance": [],
+   "secondary": []
+  },
+  "2ee8b8": {
+   "title": "Visible label is part of accessible name",
+   "status": "proposed",
+   "conformance": [
+    "2.5.3"
+   ],
+   "secondary": []
+  },
+  "59br37": {
+   "title": "Zoomed text node is not clipped with CSS overflow",
+   "status": "proposed",
+   "conformance": [
+    "1.4.4"
+   ],
+   "secondary": []
+  }
+ },
+ "failures": {
+  "F1": {
+   "criteria": [
+    "1.3.2"
+   ],
+   "obsolete": false
+  },
+  "F2": {
+   "criteria": [
+    "1.3.1"
+   ],
+   "obsolete": false
+  },
+  "F3": {
+   "criteria": [
+    "1.1.1"
+   ],
+   "obsolete": false
+  },
+  "F7": {
+   "criteria": [
+    "2.2.2"
+   ],
+   "obsolete": false
+  },
+  "F8": {
+   "criteria": [
+    "1.2.2"
+   ],
+   "obsolete": false
+  },
+  "F9": {
+   "criteria": [
+    "3.2.5"
+   ],
+   "obsolete": false
+  },
+  "F10": {
+   "criteria": [
+    "2.1.2"
+   ],
+   "obsolete": false
+  },
+  "F12": {
+   "criteria": [
+    "2.2.5"
+   ],
+   "obsolete": false
+  },
+  "F13": {
+   "criteria": [
+    "1.1.1",
+    "1.4.1"
+   ],
+   "obsolete": false
+  },
+  "F14": {
+   "criteria": [
+    "1.3.3"
+   ],
+   "obsolete": false
+  },
+  "F15": {
+   "criteria": [
+    "4.1.2"
+   ],
+   "obsolete": false
+  },
+  "F16": {
+   "criteria": [
+    "2.2.2"
+   ],
+   "obsolete": false
+  },
+  "F20": {
+   "criteria": [
+    "1.1.1",
+    "4.1.2"
+   ],
+   "obsolete": false
+  },
+  "F22": {
+   "criteria": [
+    "3.2.5"
+   ],
+   "obsolete": false
+  },
+  "F23": {
+   "criteria": [
+    "1.4.2"
+   ],
+   "obsolete": false
+  },
+  "F24": {
+   "criteria": [
+    "1.4.3",
+    "1.4.6",
+    "1.4.8"
+   ],
+   "obsolete": false
+  },
+  "F25": {
+   "criteria": [
+    "2.4.2"
+   ],
+   "obsolete": false
+  },
+  "F26": {
+   "criteria": [
+    "1.3.3"
+   ],
+   "obsolete": false
+  },
+  "F30": {
+   "criteria": [
+    "1.1.1",
+    "1.2.1"
+   ],
+   "obsolete": false
+  },
+  "F31": {
+   "criteria": [
+    "3.2.4"
+   ],
+   "obsolete": false
+  },
+  "F32": {
+   "criteria": [
+    "1.3.2"
+   ],
+   "obsolete": false
+  },
+  "F33": {
+   "criteria": [
+    "1.3.1",
+    "1.3.2"
+   ],
+   "obsolete": false
+  },
+  "F34": {
+   "criteria": [
+    "1.3.1",
+    "1.3.2"
+   ],
+   "obsolete": false
+  },
+  "F36": {
+   "criteria": [
+    "3.2.2"
+   ],
+   "obsolete": false
+  },
+  "F37": {
+   "criteria": [
+    "3.2.2"
+   ],
+   "obsolete": false
+  },
+  "F38": {
+   "criteria": [
+    "1.1.1"
+   ],
+   "obsolete": false
+  },
+  "F39": {
+   "criteria": [
+    "1.1.1"
+   ],
+   "obsolete": false
+  },
+  "F40": {
+   "criteria": [
+    "2.2.1",
+    "2.2.4",
+    "3.2.5"
+   ],
+   "obsolete": false
+  },
+  "F41": {
+   "criteria": [
+    "2.2.1",
+    "2.2.4",
+    "3.2.5"
+   ],
+   "obsolete": false
+  },
+  "F42": {
+   "criteria": [
+    "1.3.1",
+    "2.1.1",
+    "4.1.2"
+   ],
+   "obsolete": false
+  },
+  "F43": {
+   "criteria": [
+    "1.3.1"
+   ],
+   "obsolete": false
+  },
+  "F44": {
+   "criteria": [
+    "2.4.3"
+   ],
+   "obsolete": false
+  },
+  "F46": {
+   "criteria": [
+    "1.3.1"
+   ],
+   "obsolete": false
+  },
+  "F48": {
+   "criteria": [
+    "1.3.1"
+   ],
+   "obsolete": false
+  },
+  "F49": {
+   "criteria": [
+    "1.3.2"
+   ],
+   "obsolete": false
+  },
+  "F50": {
+   "criteria": [
+    "2.2.2"
+   ],
+   "obsolete": false
+  },
+  "F52": {
+   "criteria": [
+    "3.2.5"
+   ],
+   "obsolete": false
+  },
+  "F54": {
+   "criteria": [
+    "2.1.1"
+   ],
+   "obsolete": false
+  },
+  "F55": {
+   "criteria": [
+    "2.1.1",
+    "2.4.7",
+    "2.4.13",
+    "3.2.1"
+   ],
+   "obsolete": false
+  },
+  "F58": {
+   "criteria": [
+    "2.2.1"
+   ],
+   "obsolete": false
+  },
+  "F59": {
+   "criteria": [
+    "4.1.2"
+   ],
+   "obsolete": false
+  },
+  "F60": {
+   "criteria": [
+    "3.2.5"
+   ],
+   "obsolete": false
+  },
+  "F61": {
+   "criteria": [
+    "3.2.5"
+   ],
+   "obsolete": false
+  },
+  "F63": {
+   "criteria": [
+    "2.4.4"
+   ],
+   "obsolete": false
+  },
+  "F65": {
+   "criteria": [
+    "1.1.1"
+   ],
+   "obsolete": false
+  },
+  "F66": {
+   "criteria": [
+    "3.2.3"
+   ],
+   "obsolete": false
+  },
+  "F67": {
+   "criteria": [
+    "1.1.1",
+    "1.2.1"
+   ],
+   "obsolete": false
+  },
+  "F68": {
+   "criteria": [
+    "4.1.2"
+   ],
+   "obsolete": false
+  },
+  "F69": {
+   "criteria": [
+    "1.4.4"
+   ],
+   "obsolete": false
+  },
+  "F70": {
+   "criteria": [
+    "4.1.1"
+   ],
+   "obsolete": true
+  },
+  "F71": {
+   "criteria": [
+    "1.1.1"
+   ],
+   "obsolete": false
+  },
+  "F72": {
+   "criteria": [
+    "1.1.1"
+   ],
+   "obsolete": false
+  },
+  "F73": {
+   "criteria": [
+    "1.4.1"
+   ],
+   "obsolete": false
+  },
+  "F74": {
+   "criteria": [
+    "1.2.2",
+    "1.2.8"
+   ],
+   "obsolete": false
+  },
+  "F75": {
+   "criteria": [
+    "1.2.2"
+   ],
+   "obsolete": false
+  },
+  "F77": {
+   "criteria": [
+    "4.1.1"
+   ],
+   "obsolete": true
+  },
+  "F78": {
+   "criteria": [
+    "1.4.11",
+    "2.4.7",
+    "2.4.13"
+   ],
+   "obsolete": false
+  },
+  "F79": {
+   "criteria": [
+    "4.1.2"
+   ],
+   "obsolete": false
+  },
+  "F80": {
+   "criteria": [
+    "1.4.4"
+   ],
+   "obsolete": false
+  },
+  "F81": {
+   "criteria": [
+    "1.4.1"
+   ],
+   "obsolete": false
+  },
+  "F82": {
+   "criteria": [
+    "3.3.2"
+   ],
+   "obsolete": false
+  },
+  "F83": {
+   "criteria": [
+    "1.4.3",
+    "1.4.6"
+   ],
+   "obsolete": false
+  },
+  "F84": {
+   "criteria": [
+    "2.4.9"
+   ],
+   "obsolete": false
+  },
+  "F85": {
+   "criteria": [
+    "2.4.3"
+   ],
+   "obsolete": false
+  },
+  "F86": {
+   "criteria": [
+    "4.1.2"
+   ],
+   "obsolete": false
+  },
+  "F88": {
+   "criteria": [
+    "1.4.8"
+   ],
+   "obsolete": false
+  },
+  "F89": {
+   "criteria": [
+    "2.4.4",
+    "2.4.9",
+    "4.1.2"
+   ],
+   "obsolete": false
+  },
+  "F90": {
+   "criteria": [
+    "1.3.1"
+   ],
+   "obsolete": false
+  },
+  "F91": {
+   "criteria": [
+    "1.3.1"
+   ],
+   "obsolete": false
+  },
+  "F92": {
+   "criteria": [
+    "1.3.1"
+   ],
+   "obsolete": false
+  },
+  "F93": {
+   "criteria": [
+    "1.4.2"
+   ],
+   "obsolete": false
+  },
+  "F94": {
+   "criteria": [
+    "1.4.4"
+   ],
+   "obsolete": false
+  },
+  "F95": {
+   "criteria": [
+    "1.4.13"
+   ],
+   "obsolete": false
+  },
+  "F96": {
+   "criteria": [
+    "2.5.3"
+   ],
+   "obsolete": false
+  },
+  "F97": {
+   "criteria": [
+    "1.3.4"
+   ],
+   "obsolete": false
+  },
+  "F98": {
+   "criteria": [
+    "2.5.6"
+   ],
+   "obsolete": false
+  },
+  "F99": {
+   "criteria": [
+    "2.1.4"
+   ],
+   "obsolete": false
+  },
+  "F100": {
+   "criteria": [
+    "1.3.4"
+   ],
+   "obsolete": false
+  },
+  "F101": {
+   "criteria": [
+    "2.5.2"
+   ],
+   "obsolete": false
+  },
+  "F102": {
+   "criteria": [
+    "1.4.10"
+   ],
+   "obsolete": false
+  },
+  "F103": {
+   "criteria": [
+    "4.1.3"
+   ],
+   "obsolete": false
+  },
+  "F104": {
+   "criteria": [
+    "1.4.12"
+   ],
+   "obsolete": false
+  },
+  "F105": {
+   "criteria": [
+    "2.5.1"
+   ],
+   "obsolete": false
+  },
+  "F106": {
+   "criteria": [
+    "2.5.4"
+   ],
+   "obsolete": false
+  },
+  "F107": {
+   "criteria": [
+    "1.3.5"
+   ],
+   "obsolete": false
+  },
+  "F108": {
+   "criteria": [
+    "2.5.7"
+   ],
+   "obsolete": false
+  },
+  "F109": {
+   "criteria": [
+    "3.3.8",
+    "3.3.9"
+   ],
+   "obsolete": false
+  },
+  "F110": {
+   "criteria": [
+    "2.4.11"
+   ],
+   "obsolete": false
+  },
+  "F111": {
+   "criteria": [
+    "1.3.1",
+    "2.5.3",
+    "4.1.2"
+   ],
+   "obsolete": false
+  },
+  "F112": {
+   "criteria": [
+    "2.2.2"
+   ],
+   "obsolete": false
+  },
+  "F113": {
+   "criteria": [
+    "1.2.5"
+   ],
+   "obsolete": false
+  }
+ }
+}

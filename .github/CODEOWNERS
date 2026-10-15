@@ -1,0 +1,7 @@
+# The code owner GitHub asks to review each change (H3): the maintainer's
+# own account. While one person maintains the project, a code owner's
+# review is not required: GitHub does not let the author of a pull request
+# approve it, so the rule would block every change. Require it once a
+# second maintainer can review, and name them here (PREPUBLISH.md item
+# 14).
+* @bellbriar

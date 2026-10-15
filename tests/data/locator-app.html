@@ -1,0 +1,44 @@
+<!doctype html>
+<!-- Locators (A4) in a rendered capture: tests/test_run_shape.py. Scripts
+     build the page and attach open shadow roots, one inside another. -->
+<html lang="en"><head><meta charset="utf-8"><title>App</title></head><body>
+<div id="root"></div>
+<script>
+class XCard extends HTMLElement {
+  constructor() { super(); const r = this.attachShadow({mode: 'open'});
+    r.innerHTML = '<style>:host{display:block}</style><header><slot name="title"></slot></header><div class="body"><slot></slot></div><button>More</button>'; }
+}
+customElements.define('x-card', XCard);
+class XOuter extends HTMLElement {
+  constructor() { super(); const r = this.attachShadow({mode: 'open'});
+    r.innerHTML = '<x-card><h3 slot="title">Inner</h3><a href="/i">inner link</a></x-card><p>outer shadow</p>'; }
+}
+customElements.define('x-outer', XOuter);
+// A forwarded slot: x-dialog's slot is a light child of x-frame.
+customElements.define('x-frame', class extends HTMLElement {
+  constructor() { super(); this.attachShadow({mode: 'open'}).innerHTML =
+    '<div class="frame"><slot></slot></div>'; } });
+customElements.define('x-dialog', class extends HTMLElement {
+  constructor() { super(); this.attachShadow({mode: 'open'}).innerHTML =
+    '<x-frame><slot></slot></x-frame><button>Close</button>'; } });
+// Nodes for a slot inside another slot's fallback, which is not shown.
+customElements.define('x-nest', class extends HTMLElement {
+  constructor() { super(); this.attachShadow({mode: 'open'}).innerHTML =
+    '<slot name="a"><slot name="b"></slot></slot><slot name="b"></slot><p>after</p>'; } });
+const root = document.getElementById('root');
+root.innerHTML = '<nav><a href="/">Home</a><a href="/x">X</a></nav><main><x-card><h2 slot="title">Card</h2><p>Text</p><span>default slot</span><b slot="nowhere">left out</b></x-card><x-card><h2 slot="title">Two</h2></x-card><x-outer></x-outer>' +
+  '<x-dialog><a href="/d">forwarded</a><p>through two slots</p></x-dialog>' +
+  '<x-nest><span slot="a">A</span><span slot="b"><a href="/hidden">in a fallback slot</a></span></x-nest>' +
+  '<div><menuitem><a href="/m">m</a></menuitem><a href="/n">n</a></div><ul>' +
+  Array.from({length: 5}, (_, i) => '<li><a href="/p' + i + '">' + i + '</a></li>').join('') + '</ul></main>';
+// Every element, in every open tree, gets a stamp of its own, so the test
+// knows each one by more than its name.
+let stamp = 0;
+(function mark(tree) {
+  for (const el of tree.querySelectorAll('*')) {
+    el.setAttribute('data-u', 's' + (++stamp));
+    if (el.shadowRoot) mark(el.shadowRoot);
+  }
+})(document);
+</script>
+</body></html>

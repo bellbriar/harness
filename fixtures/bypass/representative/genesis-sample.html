@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<!-- bypass-fixture: representative, not captured. Genesis Sample child theme (Genesis 3.x, skip-links on). Expected bb-skip-link: pass. G1: 'Skip to main content' before the header reaches <main id=genesis-content>; a first skip link to the nav itself must not count as broken. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Genesis Sample</title>
+</head>
+<body class="home blog wp-custom-logo header-full-width content-sidebar">
+<div class="site-container" id="top">
+<ul class="genesis-skip-link">
+<li><a href="#genesis-nav-primary" class="screen-reader-shortcut"> Skip to primary navigation</a></li>
+<li><a href="#genesis-content" class="screen-reader-shortcut"> Skip to main content</a></li>
+<li><a href="#genesis-sidebar-primary" class="screen-reader-shortcut"> Skip to primary sidebar</a></li>
+<li><a href="#genesis-footer-widgets" class="screen-reader-shortcut"> Skip to footer</a></li>
+</ul>
+<header class="site-header"><div class="wrap">
+<div class="title-area"><a href="https://example.com/" class="custom-logo-link" rel="home"><img src="logo.png" class="custom-logo" alt="Genesis Sample" width="350" height="80"></a><p class="site-title">Genesis Sample</p><p class="site-description">Just another WordPress site</p></div>
+<nav class="nav-primary" aria-label="Main" id="genesis-nav-primary"><div class="wrap"><ul id="menu-header-menu" class="menu genesis-nav-menu menu-primary js-superfish">
+<li class="menu-item"><a href="https://example.com/about/"><span>About</span></a></li>
+<li class="menu-item menu-item-has-children"><a href="https://example.com/services/"><span>Services</span></a><ul class="sub-menu"><li class="menu-item"><a href="https://example.com/services/design/"><span>Design</span></a></li><li class="menu-item"><a href="https://example.com/services/build/"><span>Build</span></a></li></ul></li>
+<li class="menu-item"><a href="https://example.com/blog/"><span>Blog</span></a></li>
+<li class="menu-item"><a href="https://example.com/contact/"><span>Contact</span></a></li>
+</ul></div></nav>
+</div></header>
+<div class="site-inner"><div class="content-sidebar-wrap">
+<main class="content" id="genesis-content">
+<article class="post-1 post type-post entry" aria-label="Hello world!"><header class="entry-header"><h2 class="entry-title"><a class="entry-title-link" rel="bookmark" href="https://example.com/hello-world/">Hello world!</a></h2><p class="entry-meta"><time class="entry-time">October 1, 2026</time></p></header>
+<div class="entry-content"><p>Welcome to WordPress. This is your first post. Edit or delete it, then start writing!</p></div></article>
+</main>
+<aside class="sidebar sidebar-primary widget-area" role="complementary" aria-label="Primary Sidebar" id="genesis-sidebar-primary"><h2 class="genesis-sidebar-title screen-reader-text">Primary Sidebar</h2>
+<section class="widget widget_search"><div class="widget-wrap"><form class="search-form" method="get" action="https://example.com/" role="search"><label class="search-form-label screen-reader-text" for="searchform-1">Search this website</label><input class="search-form-input" type="search" name="s" id="searchform-1" placeholder="Search this website"><input class="search-form-submit" type="submit" value="Search"></form></div></section>
+</aside>
+</div></div>
+<div class="footer-widgets" id="genesis-footer-widgets"><h2 class="genesis-sidebar-title screen-reader-text">Footer</h2><div class="wrap"><section class="widget widget_text"><div class="widget-wrap"><h3 class="widgettitle widget-title">Our Mission</h3><div class="textwidget"><p>We build things.</p></div></div></section></div></div>
+<footer class="site-footer"><div class="wrap"><p>Copyright 2026 &middot; <a href="https://www.studiopress.com/">Genesis Framework</a> &middot; <a href="https://wordpress.org/">WordPress</a> &middot; <a rel="nofollow" href="https://example.com/wp-login.php">Log in</a></p></div></footer>
+</div>
+</body>
+</html>

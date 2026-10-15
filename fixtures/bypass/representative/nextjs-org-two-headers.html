@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<!-- bypass-fixture: representative, not captured. A Next.js marketing site that ships two site headers (structure modeled on nextjs.org saved 2026-10-06; text and links replaced). Expected bb-skip-link: review. The skip link is in the second header, after the first header's links and controls; a stylesheet decides which header shows, so markup cannot establish a skip link at the start of the page: review, pled. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Example Framework</title>
+</head>
+<body>
+<header class="sticky top-0 z-40 flex h-16 justify-center">
+<a href="https://example.com/oss" aria-label="Example open source">OSS</a><a href="/" aria-label="Example home">Example</a>
+<nav aria-label="Primary navigation" class="relative z-10 flex"><a href="/docs">Docs</a><a href="/learn">Learn</a><a href="/showcase">Showcase</a><a href="/blog">Blog</a><a href="/templates">Templates</a></nav>
+<button type="button" class="h-8 cursor-pointer">Search</button><button type="button" aria-label="Open menu" class="relative flex size-8">Menu</button>
+</header>
+<header class="bg-background-100 flex flex-col">
+<a href="#geist-skip-nav" class="fixed -m-px overflow-hidden whitespace-nowrap opacity-0 focus:opacity-100">Skip to content</a>
+<nav class="cV3TuW_nav" aria-label="Legacy navigation"><a href="/docs">Docs</a><a href="/learn">Learn</a><a href="/showcase">Showcase</a></nav>
+</header>
+<div id="geist-skip-nav"></div>
+<main class="flex flex-col"><h1>The framework for the web</h1><p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p></main>
+<footer class="bg-background-200"><p>Copyright Example</p></footer>
+</body>
+</html>

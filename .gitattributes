@@ -1,0 +1,6 @@
+# Every file as committed, byte for byte, on every system: no line-ending
+# conversion. Files are compared by their bytes (LICENSE's SHA-256, the
+# example's fixture hashes, axe-core's), and two web-platform-tests data
+# files hold CR on purpose. Without this, Git on Windows (core.autocrlf, as
+# GitHub's Windows runners set it) checks text files out with CRLF.
+* -text

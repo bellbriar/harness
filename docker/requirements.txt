@@ -1,0 +1,16 @@
+# The versions the image installs (docker/Dockerfile reads this file as pip
+# constraints): the harness's dependencies and Playwright's, pinned so a
+# rebuild of a release installs what was tested (R4A-4). playwright must be
+# the version of the Dockerfile's base image, whose browsers it holds
+# (tests/test_part_r4.py checks). Dependabot proposes updates; the CI's
+# image job tests each.
+beautifulsoup4==4.15.0
+cffi==2.1.1
+cryptography==50.0.1
+greenlet==3.5.6
+justhtml==3.13.0
+playwright==1.63.0
+pycparser==3.0
+pyee==13.0.1
+soupsieve==2.9.2
+typing_extensions==4.16.0

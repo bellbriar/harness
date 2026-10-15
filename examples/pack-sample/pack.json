@@ -1,0 +1,8 @@
+{
+  "name": "wcag-sample",
+  "version": "0.0.3",
+  "rulebook_min": "0.1.0",
+  "files": {
+    "SKILL.md": "57ad816812a1685049d0127a4f8ab79a5e5f41c2c552ccfa9a17439d6cc60b9f"
+  }
+}

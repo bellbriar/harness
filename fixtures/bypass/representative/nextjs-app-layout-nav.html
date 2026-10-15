@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<!-- bypass-fixture: representative, not captured. Next.js App Router app with a layout header/nav, no skip link (typical AI-built app). Expected bb-skip-link: review. Header nav repeats on every route; <main> after it (ARIA11) can satisfy 2.4.1; no skip link -> pled -> moderate review. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Acme Dashboard</title>
+</head>
+<body class="min-h-screen bg-background antialiased">
+<header class="sticky top-0 z-50 w-full border-b"><div class="container flex h-14 items-center"><a class="mr-6 flex items-center space-x-2" href="/"><span class="font-bold">Acme</span></a>
+<nav class="flex items-center gap-6 text-sm"><a class="transition-colors hover:text-foreground/80" href="/dashboard">Dashboard</a><a class="transition-colors hover:text-foreground/80" href="/customers">Customers</a><a class="transition-colors hover:text-foreground/80" href="/invoices">Invoices</a><a class="transition-colors hover:text-foreground/80" href="/settings">Settings</a></nav>
+<button class="ml-auto inline-flex h-9 w-9 items-center justify-center rounded-md" aria-label="Toggle theme"><svg aria-hidden="true" viewBox="0 0 24 24" class="h-4 w-4"><circle cx="12" cy="12" r="4"/></svg></button></div></header>
+<main class="container py-6"><h1 class="text-3xl font-bold tracking-tight">Dashboard</h1><p class="text-muted-foreground">Overview of your account.</p></main>
+<footer class="border-t py-6"><p class="text-sm">Built by Acme.</p></footer>
+<script src="/_next/static/chunks/main-app.js" async=""></script>
+</body>
+</html>

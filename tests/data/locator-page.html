@@ -1,0 +1,27 @@
+<!doctype html>
+<!-- Locators (A4) resolved in Chromium: tests/test_run_shape.py. Every
+     element here gets a locator, and Chromium, scripts off, must find that
+     element with it and nothing else. -->
+<html lang="en"><head><meta charset="utf-8"><title>Locators</title>
+<style>p { margin: 0 }</style></head><body>
+<header><nav><ul><li><a href="/">Home</a></li><li><a href="/a">A</a></li><li><a id="x" href="/b">B</a></li></ul></nav></header>
+<main id="main"><h1>Locators</h1><p>One<p>Two<div id="X"><span>a</span><span>b</span></div>
+<table><caption>T</caption><tr><th>h<th>i<tr><td>1<td>2</table>
+<dl><dt>term<dd>one<dd>two</dl>
+<p class="MsoNormal">Word<o:p></o:p><st1:place>here</st1:place></p>
+<form><label for="q">Query</label><input id="q"><select><option>a<option selected>b</select><button>Go</button></form>
+<svg width="10" height="10"><foreignObject><p>in svg</p></foreignObject><clipPath id="cp"><circle r="1"></circle></clipPath><circle r="2"></circle></svg>
+<template><p>inert</p></template>
+<my-card><template shadowrootmode="open"><style>p{}</style><div><slot name="t"></slot><slot></slot></div><button>Go</button><div id="x">inner</div></template><h2 slot="t">Title</h2><p>Body</p><span>shown in the default slot</span></my-card>
+<x-a><template shadowrootmode="open"><slot name="none">fallback <b>bold</b></slot><p>shadow</p></template><i>unslotted</i></x-a>
+<x-b><template shadowrootmode="open"><slot><em>fallback</em></slot></template><i>slotted</i><i>two</i></x-b>
+<x-h id="h"><template shadowrootmode="open"><div><span>1</span><div>inner</div></div><div>top</div></template></x-h>
+<x-outer><template shadowrootmode="open"><p>outer</p><x-inner><template shadowrootmode="open"><a href="/deep">deep</a><a href="/deep2">d2</a></template></x-inner></template></x-outer>
+<x-closed><template shadowrootmode="closed"><a href="/c">closed</a></template></x-closed>
+<x-dialog><template shadowrootmode="open"><x-frame><template shadowrootmode="open"><div><slot></slot></div></template><slot></slot></x-frame><button>Close</button></template><a href="/d">forwarded</a><p>through two slots</p></x-dialog>
+<x-nest><template shadowrootmode="open"><slot name="a"><slot name="b"></slot></slot><slot name="b"></slot><p>after</p></template><span slot="a">A</span><span slot="b"><a href="/hidden">in a fallback slot</a></span></x-nest>
+<div><menuitem><a href="/m">m</a></menuitem><a href="/n">n</a></div>
+<div id="dup">1</div><div id="dup">2</div><div id="Case">3</div><div id="case">4</div>
+<div id="1st">digit</div><div id="a.b c">odd</div><x-y.z>dot</x-y.z>
+<ol><li>1</li><li>2</li><li><ul><li>a</li><li><em>b</em></li></ul></li></ol>
+</main><footer><p>f</p><p><small>g</small></p></footer></body></html>

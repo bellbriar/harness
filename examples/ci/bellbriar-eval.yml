@@ -1,0 +1,69 @@
+# TEMPLATE — copy into a SITE's repository as .github/workflows/bellbriar-eval.yml.
+# (This file is not run by the harness repository itself.)
+#
+# CI gate: fail the build on Tier-1 (complaint-boilerplate) fails in the
+# built site. Rendered, so a client-rendered build (Vite, Next export, Astro
+# islands) is evaluated after its scripts build each page, and contrast and
+# the other browser checks run. A green run is a floor, never conformance.
+name: bellbriar-eval
+on: [push, pull_request]
+
+permissions:
+  contents: read
+
+# Each action is pinned to a commit, the only reference that cannot be
+# moved; the comment names its release. Dependabot (package-ecosystem:
+# github-actions) proposes updates.
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # Lint findings on the pull request's lines (GitHub code scanning,
+      # before the lint gate below, so they upload when it fails;
+      # add `security-events: write` to the permissions above, and on a
+      # private repository `actions: read` too and GitHub Code Security,
+      # without which the upload fails, so it may not stop the gates):
+      # - run: pipx run --spec "bellbriar-harness==1.*" bellbriar-lint src/ --format sarif --fail-on never > bellbriar-lint.sarif
+      # - uses: github/codeql-action/upload-sarif@24c54180a607b1449ed407dd24f251e4e9147c8d # v4.38.3
+      #   continue-on-error: true
+      #   with:
+      #     sarif_file: bellbriar-lint.sarif
+      #     category: bellbriar-lint
+      # Lint the source for patterns that cause failures (no browser needed;
+      # pipx comes with GitHub's runners).
+      - run: pipx run --spec "bellbriar-harness==1.*" bellbriar-lint src/ --fail-on error
+      # Replace with your own build; the gate reads the built site.
+      - run: npm ci && npm run build
+      # The gate fails on WCAG failures (and probable ones). Add --strict to
+      # also fail on patterns pled in complaints that are not WCAG failures
+      # on their own, such as redundant links. For runs that must not
+      # change, pin the Action to a commit and give version: the image's
+      # digest (sha256:…), as the other actions here are pinned.
+      - uses: bellbriar/eval-action@v1
+        with:
+          args: dist --render --fail-on tier1 --json bellbriar-report.json --html bellbriar-report.html
+      # A site with failures already: commit a report made once with
+      # --fail-on never, and add --baseline baseline.json to the args above,
+      # so the gate fails only on findings that report does not list. The
+      # gate trusts that file, so have changes to it reviewed (a CODEOWNERS
+      # line for it, with code-owner review required).
+      # Or gate a deployed preview behind HTTP Basic auth. The password comes
+      # from a secret, never the command line, and goes only to the preview's
+      # own origin; recorded URLs carry no credentials or query values.
+      # - uses: bellbriar/eval-action@v1
+      #   env:
+      #     BELLBRIAR_HTTP_PASSWORD: ${{ secrets.STAGING_PASSWORD }}
+      #   with:
+      #     args: --url https://staging.example.com/ --http-user ci --fail-on tier1 --json bellbriar-report.json --html bellbriar-report.html
+      #     pass-env: BELLBRIAR_HTTP_PASSWORD
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: bellbriar-report
+          path: |
+            bellbriar-report.json
+            bellbriar-report.html

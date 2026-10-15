@@ -1,0 +1,91 @@
+[build-system]
+# 77.0.3: the first setuptools that writes PEP 639 license metadata
+# (`license` as an SPDX expression, `license-files`).
+requires = ["setuptools>=77.0.3"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bellbriar-harness"
+version = "1.0.0rc1"
+description = "Open accessibility eval harness for agent-generated web output (WCAG 2.1 AA baseline, litigation-weighted)"
+readme = "README.md"
+requires-python = ">=3.11"
+# Bellbriar's own code is Apache-2.0; the vendored axe-core (axe.min.js) is
+# MPL-2.0, and the code it bundles is MIT and ISC (its LICENSE files). The
+# source distribution also carries web-platform-tests data for the tests,
+# under the 3-Clause BSD License, first written in html5lib-tests under the
+# MIT License (R4A-15, R4D-6). One expression covers both files, so the
+# wheel's names a license and files for data only the sdist holds.
+license = "Apache-2.0 AND MPL-2.0 AND MIT AND ISC AND BSD-3-Clause"
+license-files = ["LICENSE", "NOTICE",
+                 "src/bellbriar_harness/vendor/axe-core/LICENSE",
+                 "src/bellbriar_harness/vendor/axe-core/LICENSE-3RD-PARTY.txt",
+                 "tests/data/wpt-tree-construction/LICENSE.md",
+                 "tests/data/wpt-tree-construction/LICENSE-html5lib-tests.txt"]
+authors = [{name = "Bellbriar, Inc."}]
+keywords = ["accessibility", "a11y", "wcag", "ada", "section-508", "audit",
+            "ci", "axe-core", "evidence"]
+classifiers = [
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Software Development :: Quality Assurance",
+    "Topic :: Software Development :: Testing",
+]
+# cryptography is required, not optional: bundle signing and
+# `bellbriar-evidence verify` (the README's thirty-second check) need Ed25519.
+# From 49.0 it publishes no wheels for Intel Macs, where pip would try to
+# build it from source and fail; 48.x has universal2 wheels for every
+# supported Python, so Intel Macs stay below 49.
+# justhtml parses a page's own HTML as a browser does (the WHATWG tree
+# construction, tested against WPT); the parse engine it exposes is used
+# directly (bellbriar_harness.html5), so a new major version needs a check.
+# soupsieve matches a page's own CSS selectors (what its stylesheets hide,
+# which selectors Chromium keeps: style.py), so it decides verdicts too. The
+# suite, the field sweeps and the image ran 2.9.2. 2.10 reworked matching
+# (sibling caching, attribute values), and 3.0 refuses complex selectors
+# inside :has() by default, which Chromium applies: with it a link whose
+# text such a rule hides passed (R7-1). Each needs the suite, a sweep and
+# Chromium's measurements before the range widens (the ship list's L133).
+dependencies = [
+    "beautifulsoup4>=4.12",
+    "cryptography>=42; sys_platform != 'darwin' or platform_machine != 'x86_64'",
+    "cryptography>=42,<49; sys_platform == 'darwin' and platform_machine == 'x86_64'",
+    "justhtml>=3.13,<4",
+    "soupsieve>=2.9.2,<2.10",
+]
+
+[project.optional-dependencies]
+# After installing this extra, fetch the browser binary:
+#   python -m playwright install chromium
+# 1.52 brings Chromium 136, which fires no DOM mutation events (they would
+# run a page's code inside the capture; the capture refuses a browser that
+# fires them) and has everything the capture reads with.
+browser = ["playwright>=1.52"]
+# PyYAML: the tests read the workflows, the Action and Dependabot's file.
+dev = ["pytest>=8", "pyyaml>=6"]
+
+[project.urls]
+# The repository the release is published from (H2: confirm the names).
+Homepage = "https://github.com/bellbriar/harness"
+Documentation = "https://github.com/bellbriar/harness/tree/main/docs"
+Issues = "https://github.com/bellbriar/harness/issues"
+Security = "https://github.com/bellbriar/harness/security/policy"
+
+[project.scripts]
+bellbriar-eval = "bellbriar_harness.cli:main"
+bellbriar-evidence = "bellbriar_harness.evidence_cli:main"
+bellbriar-lint = "bellbriar_harness.lint:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+# axe-core, vendored unmodified with its licenses (vendor/axe-core/README.md).
+bellbriar_harness = ["rulebook.json", "vendor/axe-core/*"]

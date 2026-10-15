@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<!-- bypass-fixture: representative, not captured. Drupal 10 Olivero front page. Expected bb-skip-link: pass. G1: 'Skip to main content' reaches <a id=main-content tabindex=-1> after the header (before the breadcrumb and <main role=main>); target not inside <main> is fine. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Welcome | Drush Site-Install</title>
+</head>
+<body class="path-frontpage">
+<a href="#main-content" class="visually-hidden focusable skip-link">Skip to main content</a>
+<div class="dialog-off-canvas-main-canvas" data-off-canvas-main-canvas>
+<div id="page-wrapper" class="page-wrapper"><div id="page">
+<header id="header" class="site-header" data-drupal-selector="site-header" role="banner"><div class="site-header__fixable" data-drupal-selector="site-header-fixable"><div class="site-header__initial"><button class="sticky-header-toggle" data-drupal-selector="sticky-header-toggle" role="switch" aria-controls="site-header__inner" aria-label="Sticky header" aria-checked="false"><span class="sticky-header-toggle__icon"><span></span><span></span><span></span></span></button></div>
+<div id="site-header__inner" class="site-header__inner" data-drupal-selector="site-header-inner"><div class="container site-header__inner__container">
+<div id="block-olivero-site-branding" class="site-branding--bg-white site-branding"><div class="site-branding__inner"><a href="/" rel="home" class="site-branding__logo"><img src="/core/themes/olivero/logo.svg" alt="Home"></a><div class="site-branding__text"><div class="site-branding__name">Drush Site-Install</div></div><!-- site-name link dropped: it repeats the logo link and trips bb-redundant-links --></div></div>
+<div class="header-nav-overlay" data-drupal-selector="header-nav-overlay"></div>
+<div class="mobile-buttons" data-drupal-selector="mobile-buttons"><button class="mobile-nav-button" data-drupal-selector="mobile-nav-button" aria-label="Main Menu" aria-controls="header-nav" aria-expanded="false"><span class="mobile-nav-button__label">Menu</span><span class="mobile-nav-button__icon"></span></button></div>
+<div id="header-nav" class="header-nav" data-drupal-selector="header-nav">
+<div class="search-block-form block block-search-narrow" data-drupal-selector="search-block-form" id="block-olivero-search-form-narrow" role="search"><div class="content"><form action="/search/node" method="get" id="search-block-form" accept-charset="UTF-8" class="search-form search-block-form"><div class="js-form-item form-item"><label for="edit-keys" class="form-item__label visually-hidden">Search</label><input title="Enter the terms you wish to search for." placeholder="Search by keyword or phrase." type="search" id="edit-keys" name="keys" value="" size="15" maxlength="128" class="form-search form-element"></div><div class="form-actions js-form-wrapper form-wrapper" id="edit-actions"><button class="button--primary search-form__submit button js-form-submit form-submit" type="submit" id="edit-submit" value="Search"><span class="icon--search"></span><span class="visually-hidden">Search</span></button></div></form></div></div>
+<nav id="block-olivero-main-menu" class="primary-nav block block-menu navigation menu--main" aria-labelledby="block-olivero-main-menu-menu" role="navigation"><h2 class="visually-hidden block__title" id="block-olivero-main-menu-menu">Main navigation</h2><ul class="menu primary-nav__menu primary-nav__menu--level-1" data-drupal-selector="primary-nav-menu--level-1"><li class="primary-nav__menu-item primary-nav__menu-item--link primary-nav__menu-item--level-1"><a href="/" class="primary-nav__menu-link primary-nav__menu-link--link primary-nav__menu-link--level-1 is-active" data-drupal-link-system-path="&lt;front&gt;"><span class="primary-nav__menu-link-inner primary-nav__menu-link-inner--level-1">Home</span></a></li><li class="primary-nav__menu-item primary-nav__menu-item--link primary-nav__menu-item--level-1"><a href="/about" class="primary-nav__menu-link primary-nav__menu-link--link primary-nav__menu-link--level-1"><span class="primary-nav__menu-link-inner primary-nav__menu-link-inner--level-1">About</span></a></li></ul></nav>
+</div></div></div></div></header>
+<div id="main-wrapper" class="layout-main-wrapper layout-container"><div id="main" class="layout-main"><div class="main-content">
+<a id="main-content" tabindex="-1"></a>
+<div class="main-content__container container">
+<div class="region region--breadcrumb grid-full layout--pass--content-medium"><div id="block-olivero-breadcrumbs" class="block block-system block-system-breadcrumb-block"><div class="block__content"><nav class="breadcrumb" role="navigation" aria-labelledby="system-breadcrumb"><h2 id="system-breadcrumb" class="visually-hidden">Breadcrumb</h2><div class="breadcrumb__content"><ol class="breadcrumb__list"><li class="breadcrumb__item"><a href="/" class="breadcrumb__link">Home</a></li></ol></div></nav></div></div></div>
+<main role="main"><div class="region region--content-above grid-full layout--pass--content-medium"><div id="block-olivero-page-title" class="block block-core block-page-title-block"><h1 class="title page-title">Welcome!</h1></div></div>
+<div class="region region--content grid-full layout--pass--content-medium" id="content"><div data-drupal-messages-fallback class="hidden messages-list"></div><div id="block-olivero-content" class="block block-system block-system-main-block"><div class="block__content"><p>You haven&rsquo;t created any frontpage content yet.</p></div></div></div></main>
+</div></div>
+<div class="social-bar"><div class="social-bar__inner fixable"><div class="rotate"><div id="block-olivero-syndicate" role="complementary" class="block block-node block-node-syndicate-block"><div class="block__content"><a href="/rss.xml" class="feed-icon">RSS feed</a></div></div></div></div></div>
+</div></div>
+<footer class="site-footer"><div class="site-footer__inner container"><div class="region region--footer-bottom grid-full layout--pass--content-medium"><div id="block-olivero-powered" class="block block-system block-system-powered-by-block"><span>Powered by <a href="https://www.drupal.org">Drupal</a></span></div></div></div></footer>
+<div class="overlay" data-drupal-selector="overlay"></div>
+</div></div></div>
+</body>
+</html>

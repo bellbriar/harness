@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1"></head>
+<body>
+<!-- FIXTURE CONTRACT: every pattern here is a real failure that used to pass
+     the static layer as clean. tests/test_rule_precision.py asserts each
+     one now fails. Add a pattern here whenever a miss is found in the field. -->
+<a href="#main">Skip to main content</a>
+<nav aria-label="Primary">
+  <!-- A. Material-Icons ligature: aria-hidden makes the real name empty -->
+  <button type="button"><i class="material-icons" aria-hidden="true">menu</i></button>
+  <!-- F. an HTML comment is not a name -->
+  <button type="button"><!-- close --><svg aria-hidden="true"></svg></button>
+  <a href="/doctors">Doctors</a>
+</nav>
+<main id="main">
+  <!-- B. no <title> in head; an SVG <title> in the body must not count -->
+  <svg role="img"><title>Decorative wave</title></svg>
+  <h1>Welcome</h1>
+  <!-- G. heading whose only text is hidden from AT -->
+  <h2><span aria-hidden="true">Our services</span></h2>
+  <!-- C. the common redundant-links shape: same href, nested, not siblings -->
+  <div class="card">
+    <a href="/dr/kim"><img src="kim.jpg" alt="Dr. Kim"></a>
+    <h2><a href="/dr/kim">Dr. Kim</a></h2>
+  </div>
+  <!-- D. link whose only content is aria-hidden: real name empty -->
+  <a href="/more"><span aria-hidden="true">Read more</span></a>
+  <!-- E. input button with no name -->
+  <input type="button">
+  <!-- H. a link whose only text is hidden by an inline style: no name -->
+  <a href="/cart"><span style="display:none">Cart</span><svg aria-hidden="true"></svg></a>
+  <!-- I. an editing host inside aria-hidden takes focus -->
+  <div aria-hidden="true"><div contenteditable="true">Notes</div></div>
+  <!-- J. a scripted link with no name: role=link, not <a href> -->
+  <span role="link" tabindex="0" data-href="/offers"></span>
+</main>
+<footer><a href="/accessibility">Accessibility</a></footer>
+</body></html>

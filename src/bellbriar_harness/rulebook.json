@@ -1,0 +1,1559 @@
+{
+  "rulebook_version": "1.0.0",
+  "conformance_target": "WCAG 2.1 AA (WCAG 2.2 A/AA delta graded separately)",
+  "tier_weights": {
+    "1": 5,
+    "2": 2,
+    "3": 1,
+    "0": 0
+  },
+  "tier_weights_note": "Provisional; recalibrate when the complaint-tagging corpus lands. Tier 0 = policy rules (settlement-shaped or exclusion residual duties), excluded from the weighted score. Rules that never fail (verdict_basis policy, best-practice or review) also weigh 0, whatever their tier.",
+  "act_note": "act_rules lists the W3C ACT rules (Accessibility Conformance Testing) a rule tests, each by id, title and W3C status, as w3c/wcag's guidelines/act-mapping.json publishes them: approved by the Accessibility Guidelines Working Group; proposed, written by the ACT Rules Community Group and published by W3C but not approved; or deprecated. A rule cites an ACT rule that tests what it tests and maps a criterion it cites (required for conformance, for a rule that can fail); where the two differ, the rule's notes say how. Many checks have no ACT rule. tests/test_citations.py checks every criterion, level, Understanding link, ACT citation and failure technique against tests/data/w3c-citations.json, a snapshot tools/w3c_citations.py makes from W3C's repositories.",
+  "citations_checked": {
+    "on": "2026-10-11",
+    "wcag": "w3c/wcag 23bad5904949 (2026-10-04)",
+    "act_rules": "w3c/wcag act-mapping.json; titles and statuses against the rule pages of w3c/wcag-act-rules f39b7f81cee6 (2026-10-08)"
+  },
+  "verdict_basis_note": "What a finding from each implemented static rule means. sc: a FAIL is a failure of each success criterion the rule cites, one W3C names: a W3C failure technique (w3c_failures), or an ACT rule approved by W3C's Accessibility Guidelines Working Group that requires the criterion for conformance. heuristic: a FAIL is a probable failure of the criteria the rule cites; markup alone cannot rule out a conformant page, or W3C does not itself name the failure. A rule that can FAIL cites only criteria at levels A and AA, the ones its FAIL is named for. policy: stricter than this rulebook's target, WCAG 2.1 AA (a settlement-shaped duty, or a WCAG 2.2 criterion); never FAILs, its findings are reported for review. best-practice: a pattern WCAG does not require on its own (W3C's ACT rules do not make it a conformance requirement, or W3C names no failure for it; each rule's notes say which); never FAILs, its findings are reported for review. review: never FAILs, it only asks for review. Only FAILs count against the gate, 'Tier-1 clean' and the score, and rules that never FAIL weigh 0 in the score. Only sc FAILs may be described as success-criterion violations.",
+  "rules": [
+    {
+      "id": "bb-img-alt",
+      "name": "Images have text alternatives",
+      "sc": [
+        "1.1.1"
+      ],
+      "level": "A",
+      "tier": 1,
+      "layer": "static-dom",
+      "status": "implemented",
+      "verdict_basis": "sc",
+      "pled_pattern": true,
+      "act_rules": [
+        {
+          "id": "23a2a8",
+          "title": "Image has non-empty accessible name",
+          "status": "approved"
+        },
+        {
+          "id": "59796f",
+          "title": "Image button has non-empty accessible name",
+          "status": "approved"
+        }
+      ],
+      "understanding": "https://www.w3.org/WAI/WCAG21/Understanding/non-text-content.html"
+    },
+    {
+      "id": "bb-svg-name",
+      "name": "svg[role=img] has accessible name",
+      "sc": [
+        "1.1.1"
+      ],
+      "level": "A",
+      "tier": 1,
+      "layer": "static-dom",
+      "status": "implemented",
+      "verdict_basis": "sc",
+      "pled_pattern": true,
+      "act_rules": [
+        {
+          "id": "7d6734",
+          "title": "SVG element with explicit role has non-empty accessible name",
+          "status": "approved"
+        }
+      ],
+      "understanding": "https://www.w3.org/WAI/WCAG21/Understanding/non-text-content.html",
+      "notes": "Checks svg elements whose role is img or ARIA 1.3's synonym image (the first role token a browser knows)."
+    },
+    {
+      "id": "bb-link-name",
+      "name": "Links have accessible names (no empty links)",
+      "sc": [
+        "2.4.4",
+        "4.1.2"
+      ],
+      "level": "A",
+      "tier": 1,
+      "layer": "static-dom",
+      "status": "implemented",
+      "verdict_basis": "sc",
+      "pled_pattern": true,
+      "act_rules": [
+        {
+          "id": "c487ae",
+          "title": "Link has non-empty accessible name",
+          "status": "approved"
+        }
+      ],
+      "understanding": "https://www.w3.org/WAI/WCAG21/Understanding/link-purpose-in-context.html",
+      "notes": "Checks what a browser exposes as a link: <a href> (a drawing's <a> with href or xlink:href too, not MathML's) and anything with role=link (ACT c487ae). Of what a drawing never renders, a link held by a <defs>, a clip path, a mask, a pattern or a marker (or by a <g> or a <marker> whose display is none) is in Chromium 141's accessibility tree, though it takes no focus, and is checked; one held by any other element that renders none of what it holds (a <symbol>, a gradient, a filter, a shape, a <use>, a <desc>), an <a> in an <a>, a text part outside a <text>, and an element of a <switch> after the one it renders are in none and are not checked (each measured). What a <use> copies into the drawing is not checked. A drawing's link is named, after aria-labelledby and aria-label, by its <title> child, then its xlink:title, then what it holds; a <title> or xlink:title of white space alone names it nothing, and nothing after it is read. A link given role=button is a button, checked by bb-button-name, so one unnamed control is one finding (axe-core reports it under link-name); role=none or presentation on a link is ignored, as browsers ignore it on focusable elements and on elements with global ARIA attributes. A name from content reads what an element inside the link holds, whatever its role, as the accessible-name computation does. Chromium 141 reads, of an element whose role holds other content (a <figure>, an <article>, a <nav>, a <header>, a <table> of data, role=group, img and the like), of a <math> and of an <object>, only its own name: its author's (aria-labelledby, aria-label, title) or, for some, its markup's (a <fieldset>'s <legend> or a <table>'s <caption> where shown, a <table>'s summary where it has no <caption>, an <output>'s <label>), each measured. Nor does it read the title of a <span>, a <div>, an <i>, a <p>, an element HTML does not have (an <icon>) and the like there (it reads a heading's, an <abbr>'s, an image's, a custom element's but one whose role is none or presentation), unless the element has a tabindex, is a link, or has a draggable attribute (a <span>, a <div>, an <i>, an <icon> and the like; not a <p>, an <em>, a <code>). A link named only by what such an element holds, or by such a title, is a review that says so: in Chrome and Edge it has no accessible name. It is minor, or moderate where axe-core 4.12 does not read that name either (MathML, text inside an <object>, a <canvas> or a drawing, the title of a <slot> or of an element that holds white space or whose role is none or presentation), and its message gives the reason it found. A <table> is one of data by its markup alone (a <caption>, a <th>, a cell's scope, twenty rows and the like), not by its cells' borders or colors, which the page's styles decide (a border or a bgcolor attribute too). An <svg> in the link gives only its own name too (aria-labelledby, aria-label, its <title>, its title attribute), here as in Chromium (measured), unless browsers honor a role=none or presentation on it, or its role is one named from its content (link, button, heading and the like): then what it holds is read."
+    },
+    {
+      "id": "bb-button-name",
+      "name": "Buttons have accessible names",
+      "sc": [
+        "4.1.2"
+      ],
+      "level": "A",
+      "tier": 1,
+      "layer": "static-dom",
+      "status": "implemented",
+      "verdict_basis": "sc",
+      "pled_pattern": true,
+      "act_rules": [
+        {
+          "id": "97a4e1",
+          "title": "Button has non-empty accessible name",
+          "status": "approved"
+        }
+      ],
+      "understanding": "https://www.w3.org/WAI/WCAG21/Understanding/name-role-value.html",
+      "notes": "Checks what a browser exposes as a button: <button>, button-type inputs and anything with role=button (ACT 97a4e1). A button given role=link is bb-link-name's; a native button given another widget role (tab, menuitem) is still checked here. Image buttons are bb-img-alt's. A name from content reads what an element inside the button holds, whatever its role, as the accessible-name computation does. Chromium 141 reads, of an element whose role holds other content (a <figure>, an <article>, a <table> of data, role=group, img and the like), of a <math> and of an <object>, only its own name: its author's (aria-labelledby, aria-label, title) or, for some, its markup's (a <fieldset>'s <legend> or a <table>'s <caption> where shown, a <table>'s summary where it has no <caption>, an <output>'s <label>), each measured. Nor does it read the title of a <span>, a <div>, an <i>, a <p>, an element HTML does not have (an <icon>) and the like there (it reads a heading's, an <abbr>'s, an image's, a custom element's but one whose role is none or presentation), unless the element has a tabindex, is a link, or has a draggable attribute (a <span>, a <div>, an <i>, an <icon> and the like; not a <p>, an <em>, a <code>). It reads a <label>'s content naming the button so too, and the button's <label> (one whose for names it, or one that holds it as its first labelable element) takes the place of its content, value and title there, an empty or hidden one too, or one that holds the button alone; not one in a <template>, nor one inside a closed <details> or other content Chromium skips, which it leaves out. A submit or reset button's default name (Submit, Reset) names it only where it has no value attribute: an empty value names it nothing, and Chromium reads no title after it. A button named only by what such an element holds or by such a title, by a title after an empty value, or whose <label> names it nothing there, is a review that says so: in Chrome and Edge it has no accessible name. It is minor (a button whose <label for> is hidden, invisible or inside content Chromium skips too, which axe-core passes), or moderate where axe-core 4.12 does not read that name either (MathML, text inside an <object>, a <canvas> or a drawing, the title of a <slot> or of an element that holds white space or whose role is none or presentation), and its message gives the reason it found. An <svg> in the button gives only its own name too (aria-labelledby, aria-label, its <title>, its title attribute), here as in Chromium (measured), unless browsers honor a role=none or presentation on it, or its role is one named from its content (link, button, heading and the like): then what it holds is read."
+    },
+    {
+      "id": "bb-redundant-links",
+      "name": "No adjacent duplicate links",
+      "sc": [
+        "2.4.4"
+      ],
+      "level": "A",
+      "tier": 1,
+      "layer": "static-dom",
+      "status": "implemented",
+      "verdict_basis": "policy",
+      "pled_pattern": true,
+      "act_rules": [],
+      "understanding": "https://www.w3.org/WAI/WCAG21/Understanding/link-purpose-in-context.html",
+      "notes": "Stricter than bare SC; kept because it is verbatim complaint boilerplate. Never FAILs: reported for review as pled in complaints, not a WCAG failure on its own (a product card with an image link and a title link to the same page conforms). Fix = technique H2 (https://www.w3.org/WAI/WCAG21/Techniques/html/H2). --strict gates the moderate-impact H2 shape."
+    },
+    {
+      "id": "bb-control-label",
+      "name": "Form fields are labeled",
+      "sc": [
+        "4.1.2"
+      ],
+      "level": "A",
+      "tier": 1,
+      "layer": "static-dom",
+      "status": "implemented",
+      "verdict_basis": "sc",
+      "pled_pattern": true,
+      "act_rules": [
+        {
+          "id": "e086e5",
+          "title": "Form field has non-empty accessible name",
+          "status": "approved"
+        }
+      ],
+      "understanding": "https://www.w3.org/WAI/WCAG21/Understanding/name-role-value.html",
+      "notes": "Fields chosen by role, as ACT rule e086e5 chooses them (P2-09): native fields (<input> other than button and hidden types, <select>, <textarea>) and any element whose role is a form field's (checkbox, combobox, listbox, menuitemcheckbox, menuitemradio, radio, searchbox, slider, spinbutton, switch, textbox), such as <div role=\"checkbox\">; disabled ones too. A role named by its content (checkbox, radio, switch and the menu items) passes with text; the others need aria-label or aria-labelledby. A field with no accessible name fails 4.1.2, the criterion e086e5 requires; it may fail 1.3.1 (visible text labels it but is not tied to it) or 3.3.2 (nothing visible labels it) as well, which markup alone cannot settle, so a FAIL names 4.1.2 alone. A field named only by its placeholder is a moderate review, pled in complaints: browsers expose the placeholder as the name, so ACT rule e086e5 passes it for its name, but the rule notes that 3.3.2 still needs a visible label that does not disappear as the user types, and markup alone cannot tell whether other visible text labels the field. --strict gates it. A placeholder names only a text field (an <input> of type text, search, tel, url, email, password or number, or of a type HTML does not have) and a <textarea>, in HTML-AAM and in Chromium 141 (measured): a <select>, a date field, a range, a color well or a checkbox with one and no other name fails, though axe-core 4.12 passes an <input> by its placeholder whatever its type (R6AB-4). A <label> names the control HTML makes it label (its for target, or a label without for's first labelable descendant in its own tree, not one a slot in it shows, and none where a slot's fallback held it: R5K-2, R5M-10), by its own aria-labelledby or aria-label first, then by its content (not the control it names: a select's options are not its label), then by its title (R5M-8, R5S-5); a hidden label names nothing (a label shown inside it still does: R5K-1), nor does one inside an element that skips what it holds (hidden=\"until-found\", or content-visibility:hidden, on a box that skips, as a block or an inline block does and an inline element or a table does not; a file run reads content-visibility and display in the style attribute only, a rendered run as the page sets them: R5M-1, R5O-3), as Chromium 141 computes it; a form-associated custom element is labelable too, which markup cannot show, so a label whose first labelable descendant is one is read as labeling the next labelable element in it (R5I-14). Chromium 141 reads a native field's <label> in place of its title and placeholder, an empty or hidden one too, and one inside an aria-hidden element, which the accessible-name computation and axe-core 4.12 leave out (measured: R6AB-1; a field named by such a label alone fails, L128): a field named only by its title past <label>s that name it nothing is a minor review that says so, since axe-core 4.12 passes it (in Chrome and Edge it has no accessible name), and the placeholder's review says so too (L104). A field named only by text in its <label> that Chromium 141 does not read (MathML, an <article>'s text, a <span>'s title) is a review as a button's is: minor where axe-core 4.12 passes it, by its title or placeholder (a <select> by its title alone) or by that text where it is a title axe-core reads; else moderate: axe-core reads no MathML or embedded content into a name, nor the title of a <slot> or of an element that holds white space or whose role is none or presentation, and a <label>'s other content by rules of its own (it fails one holding an <article>, passes one holding a <figure>: R6AB-3)."
+    },
+    {
+      "id": "bb-widget-name",
+      "name": "Menu items, options, tabs and tree items have names",
+      "sc": [
+        "4.1.2"
+      ],
+      "level": "A",
+      "tier": 2,
+      "layer": "static-dom",
+      "status": "implemented",
+      "verdict_basis": "sc",
+      "pled_pattern": false,
+      "act_rules": [
+        {
+          "id": "m6b1q3",
+          "title": "Menuitem has non-empty accessible name",
+          "status": "approved"
+        }
+      ],
+      "w3c_failures": [
+        "F68"
+      ],
+      "understanding": "https://www.w3.org/WAI/WCAG21/Understanding/name-role-value.html",
+      "notes": "Chosen by the role its markup gives (P2-09): role=\"menuitem\", \"option\", \"tab\" or \"treeitem\", each named by its text, aria-label or aria-labelledby; a native <option> in a <select> is not checked here (H6-14). An unnamed one fails 4.1.2: W3C failure F68 names a user interface control with no programmatically determined name, and ACT rule m6b1q3 covers menu items. axe-core classes an unnamed treeitem as a best practice, where this rule fails it (L67). An empty role=tooltip is a review: a tooltip is not a control, W3C names no failure for it, and its text is often written by the script that shows it. Elements hidden when the page was captured are checked too: a closed menu's items are named when it opens. Progress bars and meters are bb-progress-name's, role=img bb-role-img-name's. Replaces axe-core's aria-command-name (menuitem part), aria-tab-name, aria-tooltip-name and aria-treeitem-name."
+    },
+    {
+      "id": "bb-role-img-name",
+      "name": "role=img images have names",
+      "sc": [
+        "1.1.1"
+      ],
+      "level": "A",
+      "tier": 2,
+      "layer": "static-dom",
+      "status": "implemented",
+      "verdict_basis": "sc",
+      "pled_pattern": false,
+      "act_rules": [
+        {
+          "id": "23a2a8",
+          "title": "Image has non-empty accessible name",
+          "status": "approved"
+        }
+      ],
+      "understanding": "https://www.w3.org/WAI/WCAG21/Understanding/non-text-content.html",
+      "notes": "An element given role=\"img\" (or ARIA 1.3's \"image\"), such as a <div>, a <span> or an icon font's <i>; not an <img>, <svg> or <object>, an image input or an area, which their own rules name. Its content does not name it: in the accessibility tree with no aria-label, aria-labelledby or title, it fails 1.1.1 (ACT rule 23a2a8, which applies to an element by its img role). Split from bb-widget-name in Part R2. Replaces axe-core's role-img-alt."
+    },
+    {
+      "id": "bb-progress-name",
+      "name": "Progress bars and meters have names",
+      "sc": [
+        "1.1.1"
+      ],
+      "level": "A",
+      "tier": 2,
+      "layer": "static-dom",
+      "status": "implemented",
+      "verdict_basis": "heuristic",
+      "pled_pattern": false,
+      "act_rules": [],
+      "understanding": "https://www.w3.org/WAI/WCAG21/Understanding/non-text-content.html",
+      "notes": "An element whose role attribute says progressbar or meter (a native <progress> or <meter> without one is not checked), in the accessibility tree, with no aria-label, aria-labelledby, title or, for a <progress> or <meter>, <label>: its content does not name it. WAI-ARIA requires a name for both, and axe-core reports an unnamed one under 1.1.1 (aria-progressbar-name, aria-meter-name, which this rule replaces): its value can be announced without what it measures, such as a skill bar's skill. W3C names no failure technique for it and no ACT rule tests it, so a FAIL is a probable failure of 1.1.1 (heuristic). Split from bb-widget-name in Part R2 (L72-9, L72-11)."
+    },
+    {
+      "id": "bb-control-role",
+      "name": "Focusable custom controls have a valid role",
+      "sc": [
+        "4.1.2"
+      ],
+      "level": "A",
+      "tier": 2,
+      "layer": "static-dom",
+      "status": "implemented",
+      "verdict_basis": "heuristic",
+      "pled_pattern": false,
+      "act_rules": [],
+      "understanding": "https://www.w3.org/WAI/WCAG21/Understanding/name-role-value.html",
+      "notes": "L19: a generic element (<div>, <span>, a custom element) that takes keyboard focus (tabindex 0 or more) and whose role attribute names no known role (role=\"buton\", an abstract role) has no role at all. W3C failure F59 names a control made with script that has no role; focus alone does not show the element is a control (a focusable scroll container is not one), so a FAIL is a probable failure of 4.1.2 (heuristic). ACT 674b10 does not require valid role values on their own because an element's own role can stand in; a generic element has none. Unknown roles elsewhere stay bb-aria-role's best-practice review."
+    },
+    {
+      "id": "bb-html-lang",
+      "name": "Page has valid lang",
+      "sc": [
+        "3.1.1"
+      ],
+      "level": "A",
+      "tier": 1,
+      "layer": "static-dom",
+      "status": "implemented",
+      "verdict_basis": "sc",
+      "pled_pattern": true,
+      "act_rules": [
+        {
+          "id": "b5c3f8",
+          "title": "HTML page has lang attribute",
+          "status": "approved"
+        },
+        {
+          "id": "bf051a",
+          "title": "HTML page lang attribute has valid language tag",
+          "status": "approved"
+        }
+      ],
+      "understanding": "https://www.w3.org/WAI/WCAG21/Understanding/language-of-page.html",
+      "notes": "Fails a missing or malformed lang, and a primary language subtag the IANA Language Subtag Registry does not list (ACT bf051a): lang=\"xx\" fails, and so do lang=\"eng\" (an ISO 639-2 code for a language BCP 47 writes \"en\"), private-use tags (x-...) and every grandfathered tag (i-lux, zh-min-nan; ACT gives none a known primary language tag), which name no registered language; the message gives the registry's preferred tag where it has one. Any other three-letter subtag missing from the bundled copy of the registry (langtags.py, with its file date) is a minor review: the registry adds such codes every year."
+    },
+    {
+      "id": "bb-page-title",
+      "name": "Page has a title",
+      "sc": [
+        "2.4.2"
+      ],
+      "level": "A",
+      "tier": 1,
+      "layer": "static-dom",
+      "status": "implemented",
+      "verdict_basis": "sc",
+      "pled_pattern": false,
+      "act_rules": [
+        {
+          "id": "2779a5",
+          "title": "HTML page has non-empty title",
+          "status": "approved"
+        }
+      ],
+      "understanding": "https://www.w3.org/WAI/WCAG21/Understanding/page-titled.html"
+    },
+    {
+      "id": "bb-skip-link",
+      "name": "Bypass blocks (skip link)",
+      "sc": [
+        "2.4.1"
+      ],
+      "level": "A",
+      "tier": 1,
+      "layer": "static-dom",
+      "status": "implemented",
+      "verdict_basis": "heuristic",
+      "pled_pattern": true,
+      "act_rules": [
+        {
+          "id": "cf77f2",
+          "title": "Bypass Blocks of Repeated Content",
+          "status": "proposed"
+        }
+      ],
+      "understanding": "https://www.w3.org/WAI/WCAG21/Understanding/bypass-blocks.html",
+      "notes": "FAILs only when the markup identifies repeated blocks and nothing bypasses them, or the only mechanism is a skip link that leads nowhere or is out of the tab order. The blocks: a navigation that leads the page, the page header (not one inside the page footer), or a sidebar or other block beside the content holding either, with two or more links or controls besides the skip link (a single link is not a block). Bypasses: a working skip link; a main landmark that does not wrap the navigation, or a named region or form landmark the content starts in (ARIA11: the page's first perceivable content past the blocks is inside it; never a search, nor one inside a page header, banner, footer, sidebar or dialog); a heading that opens the content (H69); on a one-page site (no leading navigation links to another page or a hash route, a link home aside), a navigation with at least two links to areas of content past the blocks and no other links but a link home or to the top of the page (G124: sections, articles or headings; no toggles or panels); a control before each leading navigation that may expand and collapse it (SCR28, ACT 3e12e1: focusable, with aria-expanded, naming in aria-controls the navigation, an element around it or one inside it that holds all its links, with no more than one other link or control in the page header and blocks beside the content; L72-13). A missing or broken skip link where a main landmark, another landmark the content starts in, an opening heading, G124 or such a control remains is needs_review, pled in complaints; so is a page whose blocks the markup does not identify (no such navigation or header, 15 or more links outside the page footer), and a working skip link that comes after more than three links or controls of the page header and leading navigation, or, where the markup identifies no blocks, more than ten of any kind (late). The navigation to bypass is one that leads the page: before <main>; without <main>, before the first content heading and before the page's own text passes 200 characters (text and headings before the page header, and the text of form controls, do not count); never breadcrumbs, a sidebar, the footer or a dialog. A skip link is an in-page link, before the end of that navigation, that says it skips; one of the first five links, placed before it, that leads into the content past it (any language); or a link to the end of the navigation with none of its links or controls after the target (G123). With no such navigation, the first five links are read by name, and later ones before the first content heading count only with an unmistakable name ('Skip to content'). A hash route, 'Back to top', a link that opens a panel, a link after the navigation, a link with a negative tabindex (an invalid tabindex is no tabindex), and a target only inside <template> or <noscript> are not working skip links. A button or role=button/link control counts when its name plainly says it skips to the content ('Skip to main content'). A <main> wraps the navigation when the navigation opens it and only in-page links come before it; it then bypasses nothing. A heading opens the content when it is the first named heading after the banner or navigation, outside footer, sidebar and breadcrumb blocks, is not just a link home, and at most three links or controls and a short lead-in of text come before it. Only the page as exposed counts: content behind an open dialog is not evaluated, and the dialog is not the page. Operability of the skip link (visible on focus, moves focus) is interaction-layer. W3C's ACT rule cf77f2 (proposed) passes a page where any one of four holds: every block of repeated content can be collapsed (3e12e1), a heading is in the content past the blocks (047fe0), a landmark holds that content (b40fd1), or an instrument moves focus to it (ye5d6e). This rule follows H69 in wanting the heading to open the content, so a page whose only bypass is a heading further down fails here (a probable failure, heuristic); markup cannot show that a toggle collapses anything, so one makes a review, not a pass (L72-10)."
+    },
+    {
+      "id": "bb-viewport-zoom",
+      "name": "Zoom not disabled",
+      "sc": [
+        "1.4.4"
+      ],
+      "level": "AA",
+      "tier": 1,
+      "layer": "static-dom",
+      "status": "implemented",
+      "verdict_basis": "sc",
+      "pled_pattern": true,
+      "act_rules": [
+        {
+          "id": "b4f0c3",
+          "title": "Meta viewport allows for zoom",
+          "status": "approved"
+        }
+      ],
+      "understanding": "https://www.w3.org/WAI/WCAG21/Understanding/resize-text.html"
+    },
+    {
+      "id": "bb-aria-ref",
+      "name": "ARIA/label references resolve",
+      "sc": [
+        "1.3.1",
+        "4.1.2"
+      ],
+      "level": "A",
+      "tier": 1,
+      "layer": "static-dom",
+      "status": "implemented",
+      "verdict_basis": "review",
+      "pled_pattern": true,
+      "act_rules": [],
+      "understanding": "https://www.w3.org/WAI/WCAG21/Understanding/name-role-value.html",
+      "notes": "Never fails: a reference that points nowhere is reported for review, pled in complaints as \"broken ARIA\". When every aria-labelledby id is missing and nothing else names an element that must be named, the element has no accessible name, and the rule for that element fails it (bb-link-name, bb-button-name, bb-control-label, bb-widget-name, bb-img-alt, bb-role-img-name, bb-svg-name, bb-iframe-title, and in the browser bb-summary-name and bb-object-alt), under the criterion that rule cites: one defect, one failure (QR-13). This rule reports the broken reference beside it at moderate impact; any other reference that points nowhere is a minor review. W3C's only ACT rule on missing ID references, in6db8, is deprecated."
+    },
+    {
+      "id": "bb-aria-hidden-focus",
+      "name": "aria-hidden contains no focusables",
+      "sc": [
+        "4.1.2"
+      ],
+      "level": "A",
+      "tier": 1,
+      "layer": "static-dom",
+      "status": "implemented",
+      "verdict_basis": "sc",
+      "pled_pattern": false,
+      "act_rules": [
+        {
+          "id": "6cfa84",
+          "title": "Element with aria-hidden has no content in sequential focus navigation",
+          "status": "approved"
+        }
+      ],
+      "understanding": "https://www.w3.org/WAI/WCAG21/Understanding/name-role-value.html",
+      "notes": "Fails an aria-hidden=\"true\" container holding content in sequential focus navigation: links and areas with href (a drawing's <a> with href or xlink:href too, not MathML's), enabled form controls, media with controls, editing hosts, summary, iframe, canvas fallback content, tabindex 0 or more. Content that is not rendered cannot take focus. Markup shows some hiding (hidden, inert, a closed dialog or popover, an inline style), unless an author style shows the element again, and what a drawing never renders (what a <defs>, a <symbol>, a gradient or a shape holds; an <a> in an <a>; a text part outside a <text>; an element of a <switch> after the one it renders), whatever a style says; a rendered capture records what the stylesheets hide, content made visible again included, and decides wherever it recorded. Focusable content whose display or visibility a custom property (var()) decides, under a condition too, is a moderate review in a file run, which does not read what a custom property holds; where the page's own styles set that property nowhere and no stylesheet the run cannot read could (the page links and imports none, nor names one in an <?xml-stylesheet?>), the var() is read as its fallback, or as unset where it has none, as a browser reads it, but where a rule that hides the content (display:none, visibility:hidden or collapse, or a revert to what the browser's own stylesheet hides, a var()'s fallback revert too) stands level with it in the cascade, which the run cannot order (it reads no specificity), it is still a review, under a condition too. A closed modal is aria-hidden and hidden together (Bootstrap, Flowbite and Foundation remove both as they open it): a rendered run reports nothing, and a file or server-HTML run, which cannot read linked stylesheets, reviews a container that its own framework class, or a rule in the page's own <style>, says is closed. Focusable content hidden now by a container around or inside the aria-hidden one (a closed menu, tab or panel) is a moderate review in both runs: it becomes focusable when that opens. Each offender is reported once, under its outermost aria-hidden container. ACT rule 6cfa84 requires 4.1.2 for conformance (it maps 1.3.1 as secondary), so a FAIL names 4.1.2. aria-hidden on the page's <html> or <body> hides nothing, since browsers ignore it there, so it is not checked here; a rendered run's bb-aria-hidden-body reviews it on either element (a best practice)."
+    },
+    {
+      "id": "bb-positive-tabindex",
+      "name": "No positive tabindex",
+      "sc": [
+        "2.4.3"
+      ],
+      "level": "A",
+      "tier": 1,
+      "layer": "static-dom",
+      "status": "implemented",
+      "verdict_basis": "best-practice",
+      "pled_pattern": false,
+      "act_rules": [],
+      "understanding": "https://www.w3.org/WAI/WCAG21/Understanding/focus-order.html",
+      "notes": "Positive tabindex fails 2.4.3 only when the resulting order loses meaning or operability (F44), which markup alone cannot show; axe-core classes it as a best practice. Never FAILs: reported for review. --strict gates it."
+    },
+    {
+      "id": "bb-marquee-blink",
+      "name": "No marquee/blink",
+      "sc": [
+        "2.2.2"
+      ],
+      "level": "A",
+      "tier": 1,
+      "layer": "static-dom",
+      "status": "implemented",
+      "verdict_basis": "heuristic",
+      "pled_pattern": true,
+      "act_rules": [],
+      "understanding": "https://www.w3.org/WAI/WCAG21/Understanding/pause-stop-hide.html",
+      "notes": "A <marquee> that moves (not hidden, scrollamount not 0) is a probable failure of 2.2.2 (heuristic): W3C failure F16 names scrolling content with no mechanism to pause and restart it, and markup cannot show that none exists. One that may stop by itself (behavior=\"slide\", or a loop count) or that the page's own handlers stop (an on… attribute calling stop()) is a review. No current browser makes <blink> blink, and W3C made its failure (F47) obsolete, so a <blink> element is reported for review as obsolete markup, not failed."
+    },
+    {
+      "id": "bb-aria-role",
+      "name": "ARIA roles are valid",
+      "sc": [
+        "4.1.2"
+      ],
+      "level": "A",
+      "tier": 2,
+      "layer": "static-dom",
+      "status": "implemented",
+      "verdict_basis": "best-practice",
+      "pled_pattern": false,
+      "act_rules": [
+        {
+          "id": "674b10",
+          "title": "Role attribute has valid value",
+          "status": "approved"
+        }
+      ],
+      "understanding": "https://www.w3.org/WAI/WCAG21/Understanding/name-role-value.html",
+      "notes": "Known roles: WAI-ARIA 1.2 and the 1.3 editor's draft, DPUB-ARIA 1.1 (doc-*) and Graphics-ARIA 1.0. Abstract roles are for the spec, not for authors, and are reported. A focusable generic element whose role is unknown is bb-control-role's (a FAIL), not reported here."
+    },
+    {
+      "id": "bb-aria-attr",
+      "name": "ARIA attributes are valid",
+      "sc": [
+        "4.1.2"
+      ],
+      "level": "A",
+      "tier": 2,
+      "layer": "static-dom",
+      "status": "implemented",
+      "verdict_basis": "best-practice",
+      "pled_pattern": false,
+      "act_rules": [
+        {
+          "id": "5f99a7",
+          "title": "ARIA attribute is defined in WAI-ARIA",
+          "status": "approved"
+        }
+      ],
+      "understanding": "https://www.w3.org/WAI/WCAG21/Understanding/name-role-value.html",
+      "notes": "Known attributes: WAI-ARIA 1.2 and the 1.3 editor's draft (aria-description, aria-colindextext, aria-rowindextext, the braille pair)."
+    },
+    {
+      "id": "bb-duplicate-id",
+      "name": "Referenced ids are unique",
+      "sc": [
+        "4.1.2",
+        "1.3.1"
+      ],
+      "level": "A",
+      "tier": 2,
+      "layer": "static-dom",
+      "status": "implemented",
+      "verdict_basis": "heuristic",
+      "pled_pattern": false,
+      "act_rules": [],
+      "understanding": "https://www.w3.org/WAI/WCAG21/Understanding/name-role-value.html",
+      "notes": "4.1.1 Parsing is always satisfied for HTML since WCAG 2.1's erratum of 18 April 2023, and WCAG 2.2 removed it, so a duplicated id fails nothing on its own. A reference reaches the first element with the id in its tree. A duplicated id that a <label for> or aria-labelledby names FAILs: a control may be named from the wrong element, or left unnamed (4.1.2; 1.3.1 for a label's relationship). W3C names no failure for it, so the FAIL is a probable failure (heuristic). One that another reference names (aria-describedby, aria-controls, aria-owns, aria-activedescendant, aria-errormessage, aria-details, aria-flowto, a table cell's headers, a popovertarget or commandfor, an input's list, a form control's form, an <output>'s for) is a moderate review: the relationship may reach the wrong element. One that only an in-page link or a drawing (fill=\"url(#…)\", <use href>) names, or nothing, is a minor review (R5G-8). Applies to pages that have ids. Ids inside <template> or <noscript> are not in the document, and each shadow tree has ids of its own (L72-2, L72-3, L72-7, L72-14, H6-10)."
+    },
+    {
+      "id": "bb-heading-structure",
+      "name": "Headings present, non-empty, ordered",
+      "sc": [
+        "1.3.1",
+        "2.4.6"
+      ],
+      "level": "A",
+      "tier": 2,
+      "layer": "static-dom",
+      "status": "implemented",
+      "verdict_basis": "best-practice",
+      "pled_pattern": true,
+      "act_rules": [
+        {
+          "id": "ffd0e9",
+          "title": "Heading has non-empty accessible name",
+          "status": "proposed"
+        }
+      ],
+      "understanding": "https://www.w3.org/WAI/WCAG21/Understanding/info-and-relationships.html",
+      "notes": "Headings in document order: h1-h6 that no other role overrides, and role=heading (aria-level, 2 by default). Empty headings are a moderate review (a best practice's reviews are moderate at most); a missing h1 and skipped levels are minor, read from the headings the page shows (not those in a closed or aria-hidden modal)."
+    },
+    {
+      "id": "bb-table-headers",
+      "name": "Data tables have headers",
+      "sc": [
+        "1.3.1"
+      ],
+      "level": "A",
+      "tier": 2,
+      "layer": "static-dom",
+      "status": "implemented",
+      "verdict_basis": "heuristic",
+      "pled_pattern": false,
+      "act_rules": [],
+      "w3c_failures": [
+        "F91"
+      ],
+      "understanding": "https://www.w3.org/WAI/WCAG21/Understanding/info-and-relationships.html",
+      "notes": "A table of two or more rows and two or more columns, not marked as layout (role presentation or none), with no header cell among its own cells (a nested table's do not count): no <th>, no cell with role columnheader or rowheader, and no cell with a scope or headers attribute (R5G-9). At three rows by three columns or more a data table is the likely reading, and it FAILs as a probable failure of 1.3.1 (heuristic: markup cannot show that it is a data table), as W3C failure F91 describes; a smaller one is a minor review, since a key/value table may need no headers (L72-8, L72-12)."
+    },
+    {
+      "id": "bb-iframe-title",
+      "name": "iframes are titled",
+      "sc": [
+        "4.1.2"
+      ],
+      "level": "A",
+      "tier": 2,
+      "layer": "static-dom",
+      "status": "implemented",
+      "verdict_basis": "heuristic",
+      "pled_pattern": false,
+      "act_rules": [
+        {
+          "id": "cae760",
+          "title": "Iframe element has non-empty accessible name",
+          "status": "proposed"
+        }
+      ],
+      "understanding": "https://www.w3.org/WAI/WCAG21/Understanding/name-role-value.html",
+      "notes": "An iframe in the accessibility tree with no accessible name. What the <iframe> element holds (fallback text) is never rendered and names it nothing, as in Chromium 141 and axe-core 4.12 (measured). As W3C's ACT rule cae760 (proposed) reads it, an iframe with a negative tabindex, or marked as decorative (the first role token a browser knows is none or presentation), needs none, even where a tabindex puts it in the tab order. W3C names no failure technique for it and has not approved cae760, so a FAIL is a probable failure of 4.1.2 (heuristic), not one W3C names."
+    },
+    {
+      "id": "bb-media-autoplay",
+      "name": "No autoplaying sound",
+      "sc": [
+        "1.4.2"
+      ],
+      "level": "A",
+      "tier": 2,
+      "layer": "static-dom",
+      "status": "implemented",
+      "verdict_basis": "heuristic",
+      "pled_pattern": false,
+      "act_rules": [
+        {
+          "id": "80f0bf",
+          "title": "Audio or video element avoids automatically playing audio",
+          "status": "proposed"
+        }
+      ],
+      "w3c_failures": [
+        "F93"
+      ],
+      "understanding": "https://www.w3.org/WAI/WCAG21/Understanding/audio-control.html",
+      "notes": "An <audio> or <video> that plays automatically (autoplay), is not muted and has a source in markup plays sound on load. With no controls, or with native controls the markup hides or keeps from assistive technology, it FAILs as a probable failure of 1.4.2 (heuristic: markup cannot show that the sound lasts over 3 seconds, or that a control elsewhere on the page pauses it). W3C failure F93 and ACT rule 80f0bf (proposed) test it under 1.4.2; 2.2.2 concerns moving visual content, so a FAIL does not cite it (L72-1). Native controls users can see and reach meet 1.4.2 (ACT 4c31df): a minor review. Autoplay with no source in markup is a minor review (a script may add one). A muted video that plays automatically without controls is a review for 2.2.2, which this rule does not otherwise test."
+    },
+    {
+      "id": "bb-media-captions",
+      "name": "Prerecorded media has captions and audio description",
+      "sc": [
+        "1.2.1",
+        "1.2.2",
+        "1.2.5"
+      ],
+      "level": "AA",
+      "tier": 1,
+      "layer": "static-dom",
+      "status": "implemented",
+      "verdict_basis": "review",
+      "pled_pattern": true,
+      "act_rules": [
+        {
+          "id": "eac66b",
+          "title": "Video element auditory content has accessible alternative",
+          "status": "proposed"
+        },
+        {
+          "id": "1ec09b",
+          "title": "Video element visual content has strict accessible alternative",
+          "status": "proposed"
+        }
+      ],
+      "understanding": "https://www.w3.org/WAI/WCAG21/Understanding/audio-description-prerecorded.html",
+      "notes": "The static layer can only see whether a captions track or a video embed exists, so every finding is needs_review. 1.2.2 (A) requires captions for speech; 1.2.5 (AA) requires audio description when visuals carry information the audio does not — a transcript satisfies 1.2.3 (A) only."
+    },
+    {
+      "id": "bb-autocomplete",
+      "name": "Input purpose identified",
+      "sc": [
+        "1.3.5"
+      ],
+      "level": "AA",
+      "tier": 2,
+      "layer": "static-dom",
+      "status": "implemented",
+      "verdict_basis": "review",
+      "pled_pattern": false,
+      "act_rules": [],
+      "understanding": "https://www.w3.org/WAI/WCAG21/Understanding/identify-input-purpose.html",
+      "notes": "Flags an email or tel field inside a <form> that has no autocomplete attribute (presence only; a field outside any <form> is not checked). 1.3.5 applies where a field collects the user's own data, which markup cannot show, so it is a review. The ACT rule 'autocomplete attribute has valid value' checks validity of a present value and is not what this rule tests."
+    },
+    {
+      "id": "bb-meta-refresh",
+      "name": "No timed refresh",
+      "sc": [
+        "2.2.1"
+      ],
+      "level": "A",
+      "tier": 3,
+      "layer": "static-dom",
+      "status": "implemented",
+      "verdict_basis": "sc",
+      "pled_pattern": false,
+      "act_rules": [
+        {
+          "id": "bc659a",
+          "title": "Meta element has no refresh delay",
+          "status": "approved"
+        }
+      ],
+      "understanding": "https://www.w3.org/WAI/WCAG21/Understanding/timing-adjustable.html"
+    },
+    {
+      "id": "bb-doc-links",
+      "name": "Document files flagged (exclusion 10.2)",
+      "sc": [],
+      "level": "policy",
+      "tier": 0,
+      "layer": "static-dom",
+      "status": "implemented",
+      "verdict_basis": "review",
+      "pled_pattern": true,
+      "act_rules": [],
+      "understanding": "",
+      "notes": "Inaccessible PDFs are pled; internals are outside evaluation scope; residual duty is HTML-first publication."
+    },
+    {
+      "id": "bb-a11y-statement",
+      "name": "Accessibility statement present (settlement furniture)",
+      "sc": [],
+      "level": "policy",
+      "tier": 0,
+      "layer": "static-dom",
+      "status": "implemented",
+      "verdict_basis": "review",
+      "pled_pattern": false,
+      "act_rules": [],
+      "understanding": "",
+      "notes": "Statement + feedback channel recur in DOJ and private settlements."
+    },
+    {
+      "id": "bb-alt-junk",
+      "name": "Alt text is not a filename/placeholder",
+      "sc": [
+        "1.1.1"
+      ],
+      "level": "A",
+      "tier": 1,
+      "layer": "static-dom",
+      "status": "implemented",
+      "verdict_basis": "sc",
+      "pled_pattern": true,
+      "act_rules": [
+        {
+          "id": "qt1vmo",
+          "title": "Image accessible name is descriptive",
+          "status": "approved"
+        }
+      ],
+      "understanding": "https://www.w3.org/WAI/WCAG21/Understanding/non-text-content.html",
+      "notes": "Deterministic short-circuit of the alt-quality question; genuine adequacy is bb-alt-quality (judge). Images hidden from assistive technology (aria-hidden, hidden), and presentational ones (role none or presentation where the browser honors it), are skipped: their alt is never read, and ACT rule qt1vmo applies to images with a name (H6-3)."
+    },
+    {
+      "id": "bb-generic-link-text",
+      "name": "Generic link text flagged for context grading",
+      "sc": [
+        "2.4.4"
+      ],
+      "level": "A",
+      "tier": 2,
+      "layer": "static-dom",
+      "status": "implemented",
+      "verdict_basis": "review",
+      "pled_pattern": false,
+      "act_rules": [
+        {
+          "id": "5effbb",
+          "title": "Link in context is descriptive",
+          "status": "proposed"
+        }
+      ],
+      "understanding": "https://www.w3.org/WAI/WCAG21/Understanding/link-purpose-in-context.html",
+      "notes": "needs_review only: SC 2.4.4 permits purpose-from-context, which bb-link-purpose (judge) grades."
+    },
+    {
+      "id": "bb-contrast-min",
+      "name": "Text contrast (minimum)",
+      "sc": [
+        "1.4.3"
+      ],
+      "level": "AA",
+      "tier": 1,
+      "layer": "rendered",
+      "status": "implemented",
+      "engine": "axe-core",
+      "axe_rule": "color-contrast",
+      "verdict_basis": "sc",
+      "pled_pattern": true,
+      "act_rules": [
+        {
+          "id": "afw4f7",
+          "title": "Text has minimum contrast",
+          "status": "approved"
+        }
+      ],
+      "understanding": "https://www.w3.org/WAI/WCAG21/Understanding/contrast-minimum.html",
+      "notes": "axe-core's color-contrast, in the browser: text whose contrast with its background is below 4.5:1 (3:1 for large text) fails. Where axe-core cannot tell the background (an image, a gradient, text over other elements) it asks for review. Only the state the page was captured in is tested, not hover or focus. A native check replaces axe-core's later (L1)."
+    },
+    {
+      "id": "bb-target-size",
+      "name": "Target size minimum (WCAG 2.2)",
+      "sc": [
+        "2.5.8"
+      ],
+      "level": "AA",
+      "wcag_version": "2.2",
+      "tier": 2,
+      "layer": "rendered",
+      "status": "implemented",
+      "engine": "axe-core",
+      "axe_rule": "target-size",
+      "verdict_basis": "policy",
+      "pled_pattern": false,
+      "act_rules": [],
+      "understanding": "https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html",
+      "notes": "axe-core's target-size: a pointer target smaller than 24 by 24 CSS pixels fails 2.5.8 unless it has room around it or sits in a sentence. 2.5.8 is new in WCAG 2.2, and this rulebook's target is WCAG 2.1 AA, so its findings are reported for review and never gate a build, not even with --strict. 2.5.8's other exceptions (an equivalent control elsewhere, a size the browser sets, an essential size) are not tested."
+    },
+    {
+      "id": "bb-link-in-text",
+      "name": "Links in text stand out without color",
+      "sc": [
+        "1.4.1"
+      ],
+      "level": "A",
+      "tier": 2,
+      "layer": "rendered",
+      "status": "implemented",
+      "engine": "axe-core",
+      "axe_rule": "link-in-text-block",
+      "verdict_basis": "sc",
+      "pled_pattern": false,
+      "act_rules": [],
+      "w3c_failures": [
+        "F73"
+      ],
+      "understanding": "https://www.w3.org/WAI/WCAG21/Understanding/use-of-color.html",
+      "notes": "axe-core's link-in-text-block: a link inside a block of text that is told apart from the text around it by color alone, with less than 3:1 contrast between the two, fails (W3C failure F73). A link whose color has at least 3:1 contrast with the text around it passes (W3C technique G183)."
+    },
+    {
+      "id": "bb-list",
+      "name": "Lists hold only list items",
+      "sc": [
+        "1.3.1"
+      ],
+      "level": "A",
+      "tier": 3,
+      "layer": "rendered",
+      "status": "implemented",
+      "engine": "axe-core",
+      "axe_rule": "list",
+      "verdict_basis": "heuristic",
+      "pled_pattern": false,
+      "act_rules": [
+        {
+          "id": "bc4a75",
+          "title": "ARIA required owned elements",
+          "status": "proposed"
+        }
+      ],
+      "understanding": "https://www.w3.org/WAI/WCAG21/Understanding/info-and-relationships.html",
+      "notes": "axe-core's list: a <ul> or <ol> with direct children other than <li>, <script> or <template> breaks the list assistive technology announces. W3C's ACT rule bc4a75 (proposed) tests it by the list's implicit role (its Failed Example 10 is a <ul> holding a <div>). W3C names no failure technique for it and has not approved bc4a75, so a FAIL is a probable failure (L72-5)."
+    },
+    {
+      "id": "bb-listitem",
+      "name": "List items sit in a list",
+      "sc": [
+        "1.3.1"
+      ],
+      "level": "A",
+      "tier": 3,
+      "layer": "rendered",
+      "status": "implemented",
+      "engine": "axe-core",
+      "axe_rule": "listitem",
+      "verdict_basis": "heuristic",
+      "pled_pattern": false,
+      "act_rules": [],
+      "understanding": "https://www.w3.org/WAI/WCAG21/Understanding/info-and-relationships.html",
+      "notes": "axe-core's listitem: an <li> outside a <ul>, <ol> or role=list is not announced as part of a list. W3C has no failure technique or ACT rule for it, so a FAIL is a probable failure."
+    },
+    {
+      "id": "bb-definition-list",
+      "name": "Definition lists hold only terms and descriptions",
+      "sc": [
+        "1.3.1"
+      ],
+      "level": "A",
+      "tier": 3,
+      "layer": "rendered",
+      "status": "implemented",
+      "engine": "axe-core",
+      "axe_rule": "definition-list",
+      "verdict_basis": "heuristic",
+      "pled_pattern": false,
+      "act_rules": [],
+      "understanding": "https://www.w3.org/WAI/WCAG21/Understanding/info-and-relationships.html",
+      "notes": "axe-core's definition-list: a <dl> whose direct children are other than <dt>/<dd> groups, <div> wrappers of them, <script> or <template>. W3C has no failure technique or ACT rule for it, so a FAIL is a probable failure."
+    },
+    {
+      "id": "bb-dlitem",
+      "name": "Terms and descriptions sit in a definition list",
+      "sc": [
+        "1.3.1"
+      ],
+      "level": "A",
+      "tier": 3,
+      "layer": "rendered",
+      "status": "implemented",
+      "engine": "axe-core",
+      "axe_rule": "dlitem",
+      "verdict_basis": "heuristic",
+      "pled_pattern": false,
+      "act_rules": [],
+      "understanding": "https://www.w3.org/WAI/WCAG21/Understanding/info-and-relationships.html",
+      "notes": "axe-core's dlitem: a <dt> or <dd> outside a <dl>. W3C has no failure technique or ACT rule for it, so a FAIL is a probable failure."
+    },
+    {
+      "id": "bb-aria-required-children",
+      "name": "ARIA roles contain the children they require",
+      "sc": [
+        "1.3.1"
+      ],
+      "level": "A",
+      "tier": 2,
+      "layer": "rendered",
+      "status": "implemented",
+      "engine": "axe-core",
+      "axe_rule": "aria-required-children",
+      "verdict_basis": "heuristic",
+      "pled_pattern": false,
+      "act_rules": [
+        {
+          "id": "bc4a75",
+          "title": "ARIA required owned elements",
+          "status": "proposed"
+        }
+      ],
+      "understanding": "https://www.w3.org/WAI/WCAG21/Understanding/info-and-relationships.html",
+      "notes": "axe-core's aria-required-children: an element whose explicit role requires owned elements (a list its items, a tablist its tabs) fails when it owns elements its role does not allow, or none of those it requires; one that owns nothing at all fails only as a feed, a row or a suggestion, and is reported for review otherwise (axe-core's reviewEmpty). W3C's ACT rule bc4a75 (proposed) passes an element that owns nothing. W3C names no failure technique for it and has not approved bc4a75, so a FAIL is a probable failure of 1.3.1 (heuristic)."
+    },
+    {
+      "id": "bb-aria-required-parent",
+      "name": "ARIA roles sit in the parent they require",
+      "sc": [
+        "1.3.1"
+      ],
+      "level": "A",
+      "tier": 2,
+      "layer": "rendered",
+      "status": "implemented",
+      "engine": "axe-core",
+      "axe_rule": "aria-required-parent",
+      "verdict_basis": "heuristic",
+      "pled_pattern": false,
+      "act_rules": [
+        {
+          "id": "ff89c9",
+          "title": "ARIA required context role",
+          "status": "proposed"
+        }
+      ],
+      "understanding": "https://www.w3.org/WAI/WCAG21/Understanding/info-and-relationships.html",
+      "notes": "axe-core's aria-required-parent: an element whose explicit role needs a context (a tab in a tablist, a listitem in a list) outside it. W3C's ACT rule ff89c9 (proposed) tests the same; W3C names no failure technique for it and has not approved ff89c9, so a FAIL is a probable failure of 1.3.1 (heuristic)."
+    },
+    {
+      "id": "bb-aria-required-attr",
+      "name": "ARIA roles have the states they require",
+      "sc": [
+        "4.1.2"
+      ],
+      "level": "A",
+      "tier": 3,
+      "layer": "rendered",
+      "status": "implemented",
+      "engine": "axe-core",
+      "axe_rule": "aria-required-attr",
+      "verdict_basis": "best-practice",
+      "pled_pattern": false,
+      "act_rules": [
+        {
+          "id": "4e8ab6",
+          "title": "Element with role attribute has required states and properties",
+          "status": "approved"
+        }
+      ],
+      "understanding": "https://www.w3.org/WAI/WCAG21/Understanding/name-role-value.html",
+      "notes": "axe-core's aria-required-attr: an explicit role without a state or property it requires (role=checkbox without aria-checked). W3C's ACT rule 4e8ab6 maps it to WCAG only as a secondary requirement, since browsers fall back on a default, so here it is a best practice and never FAILs."
+    },
+    {
+      "id": "bb-aria-allowed-attr",
+      "name": "ARIA attributes are allowed on their role",
+      "sc": [
+        "4.1.2"
+      ],
+      "level": "A",
+      "tier": 3,
+      "layer": "rendered",
+      "status": "implemented",
+      "engine": "axe-core",
+      "axe_rule": "aria-allowed-attr",
+      "verdict_basis": "best-practice",
+      "pled_pattern": false,
+      "act_rules": [
+        {
+          "id": "5c01ea",
+          "title": "ARIA state or property is permitted",
+          "status": "proposed"
+        }
+      ],
+      "understanding": "https://www.w3.org/WAI/WCAG21/Understanding/name-role-value.html",
+      "notes": "axe-core's aria-allowed-attr: an ARIA attribute the element's role does not support. W3C's ACT rule 5c01ea maps it to WCAG only as a secondary requirement, so here it is a best practice and never FAILs."
+    },
+    {
+      "id": "bb-aria-prohibited-attr",
+      "name": "No ARIA attribute the role prohibits",
+      "sc": [
+        "4.1.2"
+      ],
+      "level": "A",
+      "tier": 3,
+      "layer": "rendered",
+      "status": "implemented",
+      "engine": "axe-core",
+      "axe_rule": "aria-prohibited-attr",
+      "verdict_basis": "best-practice",
+      "pled_pattern": false,
+      "act_rules": [
+        {
+          "id": "5c01ea",
+          "title": "ARIA state or property is permitted",
+          "status": "proposed"
+        }
+      ],
+      "understanding": "https://www.w3.org/WAI/WCAG21/Understanding/name-role-value.html",
+      "notes": "axe-core's aria-prohibited-attr: aria-label or aria-labelledby on a role that cannot be named (a generic <div> or <span>), which assistive technology may ignore. W3C's ACT rule 5c01ea maps it to WCAG only as a secondary requirement, so here it is a best practice and never FAILs."
+    },
+    {
+      "id": "bb-aria-conditional-attr",
+      "name": "ARIA attributes are used as their role allows",
+      "sc": [
+        "4.1.2"
+      ],
+      "level": "A",
+      "tier": 3,
+      "layer": "rendered",
+      "status": "implemented",
+      "engine": "axe-core",
+      "axe_rule": "aria-conditional-attr",
+      "verdict_basis": "best-practice",
+      "pled_pattern": false,
+      "act_rules": [
+        {
+          "id": "5c01ea",
+          "title": "ARIA state or property is permitted",
+          "status": "proposed"
+        }
+      ],
+      "understanding": "https://www.w3.org/WAI/WCAG21/Understanding/name-role-value.html",
+      "notes": "axe-core's aria-conditional-attr: an ARIA attribute its role allows only in some uses (aria-checked on a native checkbox that disagrees with it; row properties outside a treegrid). W3C's ACT rule 5c01ea maps it to WCAG only as a secondary requirement, so here it is a best practice and never FAILs."
+    },
+    {
+      "id": "bb-aria-attr-value",
+      "name": "ARIA attributes have valid values",
+      "sc": [
+        "4.1.2"
+      ],
+      "level": "A",
+      "tier": 3,
+      "layer": "rendered",
+      "status": "implemented",
+      "engine": "axe-core",
+      "axe_rule": "aria-valid-attr-value",
+      "verdict_basis": "best-practice",
+      "pled_pattern": false,
+      "act_rules": [
+        {
+          "id": "6a7281",
+          "title": "ARIA state or property has valid value",
+          "status": "approved"
+        }
+      ],
+      "understanding": "https://www.w3.org/WAI/WCAG21/Understanding/name-role-value.html",
+      "notes": "axe-core's aria-valid-attr-value: an ARIA attribute whose value its definition does not allow (aria-checked=\"maybe\"). W3C's ACT rule 6a7281 says it is not required for conformance to WCAG, so here it is a best practice and never FAILs."
+    },
+    {
+      "id": "bb-aria-deprecated-role",
+      "name": "No deprecated ARIA roles",
+      "sc": [
+        "4.1.2"
+      ],
+      "level": "A",
+      "tier": 3,
+      "layer": "rendered",
+      "status": "implemented",
+      "engine": "axe-core",
+      "axe_rule": "aria-deprecated-role",
+      "verdict_basis": "best-practice",
+      "pled_pattern": false,
+      "act_rules": [],
+      "understanding": "https://www.w3.org/WAI/WCAG21/Understanding/name-role-value.html",
+      "notes": "axe-core's aria-deprecated-role: a role WAI-ARIA has deprecated (directory), which assistive technology may not support. Like an unknown role (bb-aria-role, ACT 674b10), a best practice here; it never FAILs."
+    },
+    {
+      "id": "bb-aria-braille",
+      "name": "Braille labels have a spoken equivalent",
+      "sc": [
+        "4.1.2"
+      ],
+      "level": "A",
+      "tier": 3,
+      "layer": "rendered",
+      "status": "implemented",
+      "engine": "axe-core",
+      "axe_rule": "aria-braille-equivalent",
+      "verdict_basis": "best-practice",
+      "pled_pattern": false,
+      "act_rules": [],
+      "understanding": "https://www.w3.org/WAI/WCAG21/Understanding/name-role-value.html",
+      "notes": "axe-core's aria-braille-equivalent: aria-braillelabel or aria-brailleroledescription without the aria-label or aria-roledescription WAI-ARIA requires beside it. An authoring requirement of WAI-ARIA with no WCAG failure technique or ACT rule, so a best practice here; it never FAILs."
+    },
+    {
+      "id": "bb-aria-hidden-body",
+      "name": "The page is not hidden from assistive technology",
+      "sc": [
+        "4.1.2",
+        "1.3.1"
+      ],
+      "level": "A",
+      "tier": 2,
+      "layer": "rendered",
+      "status": "implemented",
+      "engine": "axe-core",
+      "axe_rule": "aria-hidden-body",
+      "verdict_basis": "best-practice",
+      "pled_pattern": false,
+      "act_rules": [],
+      "understanding": "https://www.w3.org/WAI/WCAG21/Understanding/name-role-value.html",
+      "notes": "axe-core's aria-hidden-body: aria-hidden=\"true\" on <body>. WAI-ARIA 1.3 (a draft) tells browsers not to expose the hidden state on a document's root element, and Chromium (141, tested), Firefox (from 139) and WebKit (since April 2024) ignore aria-hidden on <html> and <body>: the page stays exposed. An older browser may hide all of it. Reported as a best practice, not a failure (L72-4), at moderate impact at most, on <html> too, which axe-core's rule does not check. The harness's own rules ignore aria-hidden there too, as those browsers do: focusable content in such a page does not fail bb-aria-hidden-focus, and its names are checked. axe-core skips what it takes as hidden (aria-hidden exactly \"true\" there, as it compares it; color-contrast, which reads what is seen, still checks the page), so on such a page a rendered run reports what axe-core's other rules found failing, and a rule that found no failure there is not evaluated; the page's capture notes and the coverage sentence say so (R5G-1, R5I-7). A file run reads no axe-core rule, this one included."
+    },
+    {
+      "id": "bb-nested-interactive",
+      "name": "Controls do not hold other focusable controls",
+      "sc": [
+        "4.1.2"
+      ],
+      "level": "A",
+      "tier": 2,
+      "layer": "rendered",
+      "status": "implemented",
+      "engine": "axe-core",
+      "axe_rule": "nested-interactive",
+      "verdict_basis": "sc",
+      "pled_pattern": false,
+      "act_rules": [
+        {
+          "id": "307n5z",
+          "title": "Element with presentational children has no focusable content",
+          "status": "approved"
+        }
+      ],
+      "understanding": "https://www.w3.org/WAI/WCAG21/Understanding/name-role-value.html",
+      "notes": "axe-core's nested-interactive: a control whose children are presentational (a button, a checkbox, a tab) holding focusable content, which assistive technology cannot reach or name. W3C's ACT rule 307n5z makes it required for 4.1.2."
+    },
+    {
+      "id": "bb-scrollable-region",
+      "name": "Scrollable regions can be reached by keyboard",
+      "sc": [
+        "2.1.1"
+      ],
+      "level": "A",
+      "tier": 2,
+      "layer": "rendered",
+      "status": "implemented",
+      "engine": "axe-core",
+      "axe_rule": "scrollable-region-focusable",
+      "verdict_basis": "sc",
+      "pled_pattern": false,
+      "act_rules": [
+        {
+          "id": "0ssw9k",
+          "title": "Scrollable content can be reached with sequential focus navigation",
+          "status": "approved"
+        }
+      ],
+      "understanding": "https://www.w3.org/WAI/WCAG21/Understanding/keyboard.html",
+      "notes": "axe-core's scrollable-region-focusable: a region that scrolls but neither takes focus nor holds anything focusable, so a keyboard user cannot scroll it in every browser. W3C's ACT rule 0ssw9k makes it required for 2.1.1."
+    },
+    {
+      "id": "bb-server-image-map",
+      "name": "No server-side image maps",
+      "sc": [
+        "2.1.1"
+      ],
+      "level": "A",
+      "tier": 3,
+      "layer": "rendered",
+      "status": "implemented",
+      "engine": "axe-core",
+      "axe_rule": "server-side-image-map",
+      "verdict_basis": "review",
+      "pled_pattern": false,
+      "act_rules": [],
+      "understanding": "https://www.w3.org/WAI/WCAG21/Understanding/keyboard.html",
+      "notes": "axe-core's server-side-image-map: <img ismap>, whose regions only a pointer can choose, unless the page offers the same destinations as links. axe-core 4.12.1 never fails it: it reports every such image as one it cannot decide, so the rule only asks for review (it was heuristic before Part R3, and could never FAIL). W3C has no failure technique or ACT rule for it."
+    },
+    {
+      "id": "bb-summary-name",
+      "name": "Disclosure summaries have names",
+      "sc": [
+        "4.1.2"
+      ],
+      "level": "A",
+      "tier": 2,
+      "layer": "rendered",
+      "status": "implemented",
+      "engine": "axe-core",
+      "axe_rule": "summary-name",
+      "verdict_basis": "sc",
+      "pled_pattern": false,
+      "act_rules": [
+        {
+          "id": "2t702h",
+          "title": "Summary element has non-empty accessible name",
+          "status": "approved"
+        }
+      ],
+      "understanding": "https://www.w3.org/WAI/WCAG21/Understanding/name-role-value.html",
+      "notes": "axe-core's summary-name: a <summary> that opens its <details> with no accessible name. W3C's ACT rule 2t702h makes it required for 4.1.2."
+    },
+    {
+      "id": "bb-object-alt",
+      "name": "Embedded objects have text alternatives",
+      "sc": [
+        "1.1.1"
+      ],
+      "level": "A",
+      "tier": 2,
+      "layer": "rendered",
+      "status": "implemented",
+      "engine": "axe-core",
+      "axe_rule": "object-alt",
+      "verdict_basis": "sc",
+      "pled_pattern": false,
+      "act_rules": [
+        {
+          "id": "8fc3b6",
+          "title": "Object element rendering non-text content has non-empty accessible name",
+          "status": "approved"
+        }
+      ],
+      "understanding": "https://www.w3.org/WAI/WCAG21/Understanding/non-text-content.html",
+      "notes": "axe-core's object-alt: an <object> with no accessible name. W3C's ACT rule 8fc3b6 requires one for 1.1.1 where the object shows an image, audio or video: a FAIL when the object's type says so (image/, audio/ or video/), or, without a type, its data URL does: the media type a data: URL states, or the file's extension (R5G-7). Any other unnamed object (an embedded page or document) is a moderate review: if it shows non-text content it needs a name (H6-2)."
+    },
+    {
+      "id": "bb-element-lang",
+      "name": "Language changes are valid tags",
+      "sc": [
+        "3.1.2"
+      ],
+      "level": "AA",
+      "tier": 3,
+      "layer": "rendered",
+      "status": "implemented",
+      "engine": "axe-core",
+      "axe_rule": "valid-lang",
+      "verdict_basis": "sc",
+      "pled_pattern": false,
+      "act_rules": [
+        {
+          "id": "de46e4",
+          "title": "Element with lang attribute has valid language tag",
+          "status": "approved"
+        }
+      ],
+      "understanding": "https://www.w3.org/WAI/WCAG21/Understanding/language-of-parts.html",
+      "notes": "axe-core's valid-lang: a lang or xml:lang attribute below <html> whose value is not a valid language tag. W3C's ACT rule de46e4 makes a valid lang required for 3.1.2. It does not test xml:lang, which browsers and assistive technology ignore in an HTML document, so a result only xml:lang can explain (the element's lang is absent, empty or names a registered language) is a minor review, not a FAIL; in an XML document xml:lang sets the language, and fails as lang does."
+    },
+    {
+      "id": "bb-xml-lang-mismatch",
+      "name": "lang and xml:lang name the same language",
+      "sc": [
+        "3.1.1"
+      ],
+      "level": "A",
+      "tier": 3,
+      "layer": "rendered",
+      "status": "implemented",
+      "engine": "axe-core",
+      "axe_rule": "html-xml-lang-mismatch",
+      "verdict_basis": "best-practice",
+      "pled_pattern": false,
+      "act_rules": [
+        {
+          "id": "5b7ae0",
+          "title": "HTML page lang and xml:lang attributes have matching values",
+          "status": "deprecated"
+        }
+      ],
+      "understanding": "https://www.w3.org/WAI/WCAG21/Understanding/language-of-page.html",
+      "notes": "axe-core's html-xml-lang-mismatch: <html> whose lang and xml:lang name different languages. W3C deprecated its ACT rule (5b7ae0) because screen readers no longer read xml:lang beside lang, so here it is a best practice and never FAILs."
+    },
+    {
+      "id": "bb-td-headers",
+      "name": "Cell headers attributes stay in their table",
+      "sc": [
+        "1.3.1"
+      ],
+      "level": "A",
+      "tier": 2,
+      "layer": "rendered",
+      "status": "implemented",
+      "engine": "axe-core",
+      "axe_rule": "td-headers-attr",
+      "verdict_basis": "sc",
+      "pled_pattern": false,
+      "act_rules": [
+        {
+          "id": "a25f45",
+          "title": "Headers attribute specified on a cell refers to cells in the same table element",
+          "status": "approved"
+        }
+      ],
+      "understanding": "https://www.w3.org/WAI/WCAG21/Understanding/info-and-relationships.html",
+      "notes": "axe-core's td-headers-attr: a cell's headers attribute names a cell outside its own table, or itself. W3C's ACT rule a25f45 makes it required for 1.3.1."
+    },
+    {
+      "id": "bb-th-data-cells",
+      "name": "Header cells head data cells",
+      "sc": [
+        "1.3.1"
+      ],
+      "level": "A",
+      "tier": 2,
+      "layer": "rendered",
+      "status": "implemented",
+      "engine": "axe-core",
+      "axe_rule": "th-has-data-cells",
+      "verdict_basis": "review",
+      "pled_pattern": false,
+      "act_rules": [
+        {
+          "id": "d0f69e",
+          "title": "Table header cell has assigned cells",
+          "status": "proposed"
+        }
+      ],
+      "understanding": "https://www.w3.org/WAI/WCAG21/Understanding/info-and-relationships.html",
+      "notes": "axe-core's th-has-data-cells: a table header cell that heads no data cell. axe-core 4.12.1 never fails it: a header with no data cell is a result it cannot decide, so the rule only asks for review (it was heuristic before Part R3, and could never FAIL). W3C's ACT rule d0f69e (proposed) tests the same; W3C names no failure technique for it."
+    },
+    {
+      "id": "bb-frame-title-unique",
+      "name": "Frames that share a title share a purpose",
+      "sc": [
+        "4.1.2"
+      ],
+      "level": "A",
+      "tier": 3,
+      "layer": "rendered",
+      "status": "implemented",
+      "engine": "axe-core",
+      "axe_rule": "frame-title-unique",
+      "verdict_basis": "review",
+      "pled_pattern": false,
+      "act_rules": [
+        {
+          "id": "4b1c6c",
+          "title": "Iframe elements with identical accessible names have equivalent purpose",
+          "status": "proposed"
+        }
+      ],
+      "understanding": "https://www.w3.org/WAI/WCAG21/Understanding/name-role-value.html",
+      "notes": "axe-core's frame-title-unique: two frames with the same title. They fail 4.1.2 only when they serve different purposes, which a person decides (W3C's ACT rule 4b1c6c, proposed), so every finding is a review."
+    },
+    {
+      "id": "bb-multiple-labels",
+      "name": "Form fields have one label",
+      "sc": [
+        "3.3.2"
+      ],
+      "level": "A",
+      "tier": 3,
+      "layer": "rendered",
+      "status": "implemented",
+      "engine": "axe-core",
+      "axe_rule": "form-field-multiple-labels",
+      "verdict_basis": "review",
+      "pled_pattern": false,
+      "act_rules": [],
+      "understanding": "https://www.w3.org/WAI/WCAG21/Understanding/labels-or-instructions.html",
+      "notes": "axe-core's form-field-multiple-labels: a field with more than one <label>, which assistive technology reads inconsistently. Not a failure on its own (no W3C failure technique or ACT rule), so every finding is a review."
+    },
+    {
+      "id": "bb-inline-spacing",
+      "name": "Inline text spacing can be overridden",
+      "sc": [
+        "1.4.12"
+      ],
+      "level": "AA",
+      "tier": 3,
+      "layer": "rendered",
+      "status": "implemented",
+      "engine": "axe-core",
+      "axe_rule": "avoid-inline-spacing",
+      "verdict_basis": "sc",
+      "pled_pattern": false,
+      "act_rules": [
+        {
+          "id": "24afc2",
+          "title": "Important letter spacing in style attributes is wide enough",
+          "status": "approved"
+        },
+        {
+          "id": "9e45ec",
+          "title": "Important word spacing in style attributes is wide enough",
+          "status": "approved"
+        },
+        {
+          "id": "78fd32",
+          "title": "Important line height in style attributes is wide enough",
+          "status": "approved"
+        }
+      ],
+      "understanding": "https://www.w3.org/WAI/WCAG21/Understanding/text-spacing.html",
+      "notes": "axe-core's avoid-inline-spacing: letter-spacing, word-spacing or line-height set !important in a style attribute below what 1.4.12 lets users set (0.12, 0.16 and 1.5 times the font size), which a user's own style cannot override. W3C's ACT rules 24afc2, 9e45ec and 78fd32 make them required for 1.4.12. Text that clips or overlaps once spacing grows is not tested (bb-text-spacing, planned)."
+    },
+    {
+      "id": "bb-reflow-320",
+      "name": "Reflow at 320 CSS pixels",
+      "sc": [
+        "1.4.10"
+      ],
+      "level": "AA",
+      "tier": 2,
+      "layer": "rendered",
+      "status": "implemented",
+      "verdict_basis": "heuristic",
+      "pled_pattern": false,
+      "act_rules": [],
+      "understanding": "https://www.w3.org/WAI/WCAG21/Understanding/reflow.html",
+      "notes": "Bellbriar's own check, in the browser (L24): just after the capture the page is narrowed to 320 by 640 CSS pixels, and the capture records the page's scroll width there and each outermost element reaching past the right edge (outside anything that clips or scrolls sideways, and not fixed to the viewport). A page that scrolls sideways at 320 px FAILs, as a probable failure: content that needs two dimensions is exempt, so where a table, image, map, video or code holds the overflow the finding is a review. A page that hides its overflow (overflow-x: hidden) does not scroll and is not reported, so content cut off there is not detected. 1.4.4 (resize text to 200%) is not tested. No ACT rule requires 1.4.10: ACT rule b4f0c3, on zoom in the viewport meta tag, maps it as a secondary requirement (L72-6, H6-8)."
+    },
+    {
+      "id": "bb-keyboard-walk",
+      "name": "All functionality keyboard-operable",
+      "sc": [
+        "2.1.1",
+        "2.4.3",
+        "2.4.7"
+      ],
+      "level": "A",
+      "tier": 1,
+      "layer": "interaction",
+      "status": "planned",
+      "pled_pattern": true,
+      "notes": "The 'denial of keyboard access / mouse-only transactions' boilerplate. Contract in browser_contracts.tab_walk."
+    },
+    {
+      "id": "bb-keyboard-trap",
+      "name": "No keyboard traps",
+      "sc": [
+        "2.1.2"
+      ],
+      "level": "A",
+      "tier": 1,
+      "layer": "interaction",
+      "status": "planned",
+      "pled_pattern": true
+    },
+    {
+      "id": "bb-modal-contract",
+      "name": "Dialogs follow APG contract",
+      "sc": [
+        "2.1.2",
+        "2.4.3",
+        "4.1.2"
+      ],
+      "level": "A",
+      "tier": 1,
+      "layer": "interaction",
+      "status": "planned",
+      "pled_pattern": true
+    },
+    {
+      "id": "bb-menu-contract",
+      "name": "Navigation menus operable per APG",
+      "sc": [
+        "2.1.1",
+        "4.1.2"
+      ],
+      "level": "A",
+      "tier": 1,
+      "layer": "interaction",
+      "status": "planned",
+      "pled_pattern": true,
+      "notes": "'Inaccessible drop-down menus' boilerplate."
+    },
+    {
+      "id": "bb-carousel-pause",
+      "name": "Auto-rotating content pausable",
+      "sc": [
+        "2.2.2"
+      ],
+      "level": "A",
+      "tier": 1,
+      "layer": "interaction",
+      "status": "planned",
+      "pled_pattern": true
+    },
+    {
+      "id": "bb-focus-visible",
+      "name": "Focus indicator visible",
+      "sc": [
+        "2.4.7",
+        "1.4.11"
+      ],
+      "level": "AA",
+      "tier": 1,
+      "layer": "rendered",
+      "status": "planned",
+      "pled_pattern": true
+    },
+    {
+      "id": "bb-live-region-status",
+      "name": "Status changes announced",
+      "sc": [
+        "4.1.3"
+      ],
+      "level": "AA",
+      "tier": 2,
+      "layer": "interaction",
+      "status": "planned",
+      "pled_pattern": false,
+      "notes": "Silent add-to-cart is the e-commerce boilerplate variant."
+    },
+    {
+      "id": "bb-text-spacing",
+      "name": "Text spacing override survives",
+      "sc": [
+        "1.4.12"
+      ],
+      "level": "AA",
+      "tier": 2,
+      "layer": "rendered",
+      "status": "planned",
+      "pled_pattern": false
+    },
+    {
+      "id": "bb-hover-focus-content",
+      "name": "Hover/focus content dismissable",
+      "sc": [
+        "1.4.13"
+      ],
+      "level": "AA",
+      "tier": 2,
+      "layer": "interaction",
+      "status": "planned",
+      "pled_pattern": false
+    },
+    {
+      "id": "bb-focus-not-obscured",
+      "name": "Focus not obscured (2.2 delta)",
+      "sc": [
+        "2.4.11"
+      ],
+      "level": "AA",
+      "wcag_version": "2.2",
+      "tier": 2,
+      "layer": "interaction",
+      "status": "planned",
+      "pled_pattern": false
+    },
+    {
+      "id": "bb-alt-quality",
+      "name": "Alt text adequacy",
+      "sc": [
+        "1.1.1"
+      ],
+      "level": "A",
+      "tier": 1,
+      "layer": "judge",
+      "status": "implemented",
+      "pled_pattern": true,
+      "notes": "Judge layer, not in this release: no judge is calibrated (docs/ROADMAP.md §3), so the rule is not evaluated and nothing is scored for it. Deterministic junk alts are failed by bb-alt-junk.",
+      "rubric_version": "0.1.0"
+    },
+    {
+      "id": "bb-link-purpose",
+      "name": "Link purpose clarity",
+      "sc": [
+        "2.4.4"
+      ],
+      "level": "A",
+      "tier": 2,
+      "layer": "judge",
+      "status": "implemented",
+      "pled_pattern": false,
+      "rubric_version": "0.1.0",
+      "notes": "Judge layer, not in this release: no judge is calibrated (docs/ROADMAP.md §3), so the rule is not evaluated and nothing is scored for it."
+    },
+    {
+      "id": "bb-headings-labels-quality",
+      "name": "Headings/labels descriptive",
+      "sc": [
+        "2.4.6"
+      ],
+      "level": "AA",
+      "tier": 2,
+      "layer": "judge",
+      "status": "implemented",
+      "pled_pattern": false,
+      "rubric_version": "0.1.0",
+      "notes": "Judge layer, not in this release: no judge is calibrated (docs/ROADMAP.md §3), so the rule is not evaluated and nothing is scored for it."
+    },
+    {
+      "id": "bb-error-messages",
+      "name": "Errors identified and suggested",
+      "sc": [
+        "3.3.1",
+        "3.3.3"
+      ],
+      "level": "A",
+      "tier": 1,
+      "layer": "interaction+judge",
+      "status": "planned",
+      "pled_pattern": false,
+      "notes": "Tier 1 on any page with a form."
+    },
+    {
+      "id": "bb-flow-ecom",
+      "name": "Flow: browse-to-purchase completable",
+      "sc": [
+        "process"
+      ],
+      "level": "AA",
+      "tier": 1,
+      "layer": "interaction",
+      "status": "planned",
+      "pled_pattern": true,
+      "notes": "Conjunctive per WCAG conformance-requirement 'complete processes'."
+    },
+    {
+      "id": "bb-flow-leadgen",
+      "name": "Flow: contact/lead form completable",
+      "sc": [
+        "process"
+      ],
+      "level": "AA",
+      "tier": 1,
+      "layer": "interaction",
+      "status": "planned",
+      "pled_pattern": true
+    }
+  ],
+  "engine_note": "Who decides each implemented rule. Absent: Bellbriar's own check, on the markup (checks_static.py) or, for a rendered rule, on what the capture measured in the browser (checks_rendered.py). \"axe-core\": axe-core (axe.AXE_VERSION, vendored unmodified and hash-checked) runs axe_rule in the browser during a rendered capture, and the capture records its results (checks_rendered.py). A run that captured no page in a browser reports every rendered rule as not evaluated. Native checks replace axe-core's rule by rule (L1); the rule ids stay."
+}

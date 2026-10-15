@@ -1,0 +1,397 @@
+# Release (A11, H4): runs when a version tag (v1.0.0) is pushed, and only
+# then. Every artifact is built here, never on a laptop: the wheel and the
+# source distribution go to PyPI through Trusted Publishing (no token; PyPI
+# checks this workflow's identity, and attaches attestations), the
+# container image to ghcr.io, and both files to the GitHub release.
+#
+# The order makes a failure stop it before anything is published, where
+# it can: the whole test suite (R4A-5); the tag on a commit of the default
+# branch, a version this project releases (R4D-1), with its notes in
+# CHANGELOG.md, and for a final version nothing pending (R6AB-7); the
+# distributions checked; the image built for x86-64 and
+# ARM64, and the x86-64 one run on the fixtures. Then PyPI, which cannot be
+# undone; then the image, pushed under its version alone, pulled back with
+# no credentials and run again; only then its floating tags (1.0, 1,
+# latest), which customers' runners follow (R4D-2); then the GitHub
+# release. A step after PyPI that fails can be run again; so can PyPI's
+# own, which skips a file already uploaded (R4D-9). The ARM64 image is
+# built but not run here (the ship list's come-back table).
+#
+# Before the first release (your accounts; PREPUBLISH.md item 14): on PyPI,
+# add this repository and workflow (release.yml, environment "pypi") as a
+# trusted publisher of bellbriar-harness; on GitHub, create the environment
+# "pypi" with a deployment rule allowing only tags v*, protect v* tags with
+# a ruleset, and after the first image push make the ghcr.io package
+# public.
+#
+# Every action is pinned to a commit (R4A-7); the comment names its release.
+# Each job has a time limit (R4F-4).
+name: release
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+# One release at a time: a run that starts while another runs waits for it,
+# so the later run sees the earlier one's version when it moves the
+# floating tags (R4H-2). GitHub keeps one waiting run; a tag pushed while
+# one waits cancels that one, which can then be re-run.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  tests:
+    name: The test suite
+    uses: ./.github/workflows/bellbriar-eval.yml
+
+  build:
+    name: Build and check the distributions
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    env:
+      # The tools that build the files, pinned, also inside the isolated
+      # environment `python -m build` makes (SB-5).
+      PIP_CONSTRAINT: ${{ github.workspace }}/tools/build-constraints.txt
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
+      - id: version
+        name: The tag names a version we release, on the default branch, with notes
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          version=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
+          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "the tag $GITHUB_REF_NAME does not name version $version"
+            exit 1
+          fi
+          # A version the image steps after PyPI would refuse never
+          # reaches PyPI (R4D-1).
+          python tools/release_tags.py --check "$version"
+          # Only a commit that reached the default branch, through its
+          # review, is released (R4A-5).
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" "origin/$DEFAULT_BRANCH"; then
+            echo "the tagged commit is not on $DEFAULT_BRANCH"
+            exit 1
+          fi
+          python tools/release_notes.py "$version" > /dev/null
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - name: A final version leaves nothing pending (PREPUBLISH items 13 and 18)
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          BELLBRIAR_RELEASE: "1"
+        run: |
+          # A release candidate (1.0.0rc1) rehearses with items pending; a
+          # final version is released only when the suite's release check
+          # passes: the worked example re-signed, no release blocker left
+          # (tests/test_examples.py's RELEASE_BLOCKERS), no decision
+          # pending (R6AB-7), the base image pinned by digest (SB-5). A check that was skipped, not run, stops it
+          # too. It runs in a copy, so the checkout the distributions are
+          # built from stays as git made it.
+          case "$VERSION" in
+            *a[0-9]*|*b[0-9]*|*rc[0-9]*)
+              echo "$VERSION is a pre-release: no release check" ;;
+            *)
+              cp -a . "$RUNNER_TEMP/release-check"
+              cd "$RUNNER_TEMP/release-check"
+              python -m pip install .
+              python -m unittest -v tests.test_examples.TestPublishedExamples.test_nothing_is_pending_for_a_release 2>&1 | tee "$RUNNER_TEMP/release-check.log"
+              grep -qx "OK" "$RUNNER_TEMP/release-check.log" || { echo "the release check did not run"; exit 1; } ;;
+          esac
+      - run: python -m pip install build "cryptography>=42"
+      - run: python tools/repo_guard.py
+      - run: python -m build
+      - run: python tools/check_dist.py dist
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: dist
+          path: dist/
+          if-no-files-found: error
+
+  smoke:
+    name: Install the wheel and run it
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: dist
+          path: dist/
+      - name: The installed commands work on the fixtures
+        run: |
+          python -m venv /tmp/venv
+          /tmp/venv/bin/python -m pip install dist/*.whl
+          /tmp/venv/bin/bellbriar-eval --version
+          /tmp/venv/bin/bellbriar-eval fixtures/good.html --fail-on tier1
+          set +e
+          /tmp/venv/bin/bellbriar-eval fixtures/bad.html --fail-on tier1 > /dev/null
+          rc=$?
+          set -e
+          [ "$rc" -eq 1 ] || { echo "expected exit 1 on fixtures/bad.html, got $rc"; exit 1; }
+          /tmp/venv/bin/bellbriar-lint fixtures/lint-good.jsx --fail-on error
+          /tmp/venv/bin/bellbriar-evidence --help > /dev/null
+
+  image-test:
+    name: Build the container image, and run it on the fixtures
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: dist
+          path: dist/
+      - uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      # The labels and annotations the published image gets, read here
+      # too, so a value buildx refuses fails before PyPI (R4H-12).
+      - id: meta
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
+        env:
+          DOCKER_METADATA_ANNOTATIONS_LEVELS: manifest,index
+        with:
+          images: ghcr.io/bellbriar/harness
+          labels: |
+            org.opencontainers.image.licenses=NOASSERTION
+            org.opencontainers.image.version=${{ needs.build.outputs.version }}
+            org.opencontainers.image.description=The Bellbriar accessibility harness, its Python dependencies and Chromium, on Playwright's Ubuntu image. Each part keeps its own license; the harness's are in its package metadata (License-Expression) and its NOTICE file
+          annotations: |
+            org.opencontainers.image.licenses=NOASSERTION
+            org.opencontainers.image.version=${{ needs.build.outputs.version }}
+            org.opencontainers.image.description=The Bellbriar accessibility harness, its Python dependencies and Chromium, on Playwright's Ubuntu image. Each part keeps its own license; the harness's are in its package metadata (License-Expression) and its NOTICE file
+      # Both architectures build before PyPI (R4D-2); the layers stay in
+      # the cache, for the image job to reuse where the cache holds them.
+      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          file: docker/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: false
+          labels: ${{ steps.meta.outputs.labels }}
+          annotations: ${{ steps.meta.outputs.annotations }}
+          cache-to: type=gha,mode=max
+      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          file: docker/Dockerfile
+          load: true
+          push: false
+          tags: bellbriar-harness:release-test
+          cache-from: type=gha
+      - run: python3 tools/image_check.py bellbriar-harness:release-test
+
+  pypi:
+    name: Publish to PyPI
+    needs: [tests, build, smoke, image-test]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: pypi
+      url: https://pypi.org/p/bellbriar-harness
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: dist
+          path: dist/
+      # A re-run that built the files again stops here, rather than let
+      # the upload skip PyPI's own files without comparing them (SB-2).
+      - name: The files PyPI already holds are these
+        env:
+          VERSION: ${{ needs.build.outputs.version }}
+        run: python3 tools/pypi_files.py "$VERSION" dist
+      # Attestations (PEP 740) are on by default. A re-run after a partial
+      # upload skips the file already there (both come from one artifact).
+      - uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
+        with:
+          skip-existing: true
+
+  image:
+    name: Publish the container image, under its version
+    needs: [build, pypi]
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      digest: ${{ steps.push.outputs.digest }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: dist
+          path: dist/
+      - name: The image's wheel is the one PyPI holds
+        env:
+          VERSION: ${{ needs.build.outputs.version }}
+        run: python3 tools/pypi_files.py --all "$VERSION" dist
+      - uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: meta
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
+        env:
+          # On the index too, which GitHub's package page reads (R4F-8).
+          DOCKER_METADATA_ANNOTATIONS_LEVELS: manifest,index
+        with:
+          # The image the README and the Action name (H2: confirm it).
+          images: ghcr.io/bellbriar/harness
+          # The image holds Ubuntu, Python, Chromium and more, each under
+          # its own licenses, so it asserts none (R4D-6), and says where
+          # the harness's own are (R4H-13). The version is the release's,
+          # not the tag's v1.0.0. image-test sets the same (R4H-12).
+          labels: |
+            org.opencontainers.image.licenses=NOASSERTION
+            org.opencontainers.image.version=${{ needs.build.outputs.version }}
+            org.opencontainers.image.description=The Bellbriar accessibility harness, its Python dependencies and Chromium, on Playwright's Ubuntu image. Each part keeps its own license; the harness's are in its package metadata (License-Expression) and its NOTICE file
+          annotations: |
+            org.opencontainers.image.licenses=NOASSERTION
+            org.opencontainers.image.version=${{ needs.build.outputs.version }}
+            org.opencontainers.image.description=The Bellbriar accessibility harness, its Python dependencies and Chromium, on Playwright's Ubuntu image. Each part keeps its own license; the harness's are in its package metadata (License-Expression) and its NOTICE file
+      - id: push
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          file: docker/Dockerfile
+          # For x86-64 and ARM64 runners and machines (R4A-11).
+          platforms: linux/amd64,linux/arm64
+          push: true
+          # Its version only: the floating tags wait for the run below.
+          tags: ghcr.io/bellbriar/harness:${{ needs.build.outputs.version }}
+          labels: ${{ steps.meta.outputs.labels }}
+          annotations: ${{ steps.meta.outputs.annotations }}
+          cache-from: type=gha
+          provenance: mode=max
+          sbom: true
+
+  public:
+    name: Anyone can pull the image, and it runs
+    needs: [build, image]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # Pulled with no credentials, as a customer's runner pulls it: the
+      # first push leaves the package private until it is made public
+      # (R4A-3). Re-run this job once it is.
+      - env:
+          VERSION: ${{ needs.build.outputs.version }}
+        run: python3 tools/image_check.py "ghcr.io/bellbriar/harness:$VERSION" --pull
+
+  tags:
+    name: Point the floating image tags at the image that ran
+    needs: [build, image, public]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      latest: ${{ steps.tags.outputs.latest }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      # Each floating tag (1.0, 1, latest) only while this is the newest
+      # release it covers (R4A-13); none for a pre-release. The releases
+      # are the published ones, not every v* tag: a tag whose run stopped
+      # before publishing is none (R4F-11). They are the GitHub releases,
+      # every page of them, and the versions on PyPI, where a run that
+      # stopped before its GitHub release published (R4H-2). Right after
+      # the first upload PyPI may not list the project yet: re-run this job.
+      - id: tags
+        env:
+          VERSION: ${{ needs.build.outputs.version }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api --paginate "repos/$GITHUB_REPOSITORY/releases" --jq '.[] | select(.draft | not) | .tag_name' > released.txt
+          curl -fsSL --retry 3 -H "Accept: application/vnd.pypi.simple.v1+json" https://pypi.org/simple/bellbriar-harness/ -o pypi.json
+          python3 tools/release_tags.py "$VERSION" ghcr.io/bellbriar/harness --released released.txt --pypi pypi.json >> "$GITHUB_OUTPUT"
+      - env:
+          FLOATING: ${{ steps.tags.outputs.floating }}
+          DIGEST: ${{ needs.image.outputs.digest }}
+        run: |
+          [ -n "$FLOATING" ] || { echo "no floating tags for this release"; exit 0; }
+          args=()
+          IFS=, read -r -a floating <<< "$FLOATING"
+          for tag in "${floating[@]}"; do args+=(-t "$tag"); done
+          docker buildx imagetools create "${args[@]}" "ghcr.io/bellbriar/harness@$DIGEST"
+
+  release:
+    name: GitHub release
+    needs: [build, pypi, image, public, tags]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: dist
+          path: dist/
+      - name: Create the release with both files and the version's notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.build.outputs.version }}
+          DIGEST: ${{ needs.image.outputs.digest }}
+          LATEST: ${{ needs.tags.outputs.latest }}
+        run: |
+          # The files attached are the ones PyPI holds (SB-2).
+          python3 tools/pypi_files.py --all "$VERSION" dist
+          python3 tools/release_notes.py "$VERSION" > notes.md
+          printf '\nPyPI: https://pypi.org/project/bellbriar-harness/%s/\nImage: ghcr.io/bellbriar/harness:%s, digest %s (give the Action this digest as its version for runs that must never change)\n' "$VERSION" "$VERSION" "$DIGEST" >> notes.md
+          flags=()
+          case "$VERSION" in *a*|*b*|*rc*) flags+=(--prerelease) ;; esac
+          # GitHub's "Latest" only for the newest release, as the image's
+          # latest tag (R4D-8).
+          if [ "$LATEST" = "true" ]; then flags+=(--latest); else flags+=(--latest=false); fi
+          gh release create "$GITHUB_REF_NAME" dist/* \
+            --repo "$GITHUB_REPOSITORY" --verify-tag \
+            --title "$GITHUB_REF_NAME" --notes-file notes.md "${flags[@]}"

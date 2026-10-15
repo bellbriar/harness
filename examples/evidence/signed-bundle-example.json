@@ -1,0 +1,131 @@
+{
+  "bundle_format": "bellbriar-evidence/1",
+  "created_at": "2026-10-15T00:41:07.383046+00:00",
+  "tool": {
+    "name": "bellbriar-harness",
+    "version": "1.0.0rc1",
+    "python": "3.15.0",
+    "libraries": {
+      "justhtml": "3.13.0",
+      "beautifulsoup4": "4.15.0",
+      "soupsieve": "2.9.2",
+      "expat": "2.8.5"
+    }
+  },
+  "rulebook_version": "1.0.0",
+  "rulebook_sha256": "060ab534d96c642860241808abc559b84689358fd0d17699f702d5afb5494886",
+  "domain": "cornerbakery.example",
+  "pack": null,
+  "inputs": [
+    {
+      "path": "fixtures/good.html",
+      "sha256": "b53c1717effdf0a58d7a6b12523eebcdd6bf8bc530234b3789ae6da43bd63da9",
+      "bytes": 1263
+    }
+  ],
+  "fetch": null,
+  "layers": [
+    {
+      "layer": "static-dom",
+      "status": "executed",
+      "note": "Deterministic DOM rules on parsed markup (ACT-mapped)."
+    },
+    {
+      "layer": "accessibility-tree",
+      "status": "skipped",
+      "note": "Not in this release: assertions on the roles, states and names a browser's accessibility tree exposes are not built (docs/ROADMAP.md)."
+    },
+    {
+      "layer": "interaction",
+      "status": "skipped",
+      "note": "Not in this release: keyboard walks, focus traps, menu and dialog behavior and live regions are not implemented (docs/ROADMAP.md)."
+    },
+    {
+      "layer": "rendered",
+      "status": "skipped",
+      "note": "Not executed: contrast, target size, reflow at 320 CSS pixels and the other rules checked in the browser run only on pages a browser captured (a URL run, or --render). Focus visibility and text spacing beyond inline styles are not implemented."
+    },
+    {
+      "layer": "judge",
+      "status": "skipped",
+      "note": "Not in this release: grading whether alt text and link text are adequate needs a judge calibrated against human-labeled pages, and none exists yet, so the rules of this layer are not evaluated."
+    }
+  ],
+  "coverage_note": "This run covers the static DOM layer only. Keyboard operability, focus visibility, contrast, reflow, screen-reader announcements, and content adequacy were NOT evaluated. A passing result here is necessary, not sufficient, and is not a determination of WCAG conformance or legal compliance.",
+  "site": {
+    "site_weighted_pass_rate": 1.0,
+    "pct_pages_tier1_clean": 1.0,
+    "pages_not_evaluable": 0,
+    "tier1_rules_executed": 16,
+    "tier1_rules_total": 27,
+    "tier1_rules_review_only": 4,
+    "total_fail_findings": 0,
+    "total_needs_review": 0,
+    "total_third_party_fail_findings": 0,
+    "total_third_party_needs_review": 0,
+    "rule_fail_totals": {}
+  },
+  "pages": [
+    {
+      "path": "fixtures/good.html",
+      "fetch": null,
+      "score": {
+        "path": "fixtures/good.html",
+        "weighted_pass_rate": 1.0,
+        "applicable_weight": 51,
+        "passed_weight": 51,
+        "tier1_clean": true,
+        "tier1_rules_executed": 16,
+        "tier1_rules_applicable": 9,
+        "evaluable": true,
+        "not_evaluable_reason": "",
+        "fail_findings": 0,
+        "needs_review_findings": 0,
+        "third_party_fail_findings": 0,
+        "third_party_needs_review_findings": 0,
+        "failed_rules": []
+      },
+      "findings": [],
+      "not_applicable_rules": [
+        "bb-svg-name",
+        "bb-widget-name",
+        "bb-role-img-name",
+        "bb-progress-name",
+        "bb-control-role",
+        "bb-aria-hidden-focus",
+        "bb-positive-tabindex",
+        "bb-marquee-blink",
+        "bb-aria-role",
+        "bb-media-autoplay",
+        "bb-media-captions",
+        "bb-meta-refresh",
+        "bb-doc-links"
+      ]
+    }
+  ],
+  "judged": null,
+  "baseline": null,
+  "attestation": "A signature on this bundle covers a signed statement, not a bare digest. The statement records the bundle digest together with the bundle format, domain, fetched host, pack, pack version, pack digest, rulebook version and rulebook digest, and verification fails unless every one of them matches this bundle and, where a domain is stated, any fetched host is that domain, its www. form, or a host below the site they name. The signature's class is 'self-signed': whoever held the key signed values the client computed, and no one else checked anything. A valid signature therefore shows only that the holder of that key signed this exact statement, and that nothing in the bundle outside its signature block has changed since. It does NOT show that the evaluation was executed correctly or on the stated inputs, or that its results were not edited before signing: the client computed them. Where this bundle has a `fetch` block, or a page has its own capture record (`fetch`), that is the client's record of a capture at the recorded time, of a live page or of a build the client served itself; no signature attests that a capture took place as recorded. A page may have differed before or after, and each recorded snapshot hash identifies the bytes the client reports it evaluated. Findings in markup the client attributed to a third-party vendor's script, by the origin of the script that inserted it, are reported but do not count as failures in the score, though a rule that applies to such markup counts as applicable, and a finding about the page as a whole counts whatever markup it rests on; that attribution can be wrong. No signature is a determination of WCAG conformance, legal compliance, or fitness for any purpose.",
+  "signature": {
+    "alg": "Ed25519",
+    "context": "bellbriar-signature/1",
+    "key_id": "04db99f6ed92cfac",
+    "statement": {
+      "statement_format": "bellbriar-signature/1",
+      "bundle_digest_sha256": "c5511c552c81d27b2c5d58f93cfade68cd22b155e579dbc75969d50105093489",
+      "attestation_class": "self-signed",
+      "key_id": "04db99f6ed92cfac",
+      "signer": "worked example (demonstration key)",
+      "signed_at": "2026-10-15T00:41:07+00:00",
+      "bundle_format": "bellbriar-evidence/1",
+      "domain": "cornerbakery.example",
+      "host": null,
+      "pack": null,
+      "pack_version": null,
+      "pack_sha256": null,
+      "rulebook_version": "1.0.0",
+      "rulebook_sha256": "060ab534d96c642860241808abc559b84689358fd0d17699f702d5afb5494886"
+    },
+    "signature_b64": "OqpbEbeOeijRcwVwOoKDJDQ0lwy7mlYmnWFEuuWYSowhJ3pUUY2xGjhmi4xFjm/V8BUPkJ2Q6RGjwD21KBXpAQ=="
+  }
+}

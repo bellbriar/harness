@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<!-- bypass-fixture: representative, not captured. Page shape. Expected bb-skip-link: review. Header nav, then <main> holding an h1 and an 'On this page' nav: the in-page nav does not make <main> a wrapper; <main> (ARIA11) -> pled review for the missing skip link. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Acme</title>
+</head>
+<body>
+<header><a href="/">Acme</a><nav aria-label="Main"><ul><li><a href="/shop">Shop</a></li><li><a href="/about">About</a></li><li><a href="/contact">Contact</a></li></ul></nav></header><main><h1>Docs</h1><nav aria-label="On this page"><a href="#a">Install</a><a href="#b">Configure</a></nav><section id="a"><h2>Install</h2><p>We help small teams plan, build and run their websites. We help small teams plan, build and run their websites. We help small teams plan, build and run their websites. We help small teams plan, build and run their websites. We help small teams plan, build and run their websites. We help small teams plan, build and run their websites. </p></section><section id="b"><h2>Configure</h2></section></main>
+</body>
+</html>

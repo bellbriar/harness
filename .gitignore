@@ -1,0 +1,20 @@
+# Python build and cache output
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# Operating-system clutter
+.DS_Store
+__MACOSX/
+
+# Private keys never belong in this repository. The demonstration key that
+# signs examples/evidence/ is kept outside it (tools/make_example_bundle.py,
+# which refuses one kept inside), and `bellbriar-evidence keygen` writes
+# <prefix>.key next to <prefix>.pub. These patterns are a second line of
+# defense, not the first.
+*.key
+*private-key*
+*PRIVATE-KEY*
+*DEMO-ONLY*

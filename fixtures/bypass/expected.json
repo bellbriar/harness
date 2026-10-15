@@ -1,0 +1,374 @@
+{
+ "representative/astra-starter-site.html": {
+  "source": "representative, not captured",
+  "family": "Astra theme starter site (WordPress)",
+  "modeled_on": "the structure of Astra's 'Digital Agency' starter site, saved by the user 2026-10-06 (not committed; text and links replaced)",
+  "bb_skip_link": "pass",
+  "exit_tier1": 0,
+  "exit_strict": 0,
+  "why": "G1: 'Skip to content' is the first link and reaches #content, after the masthead with its desktop and mobile navigations."
+ },
+ "representative/consent-modal-over-hidden-page.html": {
+  "source": "representative, not captured",
+  "family": "shape",
+  "bb_skip_link": "n/a",
+  "exit_tier1": 0,
+  "exit_strict": 0,
+  "why": "Page is aria-hidden/inert behind a modal; the dialog is not the page (handoff K, section 6)."
+ },
+ "representative/content-first-big-footer.html": {
+  "source": "representative, not captured",
+  "family": "shape",
+  "bb_skip_link": "n/a",
+  "exit_tier1": 0,
+  "exit_strict": 0,
+  "why": "Content precedes every repeated block (a 15-link footer); nothing to bypass.",
+  "part_k": "fail"
+ },
+ "representative/cookie-dialog-open-before-header.html": {
+  "source": "representative, not captured",
+  "family": "shape",
+  "bb_skip_link": "review",
+  "exit_tier1": 0,
+  "exit_strict": 1,
+  "why": "An open non-modal consent <dialog> is not the page; header nav then <main>, no skip link -> pled review."
+ },
+ "representative/docusaurus-docs-page.html": {
+  "source": "representative, not captured",
+  "family": "Docusaurus docs page",
+  "modeled_on": "the structure of docusaurus.io's Introduction page, server HTML and rendered DOM, saved by the user 2026-10-06 (not committed; text and links replaced)",
+  "bb_skip_link": "pass",
+  "exit_tier1": 0,
+  "exit_strict": 0,
+  "why": "G1: 'Skip to main content' is the first link (in a region of its own) and reaches the main wrapper past the announcement bar and navbar; the docs sidebar and breadcrumbs follow it."
+ },
+ "representative/drupal-olivero.html": {
+  "source": "representative, not captured",
+  "family": "Drupal 10 Olivero front page",
+  "bb_skip_link": "pass",
+  "exit_tier1": 0,
+  "exit_strict": 0,
+  "why": "G1: 'Skip to main content' reaches <a id=main-content tabindex=-1> after the header (before the breadcrumb and <main role=main>); target not inside <main> is fine."
+ },
+ "representative/g123-skip-nav-to-end-of-nav.html": {
+  "source": "representative, not captured",
+  "family": "shape",
+  "bb_skip_link": "pass",
+  "exit_tier1": 0,
+  "exit_strict": 0,
+  "why": "G123: 'Skip navigation' at the start of the nav to an anchor at its end.",
+  "part_k": "fail"
+ },
+ "representative/g124-one-page-in-page-nav.html": {
+  "source": "representative, not captured",
+  "family": "shape",
+  "bb_skip_link": "review",
+  "exit_tier1": 0,
+  "exit_strict": 1,
+  "why": "G124: links at the top to each content area of a one-page site can satisfy 2.4.1, as a main landmark can; the missing skip link is still pled, so a moderate review, never a FAIL.",
+  "part_k": "fail"
+ },
+ "representative/genesis-no-skip-links.html": {
+  "source": "representative, not captured",
+  "family": "Genesis child theme without the skip-links feature",
+  "bb_skip_link": "review",
+  "exit_tier1": 0,
+  "exit_strict": 1,
+  "why": "No skip link, but <main class=content> after the nav (ARIA11): 2.4.1 can be met; missing skip link is pled -> moderate review."
+ },
+ "representative/genesis-sample.html": {
+  "source": "representative, not captured",
+  "family": "Genesis Sample child theme (Genesis 3.x, skip-links on)",
+  "bb_skip_link": "pass",
+  "exit_tier1": 0,
+  "exit_strict": 0,
+  "why": "G1: 'Skip to main content' before the header reaches <main id=genesis-content>; a first skip link to the nav itself must not count as broken."
+ },
+ "representative/govuk-frontend-page.html": {
+  "source": "representative, not captured",
+  "family": "GOV.UK Frontend page",
+  "modeled_on": "the structure of gov.uk/register-to-vote, saved by the user 2026-10-06 (not committed; text and links replaced)",
+  "bb_skip_link": "pass",
+  "exit_tier1": 0,
+  "exit_strict": 0,
+  "why": "G1: the skip link follows a hidden cookie banner and reaches <main id=content> past the super-navigation header, whose menus are hidden until opened."
+ },
+ "representative/headings-only-in-footer-div.html": {
+  "source": "representative, not captured",
+  "family": "shape",
+  "bb_skip_link": "fail",
+  "exit_tier1": 1,
+  "exit_strict": 1,
+  "why": "Headings only in a footer block; no skip link, no <main> -> no mechanism."
+ },
+ "representative/link-in-bio-no-blocks.html": {
+  "source": "representative, not captured",
+  "family": "shape",
+  "bb_skip_link": "review",
+  "exit_tier1": 0,
+  "exit_strict": 1,
+  "why": "WCAG: if the list is the content there is nothing to bypass (n/a). The markup marks no navigation or page header, so the harness cannot tell a repeated block from the content; under the FAIL definition that is a review, pled, never a FAIL.",
+  "part_k": "fail"
+ },
+ "representative/main-wraps-nav-hero-heading.html": {
+  "source": "representative, not captured",
+  "family": "shape",
+  "bb_skip_link": "review",
+  "exit_tier1": 0,
+  "exit_strict": 1,
+  "why": "<main> wraps the nav (bypasses nothing) but the hero h1 opens the content (H69) -> pled review."
+ },
+ "representative/main-wraps-nav-no-heading.html": {
+  "source": "representative, not captured",
+  "family": "shape",
+  "bb_skip_link": "fail",
+  "exit_tier1": 1,
+  "exit_strict": 1,
+  "why": "<main> wraps the nav; no skip link; no heading -> nothing bypasses the nav."
+ },
+ "representative/mega-menu-div-in-header-h1.html": {
+  "source": "representative, not captured",
+  "family": "shape",
+  "bb_skip_link": "review",
+  "exit_tier1": 0,
+  "exit_strict": 1,
+  "why": "Header mega-menu (div lists with headings); h1 right after the header opens the content (H69) -> pled review."
+ },
+ "representative/multiple-skip-links-first-to-nav.html": {
+  "source": "representative, not captured",
+  "family": "shape",
+  "bb_skip_link": "pass",
+  "exit_tier1": 0,
+  "exit_strict": 0,
+  "why": "A working 'Skip to content' after a 'Skip to navigation' link; one working G1 link suffices."
+ },
+ "representative/nextjs-app-layout-nav.html": {
+  "source": "representative, not captured",
+  "family": "Next.js App Router app with a layout header/nav, no skip link (typical AI-built app)",
+  "bb_skip_link": "review",
+  "exit_tier1": 0,
+  "exit_strict": 1,
+  "why": "Header nav repeats on every route; <main> after it (ARIA11) can satisfy 2.4.1; no skip link -> pled -> moderate review."
+ },
+ "representative/nextjs-app-router-default.html": {
+  "source": "representative, not captured",
+  "family": "create-next-app (App Router) default page, server HTML",
+  "bb_skip_link": "n/a",
+  "exit_tier1": 0,
+  "exit_strict": 0,
+  "why": "No repeated blocks: five links, no navigation, no header; 2.4.1 has nothing to bypass."
+ },
+ "representative/nextjs-org-two-headers.html": {
+  "source": "representative, not captured",
+  "family": "Next.js marketing site with two site headers",
+  "modeled_on": "the structure of nextjs.org, server HTML and rendered DOM, saved by the user 2026-10-06 (not committed; text and links replaced)",
+  "bb_skip_link": "review",
+  "exit_tier1": 0,
+  "exit_strict": 1,
+  "why": "The skip link is in the second header, after the first header's links and controls; a stylesheet decides which header shows, so markup cannot establish a skip link at the start of the page: review, pled.",
+  "part_k": "pass"
+ },
+ "representative/one-link-nav-no-heading.html": {
+  "source": "representative, not captured",
+  "family": "shape",
+  "bb_skip_link": "review",
+  "exit_tier1": 0,
+  "exit_strict": 1,
+  "why": "WCAG: a single link is not a block (Understanding 2.4.1), so nothing needs bypassing (n/a). The harness establishes no repeated block, so it never FAILs; with no main landmark or heading it lists the page for review, pled (--strict gates it).",
+  "part_k": "fail"
+ },
+ "representative/role-main-div-no-skip.html": {
+  "source": "representative, not captured",
+  "family": "shape",
+  "bb_skip_link": "review",
+  "exit_tier1": 0,
+  "exit_strict": 1,
+  "why": "No skip link; role=main div after the nav (ARIA11) -> pled review."
+ },
+ "representative/shopify-dawn-storefront.html": {
+  "source": "representative, not captured",
+  "family": "Shopify Dawn storefront home page",
+  "bb_skip_link": "pass",
+  "exit_tier1": 0,
+  "exit_strict": 0,
+  "why": "G1: 'Skip to content' is the first link and reaches <main id=MainContent> past the announcement bar and header; menu drawer nav sits in a closed <details>."
+ },
+ "representative/skip-after-cookie-banner-div-menu.html": {
+  "source": "representative, not captured",
+  "family": "shape",
+  "bb_skip_link": "pass",
+  "exit_tier1": 0,
+  "exit_strict": 0,
+  "why": "G1: a working 'Skip to content' link after a 6-link cookie notice, before a div menu.",
+  "part_k": "fail"
+ },
+ "representative/skip-after-header-no-main.html": {
+  "source": "representative, not captured",
+  "family": "shape",
+  "bb_skip_link": "fail",
+  "exit_tier1": 1,
+  "exit_strict": 1,
+  "why": "Skip link placed after the header nav bypasses nothing; no <main>, no heading."
+ },
+ "representative/skip-after-primary-nav-before-subnav.html": {
+  "source": "representative, not captured",
+  "family": "shape",
+  "bb_skip_link": "review",
+  "exit_tier1": 0,
+  "exit_strict": 1,
+  "why": "Skip link sits after the 10-link primary nav (it bypasses only the sub-nav); <main> remains -> pled review.",
+  "part_k": "pass"
+ },
+ "representative/skip-after-topbar-header-div-menu.html": {
+  "source": "representative, not captured",
+  "family": "shape",
+  "bb_skip_link": "pass",
+  "exit_tier1": 0,
+  "exit_strict": 0,
+  "why": "G1: a working skip link after six top-bar links (tel/mail/social), before a <header> holding a div menu. It skips the header and its 12-link menu; the top bar before it is short (under the 10 links or controls a skip link may follow, and none of them in the page header or navigation), so it is not late.",
+  "part_k": "fail"
+ },
+ "representative/skip-display-none-inline-nothing-else.html": {
+  "source": "representative, not captured",
+  "family": "shape",
+  "bb_skip_link": "fail",
+  "exit_tier1": 1,
+  "exit_strict": 1,
+  "why": "Skip link not rendered; no <main>; no heading -> nothing bypasses the header nav."
+ },
+ "representative/skip-display-none-inline-with-main.html": {
+  "source": "representative, not captured",
+  "family": "shape",
+  "bb_skip_link": "review",
+  "exit_tier1": 0,
+  "exit_strict": 1,
+  "why": "Skip link not rendered (inline display:none) -> no skip link; <main> (ARIA11) remains -> pled review."
+ },
+ "representative/skip-last-item-in-nav.html": {
+  "source": "representative, not captured",
+  "family": "shape",
+  "bb_skip_link": "review",
+  "exit_tier1": 0,
+  "exit_strict": 1,
+  "why": "Skip link is the last item of the nav: reached only after the nav -> bypasses nothing; <main> remains.",
+  "part_k": "pass"
+ },
+ "representative/skip-sr-only-to-main.html": {
+  "source": "representative, not captured",
+  "family": "shape",
+  "bb_skip_link": "pass",
+  "exit_tier1": 0,
+  "exit_strict": 0,
+  "why": "G1: CSS-hidden-until-focus skip link (sr-only) reaching <main>."
+ },
+ "representative/skip-tabindex-minus1-with-main.html": {
+  "source": "representative, not captured",
+  "family": "shape",
+  "bb_skip_link": "review",
+  "exit_tier1": 0,
+  "exit_strict": 1,
+  "why": "Skip link removed from the Tab order (tabindex=-1) does not work for keyboard users -> broken skip link; <main> remains -> pled review.",
+  "part_k": "pass"
+ },
+ "representative/squarespace-71-site.html": {
+  "source": "representative, not captured",
+  "family": "Squarespace 7.1 template",
+  "modeled_on": "the structure of a Squarespace 7.1 trial site, saved by the user 2026-10-06 (not committed; text and links replaced)",
+  "bb_skip_link": "pass",
+  "exit_tier1": 0,
+  "exit_strict": 0,
+  "why": "G1: the header's own 'Skip to Content' link comes before the site title and navigation and reaches <main id=page>; the cart link before the header is hidden."
+ },
+ "representative/target-case-mismatch.html": {
+  "source": "representative, not captured",
+  "family": "shape",
+  "bb_skip_link": "review",
+  "exit_tier1": 0,
+  "exit_strict": 1,
+  "why": "Fragment ids are case-sensitive: #Main does not reach id=main -> broken; <main> remains."
+ },
+ "representative/target-in-noscript.html": {
+  "source": "representative, not captured",
+  "family": "shape",
+  "bb_skip_link": "review",
+  "exit_tier1": 0,
+  "exit_strict": 1,
+  "why": "With scripting on, <noscript> content is not in the DOM, so the only #content is unreachable -> broken; <main> remains.",
+  "part_k": "pass"
+ },
+ "representative/target-missing-nothing-else.html": {
+  "source": "representative, not captured",
+  "family": "shape",
+  "bb_skip_link": "fail",
+  "exit_tier1": 1,
+  "exit_strict": 1,
+  "why": "Only mechanism is a broken skip link; no <main>, no opening heading."
+ },
+ "representative/target-missing-with-heading.html": {
+  "source": "representative, not captured",
+  "family": "shape",
+  "bb_skip_link": "review",
+  "exit_tier1": 0,
+  "exit_strict": 1,
+  "why": "Broken skip link, but an h1 opens the content (H69) -> pled review."
+ },
+ "representative/target-missing-with-main.html": {
+  "source": "representative, not captured",
+  "family": "shape",
+  "bb_skip_link": "review",
+  "exit_tier1": 0,
+  "exit_strict": 1,
+  "why": "Broken skip link (no #content), but <main> (ARIA11) -> pled review."
+ },
+ "representative/toc-nav-inside-main-no-skip.html": {
+  "source": "representative, not captured",
+  "family": "shape",
+  "bb_skip_link": "review",
+  "exit_tier1": 0,
+  "exit_strict": 1,
+  "why": "Header nav, then <main> holding an h1 and an 'On this page' nav: the in-page nav does not make <main> a wrapper; <main> (ARIA11) -> pled review for the missing skip link."
+ },
+ "representative/uswds-basic-header.html": {
+  "source": "representative, not captured",
+  "family": "USWDS 3 basic header page",
+  "bb_skip_link": "pass",
+  "exit_tier1": 0,
+  "exit_strict": 0,
+  "why": "G1: usa-skipnav is the first link and reaches <main id=main-content>; the gov banner's disclosure content is [hidden]."
+ },
+ "representative/webflow-template-site.html": {
+  "source": "representative, not captured",
+  "family": "Webflow template",
+  "modeled_on": "the structure of the 'Nexifye' Webflow template, saved by the user 2026-10-06 (not committed; text and links replaced)",
+  "bb_skip_link": "review",
+  "exit_tier1": 0,
+  "exit_strict": 1,
+  "why": "No skip link; the navbar is a role=banner block with a role=navigation menu, and <main> follows the hero (whose h1 sits outside it), so a main landmark (ARIA11) can satisfy 2.4.1: review, pled."
+ },
+ "representative/wix-published.html": {
+  "source": "representative, not captured",
+  "family": "Wix (Thunderbolt) published site; skip control is a <button>",
+  "bb_skip_link": "pass",
+  "exit_tier1": 0,
+  "exit_strict": 0,
+  "why": "Skip-to-content button before the header (moves focus to <main id=PAGES_CONTAINER> by script) plus a main landmark. UNCERTAIN: exact Wix button markup/position from memory; if the button sits after the header the verdict is review."
+ },
+ "representative/wp-block-twentytwentyfive.html": {
+  "source": "representative, not captured",
+  "family": "WordPress block theme, Twenty Twenty-Five",
+  "modeled_on": "the structure of a Twenty Twenty-Five demo page, server HTML and rendered DOM, saved by the user 2026-10-06 (not committed; text and links replaced)",
+  "bb_skip_link": "pass",
+  "exit_tier1": 0,
+  "exit_strict": 0,
+  "why": "G1: WordPress puts its skip link first in the server HTML; it reaches <main id=wp--skip-link--target> past the header template part and its navigation (whose menu sits in a closed overlay)."
+ },
+ "representative/wp-classic-twentytwentyone.html": {
+  "source": "representative, not captured",
+  "family": "WordPress classic theme, Twenty Twenty-One",
+  "modeled_on": "the structure of a Twenty Twenty-One demo page (wp-themes.com), saved by the user 2026-10-06 (not committed; text and links replaced)",
+  "bb_skip_link": "pass",
+  "exit_tier1": 0,
+  "exit_strict": 0,
+  "why": "G1: 'Skip to content' is the first link and reaches #content past the masthead and its navigation."
+ }
+}

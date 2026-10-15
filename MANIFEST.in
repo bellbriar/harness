@@ -1,0 +1,18 @@
+# What the source distribution carries besides the package: every file git
+# tracks (tools/check_dist.py checks it, R4A-1), so `python -m unittest
+# discover -s tests -t .` runs from an unpacked sdist as it does from a
+# checkout.
+include LICENSE NOTICE README.md PREPUBLISH.md SECURITY.md CONTRIBUTING.md
+include CHANGELOG.md .dockerignore .gitignore .gitattributes
+graft .github
+graft action
+graft docker
+graft docs
+graft examples
+graft fixtures
+graft tests
+graft tools
+prune fixtures/bypass/captured
+global-exclude __pycache__ *.py[cod] .DS_Store
+# Private keys never ship (.gitignore, tools/repo_guard.py).
+global-exclude *.key *private-key* *PRIVATE-KEY* *DEMO-ONLY*

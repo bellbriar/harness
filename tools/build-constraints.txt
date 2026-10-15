@@ -1,0 +1,7 @@
+# The tools that build the release's files, pinned, so that a release is
+# built with what its rehearsal built with (SB-5). The release workflow's
+# build job applies them through PIP_CONSTRAINT, to `pip install build`
+# and inside the isolated environment `python -m build` installs
+# setuptools into. Move them together, on purpose, and rehearse.
+build==1.6.1
+setuptools==84.0.0

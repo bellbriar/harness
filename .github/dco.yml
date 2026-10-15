@@ -1,0 +1,7 @@
+# The DCO app (https://github.com/apps/dco) checks that every commit in a
+# pull request carries a Signed-off-by line matching its author
+# (CONTRIBUTING.md). Make its check required on the main branch.
+require:
+  members: true
+allowRemediationCommits:
+  individual: true

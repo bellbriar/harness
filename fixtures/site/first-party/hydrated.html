@@ -1,0 +1,20 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<title>Mercy Health</title>
+<meta name="viewport" content="width=device-width, initial-scale=1"></head>
+<body>
+<!-- FIXTURE CONTRACT (tests/test_fetch.py serves this from one loopback
+     origin and the vendor scripts from a SECOND, so first- and third-party
+     really differ). Server HTML is clean. After hydration:
+       * ONE first-party defect the customer owns (img with no alt)
+       * SEVEN third-party defects injected by cross-origin vendor scripts,
+         reported but NOT scored.
+     That 7-to-1 ratio is what realistic hospital markup produces; billing
+     all eight to the customer is how a first audit loses the room.
+     __VENDOR_BASE__ is substituted with the second server's origin. -->
+<a href="#main">Skip to main content</a>
+<main id="main"><h1>Find a doctor</h1><p>Search our directory.</p></main>
+<footer><a href="/accessibility">Accessibility</a></footer>
+<script src="/app.js"></script>
+<script src="__VENDOR_BASE__/vendor-consent.js"></script>
+<script src="__VENDOR_BASE__/vendor-chat.js"></script>
+</body></html>

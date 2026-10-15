@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<!-- bypass-fixture: representative, not captured. WordPress block theme, Twenty Twenty-Five (structure modeled on a page saved 2026-10-06; text and links replaced). Expected bb-skip-link: pass. G1: WordPress puts its skip link first in the server HTML; it reaches <main id=wp--skip-link--target> past the header template part and its navigation (whose menu sits in a closed overlay). -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Example Blog</title>
+</head>
+<body class="home blog wp-embed-responsive wp-theme-twentytwentyfive">
+<a class="skip-link screen-reader-text" id="wp-skip-link" href="#wp--skip-link--target">Skip to content</a>
+<div class="wp-site-blocks">
+<header class="wp-block-template-part"><div class="wp-block-group alignwide">
+<p class="wp-block-site-title"><a href="https://example.com/" rel="home">Example Blog</a></p>
+<nav class="is-responsive items-justified-right wp-block-navigation" aria-label="Main">
+<button aria-haspopup="dialog" aria-label="Open menu" class="wp-block-navigation__responsive-container-open">Menu</button>
+<div class="wp-block-navigation__responsive-container" id="modal-1"><div class="wp-block-navigation__responsive-close"><div class="wp-block-navigation__responsive-dialog">
+<button aria-label="Close menu" class="wp-block-navigation__responsive-container-close">Close</button>
+<div class="wp-block-navigation__responsive-container-content" id="modal-1-content"><ul class="wp-block-page-list"><li><a href="https://example.com/about/">About</a></li><li><a href="https://example.com/parent/">Parent Page</a></li><li><a href="https://example.com/parent/sub/">Sub-page</a></li></ul></div>
+</div></div></div>
+</nav>
+</div></header>
+<main class="wp-block-group has-global-padding" id="wp--skip-link--target">
+<h1 class="wp-block-heading">Blog</h1>
+<ul class="wp-block-post-template"><li class="wp-block-post"><h2 class="wp-block-post-title"><a href="https://example.com/a-post/">A post</a></h2><p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p></li></ul>
+</main>
+<footer class="wp-block-template-part"><nav class="is-vertical wp-block-navigation" aria-label="Footer"><a href="https://example.com/blog/">Blog</a><a href="https://example.com/about/">About</a></nav></footer>
+</div>
+</body>
+</html>

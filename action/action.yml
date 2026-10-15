@@ -1,0 +1,115 @@
+# bellbriar/eval-action (A11). This folder is the Action's own repository:
+# copy it there (action.yml at its root), tag a release v1.0.0, and move
+# the v1 tag to it. It runs the harness from its container image, so a job
+# needs no Python, Playwright or Chromium setup: Linux runners only (the
+# image is a Linux container, for x86-64 and ARM64). On macOS or Windows,
+# install the harness with pipx or uv instead (README).
+name: Bellbriar accessibility evaluation
+description: >-
+  Run the Bellbriar accessibility harness on built pages or URLs; fail the
+  job on the WCAG failures its rules find.
+author: Bellbriar, Inc.
+branding:
+  icon: check-circle
+  color: blue
+inputs:
+  args:
+    description: >-
+      The bellbriar-eval arguments, separated by spaces, or one per line
+      (to pass one that holds a space). Example: dist --render --fail-on
+      tier1 --html bellbriar-report.html --json bellbriar-report.json
+    required: true
+  version:
+    description: >-
+      The harness version to run: a release (1.0.0), a major version (1),
+      which follows the newest release of that major version, or an image
+      digest (sha256:…), which never changes.
+    required: false
+    default: "1"
+  pass-env:
+    description: >-
+      Names of environment variables to hand to the harness, separated by
+      spaces: BELLBRIAR_HTTP_PASSWORD for --http-user, and the variable
+      --sign-key-env names. Set them in the step's env, from secrets.
+    required: false
+    default: ""
+runs:
+  using: composite
+  steps:
+    - name: Run bellbriar-eval
+      shell: bash
+      env:
+        BB_ARGS: ${{ inputs.args }}
+        BB_VERSION: ${{ inputs.version }}
+        BB_PASS_ENV: ${{ inputs.pass-env }}
+      run: |
+        set -euo pipefail
+        set -f        # no wildcard in an input is ever expanded
+        if [ "$RUNNER_OS" != "Linux" ]; then
+          echo "::error::bellbriar/eval-action runs a Linux container; on $RUNNER_OS install the harness with pipx or uv instead"
+          exit 2
+        fi
+        case "${RUNNER_ARCH:-X64}" in
+          X64|ARM64) ;;
+          *)
+            echo "::error::the harness image is built for x86-64 and ARM64 runners, not $RUNNER_ARCH; install the harness with pipx or uv instead"
+            exit 2 ;;
+        esac
+        if [[ "$GITHUB_WORKSPACE" == /__w/* ]]; then
+          # A job with `container:`: docker here is the host's, so the
+          # workspace it mounts and the localhost it reaches are the
+          # host's, not this container's (R4A-18).
+          echo "::warning::bellbriar/eval-action looks to be running in a job container (container:); the image it starts sees the host's folders and network, not this container's. Run it in a job without container:."
+        fi
+        if [[ "$BB_VERSION" =~ ^sha256:[0-9a-f]{64}$ ]]; then
+          image="ghcr.io/bellbriar/harness@$BB_VERSION"
+          pull=missing              # a digest names one image for good
+        elif [[ "$BB_VERSION" =~ ^[0-9]+(\.[0-9]+){0,2}$ ]]; then
+          image="ghcr.io/bellbriar/harness:$BB_VERSION"
+          pull=always
+        else
+          echo "::error::version must be a version number such as 1 or 1.0.0, or an image digest (sha256:…), not '$BB_VERSION'"
+          exit 2
+        fi
+        # The arguments, never through a shell: one per line when there
+        # are two lines or more, else split at spaces (a folded `args: >`
+        # is one line). No quotes, no wildcards; a line's trailing spaces
+        # and carriage return are dropped.
+        argv=()
+        lines=0
+        while IFS= read -r line; do
+          line="${line%"${line##*[![:space:]]}"}"
+          [ -n "$line" ] && lines=$((lines + 1))
+        done <<< "$BB_ARGS"
+        if [ "$lines" -gt 1 ]; then
+          while IFS= read -r line; do
+            line="${line%"${line##*[![:space:]]}"}"
+            [ -n "$line" ] && argv+=("$line")
+          done <<< "$BB_ARGS"
+        else
+          read -r -a argv <<< "$(printf '%s' "$BB_ARGS" | tr '\r\n' '  ')"
+        fi
+        if [ "${#argv[@]}" -eq 0 ]; then
+          # The image would print its help and exit 0: a gate that passes
+          # on nothing (R4A-10).
+          echo "::error::args is empty: give the bellbriar-eval arguments, such as: dist --render --fail-on tier1"
+          exit 2
+        fi
+        envs=()
+        for name in $BB_PASS_ENV; do
+          if ! [[ "$name" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]]; then
+            echo "::error::pass-env takes variable names, not '$name'"
+            exit 2
+          fi
+          envs+=(-e "$name")
+        done
+        # The workspace as /work, written as the runner's own user (so the
+        # reports belong to it), and the runner's network (so a preview
+        # server the job started on localhost is reachable). A version
+        # such as 1 is pulled each run: it names whatever the registry
+        # holds now, not what this runner pulled before (R4A-13). Arrays
+        # are expanded so bash before 4.4 takes them empty (R4D-13).
+        exec docker run --rm --init --ipc=host --network host --pull "$pull" \
+          --user "$(id -u):$(id -g)" -e HOME=/tmp ${envs[@]+"${envs[@]}"} \
+          -v "$GITHUB_WORKSPACE:/work" -w /work \
+          "$image" "${argv[@]}"

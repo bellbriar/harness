@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Mercy Hospital — Find a doctor</title>
+<meta name="viewport" content="width=device-width, initial-scale=1"></head>
+<body>
+<!-- FIXTURE CONTRACT: every pattern here is ARIA/ACT-conformant and common on
+     real sites. The static layer must report ZERO fail findings on this page.
+     tests/test_rule_precision.py enforces that. Add a pattern here whenever a
+     false positive is found in the field. -->
+
+<!-- Google Tag Manager noscript fallback: present on most sites -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-XXXX" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<a href="#main">Skip to main content</a>
+<header>
+  <!-- logo link then Home link: same destination across a landmark boundary (review, not fail) -->
+  <a href="/"><img src="logo.svg" alt="Mercy Hospital"></a>
+  <nav aria-label="Primary"><a href="/">Home</a> <a href="/doctors">Find a doctor</a></nav>
+  <!-- disclosure whose panel is rendered on open (review, not fail) -->
+  <button type="button" aria-expanded="false" aria-controls="lazy-panel">Locations</button>
+  <!-- closed mobile drawer: hidden AND aria-hidden -->
+  <div id="mobile-nav" aria-hidden="true" hidden><a href="/a">Appointments</a><a href="/b">Billing</a></div>
+  <!-- closed native dialog: nothing inside is focusable until opened -->
+  <dialog id="search-dialog" aria-hidden="true"><button type="button">Search</button></dialog>
+  <!-- closed details: only the summary is focusable -->
+  <div aria-hidden="true"><details><summary tabindex="-1">Hours</summary><a href="/hours">Full hours</a></details></div>
+  <!-- inline display:none -->
+  <div aria-hidden="true" style="display:none"><button type="button">Never shown</button></div>
+  <!-- template content is inert -->
+  <template id="row-tpl"><button type="button">Add</button></template>
+  <!-- closed Bootstrap modal, as Bootstrap's docs write it: its class hides it
+       until a script opens it (a file run reviews it, never fails it) -->
+  <div class="modal fade" id="book-modal" tabindex="-1" aria-labelledby="book-title" aria-hidden="true">
+    <div class="modal-dialog"><div class="modal-content">
+      <h2 class="modal-title" id="book-title">Book a visit</h2>
+      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    </div></div>
+  </div>
+  <!-- aria-hidden around content that cannot take focus -->
+  <div aria-hidden="true"><div contenteditable="false">Read-only note</div>
+    <fieldset disabled><button type="button">Unavailable</button></fieldset></div>
+</header>
+<main id="main">
+  <h1>Find a doctor</h1>
+  <!-- decorative / alternatively-named images -->
+  <img src="divider.png" role="presentation">
+  <img src="flourish.png" aria-hidden="true">
+  <img src="visits.png" aria-label="Chart: ER visits rose 12% in 2025">
+  <span aria-hidden="true"><img src="deco.png"></span>
+  <!-- card with the recommended duplicate-link treatment -->
+  <article>
+    <a href="/dr/ana-ruiz" aria-hidden="true" tabindex="-1"><img src="ruiz.jpg" alt=""></a>
+    <h2><a href="/dr/ana-ruiz">Dr. Ana Ruiz, Cardiology</a></h2>
+  </article>
+  <!-- key/value table (review, not fail) -->
+  <table><tr><td>Phone</td><td>555-0100</td></tr><tr><td>Fax</td><td>555-0101</td></tr></table>
+  <!-- data table with headers -->
+  <table><caption>Clinic hours</caption>
+    <tr><th scope="col">Day</th><th scope="col">Open</th><th scope="col">Close</th></tr>
+    <tr><td>Mon</td><td>8am</td><td>5pm</td></tr>
+    <tr><td>Tue</td><td>8am</td><td>5pm</td></tr>
+  </table>
+  <!-- named controls of every kind -->
+  <button type="button" aria-label="Close"><svg aria-hidden="true"></svg></button>
+  <button type="button"><svg aria-hidden="true"></svg><span class="sr-only">Menu</span></button>
+  <input type="submit">
+  <input type="button" value="Go">
+  <form action="/s"><label for="q">Search</label><input id="q" type="search"><button type="submit">Search</button></form>
+  <!-- roles a browser exposes: a named link styled as a button, a tab, ARIA
+       1.3's image, and the DPUB footnote roles Pandoc and Quarto write -->
+  <a href="#" role="button" aria-label="Show filters"><svg aria-hidden="true"></svg></a>
+  <div role="tablist"><button type="button" role="tab" aria-selected="true">Overview</button></div>
+  <svg role="image" aria-label="Map of the campus"></svg>
+  <p>Visiting hours vary<a href="#fn1" id="fnref1" role="doc-noteref"><sup>1</sup></a>.</p>
+  <section role="doc-endnotes"><ol><li id="fn1">Weekends excepted. <a href="#fnref1" role="doc-backlink">Back</a></li></ol></section>
+  <table><caption>Wards</caption>
+    <tr aria-rowindex="1" aria-rowindextext="Header"><th scope="col">Ward</th><th scope="col">Floor</th></tr>
+    <tr aria-rowindex="2" aria-rowindextext="First ward"><td>Maternity</td><td>2</td></tr>
+  </table>
+</main>
+<footer><a href="/accessibility">Accessibility</a></footer>
+</body></html>

@@ -1,0 +1,18 @@
+# Proposed updates, each one a pull request the CI tests (R4A-7, R4A-4):
+# the actions the workflows pin by commit, the container image's base, and
+# the versions the image installs. A new Playwright needs the base image
+# and docker/requirements.txt moved together (tests/test_part_r4.py checks).
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+  - package-ecosystem: docker
+    directory: /docker
+    schedule:
+      interval: weekly
+  - package-ecosystem: pip
+    directory: /docker
+    schedule:
+      interval: weekly

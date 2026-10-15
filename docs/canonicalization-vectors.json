@@ -1,0 +1,2807 @@
+{
+  "spec": "docs/CANONICALIZATION.md",
+  "vector_key": {
+    "derivation": "private key = SHA-256(\"bellbriar-canonicalization-vector-key/1\") — public by construction",
+    "private_hex": "86682fe0b10f1e2e3ba92301bf62568d51e49efceb3291f9cb0776093dbc6dd9",
+    "public_hex": "ab09aea58dae707abe74fb7d31af56285d78ac02cd7f11aec1cf6c4d782aee96",
+    "key_id": "172f109161589572"
+  },
+  "canonicalization": [
+    {
+      "description": "integer-valued float serializes as an integer",
+      "input": {
+        "rate": 1.0
+      },
+      "canonical_utf8": "{\"rate\":1}",
+      "canonical_hex": "7b2272617465223a317d",
+      "sha256": "e59cfb6b86469cb8383ef739706b6bc27bab34d2b4415debcd5d8833c6fb8f2d"
+    },
+    {
+      "description": "negative zero serializes as 0",
+      "input": {
+        "rate": -0.0
+      },
+      "canonical_utf8": "{\"rate\":0}",
+      "canonical_hex": "7b2272617465223a307d",
+      "sha256": "c69bc9925d1d288c5fb8939d0888bed351be09deaab884f65ebc75412516991b"
+    },
+    {
+      "description": "non-integer float: shortest round-trip decimal",
+      "input": {
+        "rate": 0.9375
+      },
+      "canonical_utf8": "{\"rate\":0.9375}",
+      "canonical_hex": "7b2272617465223a302e393337357d",
+      "sha256": "45bea161eabc6d415e8db197e04da110f8509fc210f1cfd3a86561f5668f573a"
+    },
+    {
+      "description": "four-decimal rate stays in plain decimal, no exponent",
+      "input": {
+        "rate": 0.0001
+      },
+      "canonical_utf8": "{\"rate\":0.0001}",
+      "canonical_hex": "7b2272617465223a302e303030317d",
+      "sha256": "45c6916eca9daf74ceb791340ea3d53a6ead1d231885b7b51dba1ecf371846ec"
+    },
+    {
+      "description": "four decimal places at a larger magnitude",
+      "input": {
+        "rate": 12345.6789
+      },
+      "canonical_utf8": "{\"rate\":12345.6789}",
+      "canonical_hex": "7b2272617465223a31323334352e363738397d",
+      "sha256": "46b143dc26b0f1c72ac7b4736170c8cdd9371c030896c9158259eb559eb37bb3"
+    },
+    {
+      "description": "a long decimal from 0.0001 up prints the same in both languages",
+      "input": {
+        "x": 0.30000000000000004
+      },
+      "canonical_utf8": "{\"x\":0.30000000000000004}",
+      "canonical_hex": "7b2278223a302e33303030303030303030303030303030347d",
+      "sha256": "65b5c2b75dd049c607da86614690e4e9d2d95b4c92775b134c684e0ed64cb706"
+    },
+    {
+      "description": "integers unchanged",
+      "input": {
+        "bytes": 1263,
+        "n": -7
+      },
+      "canonical_utf8": "{\"bytes\":1263,\"n\":-7}",
+      "canonical_hex": "7b226279746573223a313236332c226e223a2d377d",
+      "sha256": "f30a6a5d4c73edbdbc63b8c8e055b42f877089a4588eba4a5317c3b33dda42c8"
+    },
+    {
+      "description": "the largest integer every verifier holds exactly: 2^53",
+      "input": {
+        "n": 9007199254740992
+      },
+      "canonical_utf8": "{\"n\":9007199254740992}",
+      "canonical_hex": "7b226e223a393030373139393235343734303939327d",
+      "sha256": "66c87d9cb3014e05a11baa97df62282d89d425f22ee15816577c84534e2ef1bb"
+    },
+    {
+      "description": "an integer-valued float up to 2^53 is an integer",
+      "input": {
+        "n": 9007199254740992.0
+      },
+      "canonical_utf8": "{\"n\":9007199254740992}",
+      "canonical_hex": "7b226e223a393030373139393235343734303939327d",
+      "sha256": "66c87d9cb3014e05a11baa97df62282d89d425f22ee15816577c84534e2ef1bb"
+    },
+    {
+      "description": "keys sorted by code point, recursively",
+      "input": {
+        "b": {
+          "y": 2,
+          "x": 1
+        },
+        "a": [
+          3,
+          {
+            "d": 4,
+            "c": 5
+          }
+        ]
+      },
+      "canonical_utf8": "{\"a\":[3,{\"c\":5,\"d\":4}],\"b\":{\"x\":1,\"y\":2}}",
+      "canonical_hex": "7b2261223a5b332c7b2263223a352c2264223a347d5d2c2262223a7b2278223a312c2279223a327d7d",
+      "sha256": "2eac88acef3afea2a9f1ea1ef720b582d659f6dd971e04fd3a8afb89bbd11d5c"
+    },
+    {
+      "description": "booleans and null",
+      "input": {
+        "ok": true,
+        "no": false,
+        "none": null
+      },
+      "canonical_utf8": "{\"no\":false,\"none\":null,\"ok\":true}",
+      "canonical_hex": "7b226e6f223a66616c73652c226e6f6e65223a6e756c6c2c226f6b223a747275657d",
+      "sha256": "8c3584cbdced6ef1a1ccb11d50c364813e0cacf53715e0bc4320581f391e94b4"
+    },
+    {
+      "description": "non-ASCII string values are raw UTF-8, not \\u escapes",
+      "input": {
+        "s": "천연 발효빵 — ünïcödé"
+      },
+      "canonical_utf8": "{\"s\":\"천연 발효빵 — ünïcödé\"}",
+      "canonical_hex": "7b2273223a22ecb29cec97b020ebb09ced9aa8ebb9b520e2809420c3bc6ec3af63c3b664c3a9227d",
+      "sha256": "a3f0b1b55a1a981183de5561ffaa57e8c6c6fb1402056da6fb471025f60cba3c"
+    },
+    {
+      "description": "only the mandatory string escapes",
+      "input": {
+        "s": "a\"b\\c\nd\te\u0001f/g"
+      },
+      "canonical_utf8": "{\"s\":\"a\\\"b\\\\c\\nd\\te\\u0001f/g\"}",
+      "canonical_hex": "7b2273223a22615c22625c5c635c6e645c74655c7530303031662f67227d",
+      "sha256": "66c22a0cbd2523c454854a4c99cb6c26e2f547fc381c5da7612e763e9ce14a9e"
+    },
+    {
+      "description": "empty containers",
+      "input": {
+        "o": {},
+        "l": []
+      },
+      "canonical_utf8": "{\"l\":[],\"o\":{}}",
+      "canonical_hex": "7b226c223a5b5d2c226f223a7b7d7d",
+      "sha256": "111c683c055d4f0a50ce55366e2dfc66644f79266248039a271dd7e25cd5b104"
+    }
+  ],
+  "rejected": [
+    {
+      "description": "NaN is not JSON",
+      "input_python": "{'x': float('nan')}",
+      "input_json": null
+    },
+    {
+      "description": "Infinity is not JSON",
+      "input_python": "{'x': float('inf')}",
+      "input_json": null
+    },
+    {
+      "description": "non-ASCII object key",
+      "input_python": "{'ключ': 1}",
+      "input_json": "{\"ключ\":1}"
+    },
+    {
+      "description": "non-string object key",
+      "input_python": "{1: 'a'}",
+      "input_json": null
+    },
+    {
+      "description": "integer beyond 2^53",
+      "input_python": "{'x': 2**53 + 1}",
+      "input_json": "{\"x\":9007199254740993}"
+    },
+    {
+      "description": "integer-valued number beyond 2^53: Python prints 1152921504606846976, JavaScript 1152921504606847000",
+      "input_python": "{'x': 2.0**60}",
+      "input_json": "{\"x\":1.152921504606847e+18}"
+    },
+    {
+      "description": "decimal smaller than 0.0001: Python prints 5e-05, JavaScript 0.00005",
+      "input_python": "{'x': 0.00005}",
+      "input_json": "{\"x\":5e-05}"
+    },
+    {
+      "description": "lone surrogate in a string",
+      "input_python": "{'s': '\\ud800'}",
+      "input_json": "{\"s\":\"\\ud800\"}"
+    }
+  ],
+  "malformed_texts": [
+    {
+      "description": "duplicate member names",
+      "text": "{\"domain\":\"a.com\",\"domain\":\"b.com\"}"
+    },
+    {
+      "description": "duplicate member names inside the signature block",
+      "text": "{\"signature\":{\"alg\":\"Ed25519\",\"alg\":\"Ed25519\"}}"
+    },
+    {
+      "description": "duplicate member names, one spelled with an escape",
+      "text": "{\"signature\":{\"statement\":{},\"\\u0073tatement\":{}}}"
+    },
+    {
+      "description": "number too large for a double",
+      "text": "{\"x\":1e999}"
+    },
+    {
+      "description": "integer literal beyond 2^53",
+      "text": "{\"x\":9007199254740993}"
+    },
+    {
+      "description": "integer beyond 2^53 spelled as a decimal",
+      "text": "{\"x\":9007199254740993.0}"
+    },
+    {
+      "description": "more digits than a double holds",
+      "text": "{\"x\":0.67570000000000001}"
+    },
+    {
+      "description": "underflows to zero",
+      "text": "{\"x\":1e-400}"
+    },
+    {
+      "description": "underflows to zero, with an exponent beyond any decimal context",
+      "text": "{\"x\":1e-99999999999999999999}"
+    },
+    {
+      "description": "NaN is not JSON",
+      "text": "{\"x\":NaN}"
+    },
+    {
+      "description": "decimal smaller than 0.0001",
+      "text": "{\"x\":5e-05}"
+    },
+    {
+      "description": "lone surrogate",
+      "text": "{\"s\":\"\\ud800\"}"
+    },
+    {
+      "description": "non-ASCII object key",
+      "text": "{\"ключ\":1}"
+    },
+    {
+      "description": "not an object",
+      "text": "[1,2]"
+    },
+    {
+      "description": "nested deeper than 32 levels",
+      "text": "{\"a\":[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]}"
+    }
+  ],
+  "malformed_bytes": [
+    {
+      "description": "starts with a byte-order mark",
+      "hex": "efbbbf7b7d"
+    },
+    {
+      "description": "not valid UTF-8",
+      "hex": "7b2273223a22ff227d"
+    }
+  ],
+  "well_formed_spellings": [
+    {
+      "text": "{\"x\":1.0}",
+      "canonical_utf8": "{\"x\":1}"
+    },
+    {
+      "text": "{\"x\":1e2}",
+      "canonical_utf8": "{\"x\":100}"
+    },
+    {
+      "text": "{\"x\":-0.0}",
+      "canonical_utf8": "{\"x\":0}"
+    },
+    {
+      "text": "{\"x\":0.67570}",
+      "canonical_utf8": "{\"x\":0.6757}"
+    },
+    {
+      "text": "{\"x\":6.757e-1}",
+      "canonical_utf8": "{\"x\":0.6757}"
+    },
+    {
+      "text": "{\"x\":0e99999999999999999999}",
+      "canonical_utf8": "{\"x\":0}"
+    },
+    {
+      "text": "{\"s\":\"\\u0041\"}",
+      "canonical_utf8": "{\"s\":\"A\"}"
+    },
+    {
+      "text": "{\"a\":[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]}",
+      "canonical_utf8": "{\"a\":[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]}"
+    }
+  ],
+  "url_hosts": [
+    {
+      "final_url": "https://www.example.com/",
+      "host": "www.example.com"
+    },
+    {
+      "final_url": "HTTPS://Example.COM:8443/a?b#c",
+      "host": "example.com"
+    },
+    {
+      "final_url": "https://user:pw@staging.example.com/",
+      "host": null
+    },
+    {
+      "final_url": "https://a@b@example.com/",
+      "host": null
+    },
+    {
+      "final_url": "https://example.com?x=@evil.test",
+      "host": "example.com"
+    },
+    {
+      "final_url": "https://example.com#@evil.test",
+      "host": "example.com"
+    },
+    {
+      "final_url": "https://example.com./",
+      "host": "example.com"
+    },
+    {
+      "final_url": "http://127.0.0.1",
+      "host": "127.0.0.1"
+    },
+    {
+      "final_url": "http://[::1]:8080/x",
+      "host": "::1"
+    },
+    {
+      "final_url": "https://[::ffff:7f00:1]/",
+      "host": "::ffff:7f00:1"
+    },
+    {
+      "final_url": "https://xn--bcher-kva.de/",
+      "host": "xn--bcher-kva.de"
+    },
+    {
+      "final_url": "https://evil.test\\@example.com/",
+      "host": null
+    },
+    {
+      "final_url": "https://ex%61mple.com/",
+      "host": null
+    },
+    {
+      "final_url": "https://bücher.de/",
+      "host": null
+    },
+    {
+      "final_url": "https://example.com/a b",
+      "host": null
+    },
+    {
+      "final_url": "https://example.com:80a/",
+      "host": null
+    },
+    {
+      "final_url": "https://example.com:/",
+      "host": "example.com"
+    },
+    {
+      "final_url": "https://[::1/",
+      "host": null
+    },
+    {
+      "final_url": "https:///path",
+      "host": null
+    },
+    {
+      "final_url": "ftp://example.com/",
+      "host": null
+    },
+    {
+      "final_url": "example.com",
+      "host": null
+    }
+  ],
+  "host_relations": [
+    {
+      "host": "example.com",
+      "domain": "example.com",
+      "relation": "same"
+    },
+    {
+      "host": "www.example.com",
+      "domain": "example.com",
+      "relation": "same"
+    },
+    {
+      "host": "example.com",
+      "domain": "www.example.com",
+      "relation": "same"
+    },
+    {
+      "host": "staging.example.com",
+      "domain": "example.com",
+      "relation": "subdomain"
+    },
+    {
+      "host": "staging.example.com",
+      "domain": "www.example.com",
+      "relation": "subdomain"
+    },
+    {
+      "host": "a.b.example.com",
+      "domain": "example.com",
+      "relation": "subdomain"
+    },
+    {
+      "host": "www.staging.example.com",
+      "domain": "staging.example.com",
+      "relation": "same"
+    },
+    {
+      "host": "example.com",
+      "domain": "staging.example.com",
+      "relation": "unrelated"
+    },
+    {
+      "host": "badexample.com",
+      "domain": "example.com",
+      "relation": "unrelated"
+    },
+    {
+      "host": "example.com.evil.test",
+      "domain": "example.com",
+      "relation": "unrelated"
+    },
+    {
+      "host": "evil.com",
+      "domain": "www.com",
+      "relation": "unrelated"
+    },
+    {
+      "host": "192.0.2.1",
+      "domain": "192.0.2.1",
+      "relation": "same"
+    },
+    {
+      "host": "192.0.2.10",
+      "domain": "192.0.2.1",
+      "relation": "unrelated"
+    },
+    {
+      "host": "::1",
+      "domain": "::1",
+      "relation": "same"
+    },
+    {
+      "host": "::1",
+      "domain": "localhost",
+      "relation": "unrelated"
+    },
+    {
+      "host": null,
+      "domain": "example.com",
+      "relation": "unstated"
+    },
+    {
+      "host": "example.com",
+      "domain": null,
+      "relation": "unstated"
+    }
+  ],
+  "page_records": [
+    {
+      "fetch": "https://www.example.com/",
+      "page": {
+        "final_url": "https://www.example.com/about"
+      },
+      "bundle": {
+        "bundle_format": "bellbriar-evidence/1",
+        "created_at": "2026-01-01T00:00:00+00:00",
+        "tool": {
+          "name": "bellbriar-harness",
+          "version": "0.3.0"
+        },
+        "rulebook_version": "0.1.0",
+        "rulebook_sha256": "0ed2bae6a54ecb271075cdc39f0e5a8d00afa7fa336a2d5e7bbe994051f47aff",
+        "domain": "example.com",
+        "pack": {
+          "name": "wcag",
+          "version": "1.0.0",
+          "manifest_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "files": 1,
+          "signature_verified": false
+        },
+        "layers": [],
+        "coverage_note": "천연 발효빵",
+        "site": {
+          "site_weighted_pass_rate": 1.0,
+          "pct_pages_tier1_clean": 0.5,
+          "total_fail_findings": 0
+        },
+        "attestation": "A test vector: evidence of nothing.",
+        "signature": null,
+        "inputs": [],
+        "judged": null,
+        "fetch": {
+          "final_url": "https://www.example.com/",
+          "pages": 1
+        },
+        "pages": [
+          {
+            "path": "https://www.example.com/about",
+            "fetch": {
+              "final_url": "https://www.example.com/about"
+            }
+          }
+        ]
+      },
+      "result": "fine"
+    },
+    {
+      "fetch": "https://www.example.com/",
+      "page": {
+        "final_url": "HTTPS://WWW.Example.com:443/x"
+      },
+      "bundle": {
+        "bundle_format": "bellbriar-evidence/1",
+        "created_at": "2026-01-01T00:00:00+00:00",
+        "tool": {
+          "name": "bellbriar-harness",
+          "version": "0.3.0"
+        },
+        "rulebook_version": "0.1.0",
+        "rulebook_sha256": "0ed2bae6a54ecb271075cdc39f0e5a8d00afa7fa336a2d5e7bbe994051f47aff",
+        "domain": "example.com",
+        "pack": {
+          "name": "wcag",
+          "version": "1.0.0",
+          "manifest_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "files": 1,
+          "signature_verified": false
+        },
+        "layers": [],
+        "coverage_note": "천연 발효빵",
+        "site": {
+          "site_weighted_pass_rate": 1.0,
+          "pct_pages_tier1_clean": 0.5,
+          "total_fail_findings": 0
+        },
+        "attestation": "A test vector: evidence of nothing.",
+        "signature": null,
+        "inputs": [],
+        "judged": null,
+        "fetch": {
+          "final_url": "https://www.example.com/",
+          "pages": 1
+        },
+        "pages": [
+          {
+            "path": "HTTPS://WWW.Example.com:443/x",
+            "fetch": {
+              "final_url": "HTTPS://WWW.Example.com:443/x"
+            }
+          }
+        ]
+      },
+      "result": "fine"
+    },
+    {
+      "fetch": "https://www.example.com/",
+      "page": {
+        "final_url": "https://www.example.com/x",
+        "host": "www.example.com"
+      },
+      "bundle": {
+        "bundle_format": "bellbriar-evidence/1",
+        "created_at": "2026-01-01T00:00:00+00:00",
+        "tool": {
+          "name": "bellbriar-harness",
+          "version": "0.3.0"
+        },
+        "rulebook_version": "0.1.0",
+        "rulebook_sha256": "0ed2bae6a54ecb271075cdc39f0e5a8d00afa7fa336a2d5e7bbe994051f47aff",
+        "domain": "example.com",
+        "pack": {
+          "name": "wcag",
+          "version": "1.0.0",
+          "manifest_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "files": 1,
+          "signature_verified": false
+        },
+        "layers": [],
+        "coverage_note": "천연 발효빵",
+        "site": {
+          "site_weighted_pass_rate": 1.0,
+          "pct_pages_tier1_clean": 0.5,
+          "total_fail_findings": 0
+        },
+        "attestation": "A test vector: evidence of nothing.",
+        "signature": null,
+        "inputs": [],
+        "judged": null,
+        "fetch": {
+          "final_url": "https://www.example.com/",
+          "pages": 1
+        },
+        "pages": [
+          {
+            "path": "https://www.example.com/x",
+            "fetch": {
+              "final_url": "https://www.example.com/x",
+              "host": "www.example.com"
+            }
+          }
+        ]
+      },
+      "result": "fine"
+    },
+    {
+      "fetch": "https://www.example.com/",
+      "page": null,
+      "bundle": {
+        "bundle_format": "bellbriar-evidence/1",
+        "created_at": "2026-01-01T00:00:00+00:00",
+        "tool": {
+          "name": "bellbriar-harness",
+          "version": "0.3.0"
+        },
+        "rulebook_version": "0.1.0",
+        "rulebook_sha256": "0ed2bae6a54ecb271075cdc39f0e5a8d00afa7fa336a2d5e7bbe994051f47aff",
+        "domain": "example.com",
+        "pack": {
+          "name": "wcag",
+          "version": "1.0.0",
+          "manifest_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "files": 1,
+          "signature_verified": false
+        },
+        "layers": [],
+        "coverage_note": "천연 발효빵",
+        "site": {
+          "site_weighted_pass_rate": 1.0,
+          "pct_pages_tier1_clean": 0.5,
+          "total_fail_findings": 0
+        },
+        "attestation": "A test vector: evidence of nothing.",
+        "signature": null,
+        "inputs": [],
+        "judged": null,
+        "fetch": {
+          "final_url": "https://www.example.com/",
+          "pages": 1
+        },
+        "pages": [
+          {
+            "path": "https://www.example.com/",
+            "fetch": null
+          }
+        ]
+      },
+      "result": "malformed"
+    },
+    {
+      "fetch": "https://www.example.com/",
+      "page": {
+        "final_url": "https://example.com/"
+      },
+      "bundle": {
+        "bundle_format": "bellbriar-evidence/1",
+        "created_at": "2026-01-01T00:00:00+00:00",
+        "tool": {
+          "name": "bellbriar-harness",
+          "version": "0.3.0"
+        },
+        "rulebook_version": "0.1.0",
+        "rulebook_sha256": "0ed2bae6a54ecb271075cdc39f0e5a8d00afa7fa336a2d5e7bbe994051f47aff",
+        "domain": "example.com",
+        "pack": {
+          "name": "wcag",
+          "version": "1.0.0",
+          "manifest_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "files": 1,
+          "signature_verified": false
+        },
+        "layers": [],
+        "coverage_note": "천연 발효빵",
+        "site": {
+          "site_weighted_pass_rate": 1.0,
+          "pct_pages_tier1_clean": 0.5,
+          "total_fail_findings": 0
+        },
+        "attestation": "A test vector: evidence of nothing.",
+        "signature": null,
+        "inputs": [],
+        "judged": null,
+        "fetch": {
+          "final_url": "https://www.example.com/",
+          "pages": 1
+        },
+        "pages": [
+          {
+            "path": "https://example.com/",
+            "fetch": {
+              "final_url": "https://example.com/"
+            }
+          }
+        ]
+      },
+      "result": "malformed"
+    },
+    {
+      "fetch": "https://www.example.com/",
+      "page": {
+        "final_url": "https://www.example.com/x",
+        "host": "example.com"
+      },
+      "bundle": {
+        "bundle_format": "bellbriar-evidence/1",
+        "created_at": "2026-01-01T00:00:00+00:00",
+        "tool": {
+          "name": "bellbriar-harness",
+          "version": "0.3.0"
+        },
+        "rulebook_version": "0.1.0",
+        "rulebook_sha256": "0ed2bae6a54ecb271075cdc39f0e5a8d00afa7fa336a2d5e7bbe994051f47aff",
+        "domain": "example.com",
+        "pack": {
+          "name": "wcag",
+          "version": "1.0.0",
+          "manifest_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "files": 1,
+          "signature_verified": false
+        },
+        "layers": [],
+        "coverage_note": "천연 발효빵",
+        "site": {
+          "site_weighted_pass_rate": 1.0,
+          "pct_pages_tier1_clean": 0.5,
+          "total_fail_findings": 0
+        },
+        "attestation": "A test vector: evidence of nothing.",
+        "signature": null,
+        "inputs": [],
+        "judged": null,
+        "fetch": {
+          "final_url": "https://www.example.com/",
+          "pages": 1
+        },
+        "pages": [
+          {
+            "path": "https://www.example.com/x",
+            "fetch": {
+              "final_url": "https://www.example.com/x",
+              "host": "example.com"
+            }
+          }
+        ]
+      },
+      "result": "malformed"
+    },
+    {
+      "fetch": "https://www.example.com/",
+      "page": {
+        "final_url": "www.example.com/x"
+      },
+      "bundle": {
+        "bundle_format": "bellbriar-evidence/1",
+        "created_at": "2026-01-01T00:00:00+00:00",
+        "tool": {
+          "name": "bellbriar-harness",
+          "version": "0.3.0"
+        },
+        "rulebook_version": "0.1.0",
+        "rulebook_sha256": "0ed2bae6a54ecb271075cdc39f0e5a8d00afa7fa336a2d5e7bbe994051f47aff",
+        "domain": "example.com",
+        "pack": {
+          "name": "wcag",
+          "version": "1.0.0",
+          "manifest_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "files": 1,
+          "signature_verified": false
+        },
+        "layers": [],
+        "coverage_note": "천연 발효빵",
+        "site": {
+          "site_weighted_pass_rate": 1.0,
+          "pct_pages_tier1_clean": 0.5,
+          "total_fail_findings": 0
+        },
+        "attestation": "A test vector: evidence of nothing.",
+        "signature": null,
+        "inputs": [],
+        "judged": null,
+        "fetch": {
+          "final_url": "https://www.example.com/",
+          "pages": 1
+        },
+        "pages": [
+          {
+            "path": "www.example.com/x",
+            "fetch": {
+              "final_url": "www.example.com/x"
+            }
+          }
+        ]
+      },
+      "result": "malformed"
+    },
+    {
+      "fetch": null,
+      "page": {
+        "final_url": "http://127.0.0.1:8123/index.html"
+      },
+      "bundle": {
+        "bundle_format": "bellbriar-evidence/1",
+        "created_at": "2026-01-01T00:00:00+00:00",
+        "tool": {
+          "name": "bellbriar-harness",
+          "version": "0.3.0"
+        },
+        "rulebook_version": "0.1.0",
+        "rulebook_sha256": "0ed2bae6a54ecb271075cdc39f0e5a8d00afa7fa336a2d5e7bbe994051f47aff",
+        "domain": "example.com",
+        "pack": {
+          "name": "wcag",
+          "version": "1.0.0",
+          "manifest_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "files": 1,
+          "signature_verified": false
+        },
+        "layers": [],
+        "coverage_note": "천연 발효빵",
+        "site": {
+          "site_weighted_pass_rate": 1.0,
+          "pct_pages_tier1_clean": 0.5,
+          "total_fail_findings": 0
+        },
+        "attestation": "A test vector: evidence of nothing.",
+        "signature": null,
+        "inputs": [],
+        "judged": null,
+        "fetch": null,
+        "pages": [
+          {
+            "path": "index.html",
+            "fetch": {
+              "final_url": "http://127.0.0.1:8123/index.html"
+            }
+          }
+        ]
+      },
+      "result": "fine"
+    },
+    {
+      "fetch": null,
+      "page": {
+        "final_url": "http://[::1]:8080/"
+      },
+      "bundle": {
+        "bundle_format": "bellbriar-evidence/1",
+        "created_at": "2026-01-01T00:00:00+00:00",
+        "tool": {
+          "name": "bellbriar-harness",
+          "version": "0.3.0"
+        },
+        "rulebook_version": "0.1.0",
+        "rulebook_sha256": "0ed2bae6a54ecb271075cdc39f0e5a8d00afa7fa336a2d5e7bbe994051f47aff",
+        "domain": "example.com",
+        "pack": {
+          "name": "wcag",
+          "version": "1.0.0",
+          "manifest_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "files": 1,
+          "signature_verified": false
+        },
+        "layers": [],
+        "coverage_note": "천연 발효빵",
+        "site": {
+          "site_weighted_pass_rate": 1.0,
+          "pct_pages_tier1_clean": 0.5,
+          "total_fail_findings": 0
+        },
+        "attestation": "A test vector: evidence of nothing.",
+        "signature": null,
+        "inputs": [],
+        "judged": null,
+        "fetch": null,
+        "pages": [
+          {
+            "path": "index.html",
+            "fetch": {
+              "final_url": "http://[::1]:8080/"
+            }
+          }
+        ]
+      },
+      "result": "fine"
+    },
+    {
+      "fetch": null,
+      "page": {
+        "final_url": "http://localhost:3000/"
+      },
+      "bundle": {
+        "bundle_format": "bellbriar-evidence/1",
+        "created_at": "2026-01-01T00:00:00+00:00",
+        "tool": {
+          "name": "bellbriar-harness",
+          "version": "0.3.0"
+        },
+        "rulebook_version": "0.1.0",
+        "rulebook_sha256": "0ed2bae6a54ecb271075cdc39f0e5a8d00afa7fa336a2d5e7bbe994051f47aff",
+        "domain": "example.com",
+        "pack": {
+          "name": "wcag",
+          "version": "1.0.0",
+          "manifest_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "files": 1,
+          "signature_verified": false
+        },
+        "layers": [],
+        "coverage_note": "천연 발효빵",
+        "site": {
+          "site_weighted_pass_rate": 1.0,
+          "pct_pages_tier1_clean": 0.5,
+          "total_fail_findings": 0
+        },
+        "attestation": "A test vector: evidence of nothing.",
+        "signature": null,
+        "inputs": [],
+        "judged": null,
+        "fetch": null,
+        "pages": [
+          {
+            "path": "index.html",
+            "fetch": {
+              "final_url": "http://localhost:3000/"
+            }
+          }
+        ]
+      },
+      "result": "fine"
+    },
+    {
+      "fetch": null,
+      "page": {
+        "final_url": "http://app.localhost/"
+      },
+      "bundle": {
+        "bundle_format": "bellbriar-evidence/1",
+        "created_at": "2026-01-01T00:00:00+00:00",
+        "tool": {
+          "name": "bellbriar-harness",
+          "version": "0.3.0"
+        },
+        "rulebook_version": "0.1.0",
+        "rulebook_sha256": "0ed2bae6a54ecb271075cdc39f0e5a8d00afa7fa336a2d5e7bbe994051f47aff",
+        "domain": "example.com",
+        "pack": {
+          "name": "wcag",
+          "version": "1.0.0",
+          "manifest_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "files": 1,
+          "signature_verified": false
+        },
+        "layers": [],
+        "coverage_note": "천연 발효빵",
+        "site": {
+          "site_weighted_pass_rate": 1.0,
+          "pct_pages_tier1_clean": 0.5,
+          "total_fail_findings": 0
+        },
+        "attestation": "A test vector: evidence of nothing.",
+        "signature": null,
+        "inputs": [],
+        "judged": null,
+        "fetch": null,
+        "pages": [
+          {
+            "path": "index.html",
+            "fetch": {
+              "final_url": "http://app.localhost/"
+            }
+          }
+        ]
+      },
+      "result": "fine"
+    },
+    {
+      "fetch": null,
+      "page": null,
+      "bundle": {
+        "bundle_format": "bellbriar-evidence/1",
+        "created_at": "2026-01-01T00:00:00+00:00",
+        "tool": {
+          "name": "bellbriar-harness",
+          "version": "0.3.0"
+        },
+        "rulebook_version": "0.1.0",
+        "rulebook_sha256": "0ed2bae6a54ecb271075cdc39f0e5a8d00afa7fa336a2d5e7bbe994051f47aff",
+        "domain": "example.com",
+        "pack": {
+          "name": "wcag",
+          "version": "1.0.0",
+          "manifest_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "files": 1,
+          "signature_verified": false
+        },
+        "layers": [],
+        "coverage_note": "천연 발효빵",
+        "site": {
+          "site_weighted_pass_rate": 1.0,
+          "pct_pages_tier1_clean": 0.5,
+          "total_fail_findings": 0
+        },
+        "attestation": "A test vector: evidence of nothing.",
+        "signature": null,
+        "inputs": [],
+        "judged": null,
+        "fetch": null,
+        "pages": [
+          {
+            "path": "index.html",
+            "fetch": null
+          }
+        ]
+      },
+      "result": "fine"
+    },
+    {
+      "fetch": null,
+      "page": {
+        "final_url": "https://www.example.com/"
+      },
+      "bundle": {
+        "bundle_format": "bellbriar-evidence/1",
+        "created_at": "2026-01-01T00:00:00+00:00",
+        "tool": {
+          "name": "bellbriar-harness",
+          "version": "0.3.0"
+        },
+        "rulebook_version": "0.1.0",
+        "rulebook_sha256": "0ed2bae6a54ecb271075cdc39f0e5a8d00afa7fa336a2d5e7bbe994051f47aff",
+        "domain": "example.com",
+        "pack": {
+          "name": "wcag",
+          "version": "1.0.0",
+          "manifest_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "files": 1,
+          "signature_verified": false
+        },
+        "layers": [],
+        "coverage_note": "천연 발효빵",
+        "site": {
+          "site_weighted_pass_rate": 1.0,
+          "pct_pages_tier1_clean": 0.5,
+          "total_fail_findings": 0
+        },
+        "attestation": "A test vector: evidence of nothing.",
+        "signature": null,
+        "inputs": [],
+        "judged": null,
+        "fetch": null,
+        "pages": [
+          {
+            "path": "index.html",
+            "fetch": {
+              "final_url": "https://www.example.com/"
+            }
+          }
+        ]
+      },
+      "result": "malformed"
+    },
+    {
+      "fetch": null,
+      "page": {
+        "final_url": "http://127.000.0.1/"
+      },
+      "bundle": {
+        "bundle_format": "bellbriar-evidence/1",
+        "created_at": "2026-01-01T00:00:00+00:00",
+        "tool": {
+          "name": "bellbriar-harness",
+          "version": "0.3.0"
+        },
+        "rulebook_version": "0.1.0",
+        "rulebook_sha256": "0ed2bae6a54ecb271075cdc39f0e5a8d00afa7fa336a2d5e7bbe994051f47aff",
+        "domain": "example.com",
+        "pack": {
+          "name": "wcag",
+          "version": "1.0.0",
+          "manifest_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "files": 1,
+          "signature_verified": false
+        },
+        "layers": [],
+        "coverage_note": "천연 발효빵",
+        "site": {
+          "site_weighted_pass_rate": 1.0,
+          "pct_pages_tier1_clean": 0.5,
+          "total_fail_findings": 0
+        },
+        "attestation": "A test vector: evidence of nothing.",
+        "signature": null,
+        "inputs": [],
+        "judged": null,
+        "fetch": null,
+        "pages": [
+          {
+            "path": "index.html",
+            "fetch": {
+              "final_url": "http://127.000.0.1/"
+            }
+          }
+        ]
+      },
+      "result": "malformed"
+    },
+    {
+      "fetch": null,
+      "page": {
+        "final_url": "http://10.0.0.5/"
+      },
+      "bundle": {
+        "bundle_format": "bellbriar-evidence/1",
+        "created_at": "2026-01-01T00:00:00+00:00",
+        "tool": {
+          "name": "bellbriar-harness",
+          "version": "0.3.0"
+        },
+        "rulebook_version": "0.1.0",
+        "rulebook_sha256": "0ed2bae6a54ecb271075cdc39f0e5a8d00afa7fa336a2d5e7bbe994051f47aff",
+        "domain": "example.com",
+        "pack": {
+          "name": "wcag",
+          "version": "1.0.0",
+          "manifest_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "files": 1,
+          "signature_verified": false
+        },
+        "layers": [],
+        "coverage_note": "천연 발효빵",
+        "site": {
+          "site_weighted_pass_rate": 1.0,
+          "pct_pages_tier1_clean": 0.5,
+          "total_fail_findings": 0
+        },
+        "attestation": "A test vector: evidence of nothing.",
+        "signature": null,
+        "inputs": [],
+        "judged": null,
+        "fetch": null,
+        "pages": [
+          {
+            "path": "index.html",
+            "fetch": {
+              "final_url": "http://10.0.0.5/"
+            }
+          }
+        ]
+      },
+      "result": "malformed"
+    },
+    {
+      "fetch": null,
+      "page": {
+        "final_url": "http://localhost.example.com/"
+      },
+      "bundle": {
+        "bundle_format": "bellbriar-evidence/1",
+        "created_at": "2026-01-01T00:00:00+00:00",
+        "tool": {
+          "name": "bellbriar-harness",
+          "version": "0.3.0"
+        },
+        "rulebook_version": "0.1.0",
+        "rulebook_sha256": "0ed2bae6a54ecb271075cdc39f0e5a8d00afa7fa336a2d5e7bbe994051f47aff",
+        "domain": "example.com",
+        "pack": {
+          "name": "wcag",
+          "version": "1.0.0",
+          "manifest_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "files": 1,
+          "signature_verified": false
+        },
+        "layers": [],
+        "coverage_note": "천연 발효빵",
+        "site": {
+          "site_weighted_pass_rate": 1.0,
+          "pct_pages_tier1_clean": 0.5,
+          "total_fail_findings": 0
+        },
+        "attestation": "A test vector: evidence of nothing.",
+        "signature": null,
+        "inputs": [],
+        "judged": null,
+        "fetch": null,
+        "pages": [
+          {
+            "path": "index.html",
+            "fetch": {
+              "final_url": "http://localhost.example.com/"
+            }
+          }
+        ]
+      },
+      "result": "malformed"
+    },
+    {
+      "description": "a URL run of two pages",
+      "bundle": {
+        "bundle_format": "bellbriar-evidence/1",
+        "created_at": "2026-01-01T00:00:00+00:00",
+        "tool": {
+          "name": "bellbriar-harness",
+          "version": "0.3.0"
+        },
+        "rulebook_version": "0.1.0",
+        "rulebook_sha256": "0ed2bae6a54ecb271075cdc39f0e5a8d00afa7fa336a2d5e7bbe994051f47aff",
+        "domain": "example.com",
+        "pack": {
+          "name": "wcag",
+          "version": "1.0.0",
+          "manifest_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "files": 1,
+          "signature_verified": false
+        },
+        "layers": [],
+        "coverage_note": "천연 발효빵",
+        "site": {
+          "site_weighted_pass_rate": 1.0,
+          "pct_pages_tier1_clean": 0.5,
+          "total_fail_findings": 0
+        },
+        "attestation": "A test vector: evidence of nothing.",
+        "signature": null,
+        "inputs": [
+          {
+            "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+            "bytes": 1,
+            "kind": "url-snapshot",
+            "path": "https://www.example.com/a"
+          },
+          {
+            "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+            "bytes": 1,
+            "kind": "url-snapshot",
+            "path": "https://www.example.com/b"
+          }
+        ],
+        "judged": null,
+        "fetch": {
+          "final_url": "https://www.example.com/a",
+          "pages": 2
+        },
+        "pages": [
+          {
+            "path": "https://www.example.com/a",
+            "fetch": {
+              "final_url": "https://www.example.com/a"
+            }
+          },
+          {
+            "path": "https://www.example.com/b",
+            "fetch": {
+              "final_url": "https://www.example.com/b"
+            }
+          }
+        ]
+      },
+      "result": "fine"
+    },
+    {
+      "description": "fetch.pages counts more pages than the bundle has",
+      "bundle": {
+        "bundle_format": "bellbriar-evidence/1",
+        "created_at": "2026-01-01T00:00:00+00:00",
+        "tool": {
+          "name": "bellbriar-harness",
+          "version": "0.3.0"
+        },
+        "rulebook_version": "0.1.0",
+        "rulebook_sha256": "0ed2bae6a54ecb271075cdc39f0e5a8d00afa7fa336a2d5e7bbe994051f47aff",
+        "domain": "example.com",
+        "pack": {
+          "name": "wcag",
+          "version": "1.0.0",
+          "manifest_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "files": 1,
+          "signature_verified": false
+        },
+        "layers": [],
+        "coverage_note": "천연 발효빵",
+        "site": {
+          "site_weighted_pass_rate": 1.0,
+          "pct_pages_tier1_clean": 0.5,
+          "total_fail_findings": 0
+        },
+        "attestation": "A test vector: evidence of nothing.",
+        "signature": null,
+        "inputs": [],
+        "judged": null,
+        "fetch": {
+          "final_url": "https://www.example.com/a",
+          "pages": 3
+        },
+        "pages": [
+          {
+            "path": "https://www.example.com/a",
+            "fetch": {
+              "final_url": "https://www.example.com/a"
+            }
+          },
+          {
+            "path": "https://www.example.com/b",
+            "fetch": {
+              "final_url": "https://www.example.com/b"
+            }
+          }
+        ]
+      },
+      "result": "malformed"
+    },
+    {
+      "description": "a URL run's fetch without pages",
+      "bundle": {
+        "bundle_format": "bellbriar-evidence/1",
+        "created_at": "2026-01-01T00:00:00+00:00",
+        "tool": {
+          "name": "bellbriar-harness",
+          "version": "0.3.0"
+        },
+        "rulebook_version": "0.1.0",
+        "rulebook_sha256": "0ed2bae6a54ecb271075cdc39f0e5a8d00afa7fa336a2d5e7bbe994051f47aff",
+        "domain": "example.com",
+        "pack": {
+          "name": "wcag",
+          "version": "1.0.0",
+          "manifest_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "files": 1,
+          "signature_verified": false
+        },
+        "layers": [],
+        "coverage_note": "천연 발효빵",
+        "site": {
+          "site_weighted_pass_rate": 1.0,
+          "pct_pages_tier1_clean": 0.5,
+          "total_fail_findings": 0
+        },
+        "attestation": "A test vector: evidence of nothing.",
+        "signature": null,
+        "inputs": [],
+        "judged": null,
+        "fetch": {
+          "final_url": "https://www.example.com/a"
+        },
+        "pages": [
+          {
+            "path": "https://www.example.com/a",
+            "fetch": {
+              "final_url": "https://www.example.com/a"
+            }
+          }
+        ]
+      },
+      "result": "malformed"
+    },
+    {
+      "description": "a page of a URL run with no capture record",
+      "bundle": {
+        "bundle_format": "bellbriar-evidence/1",
+        "created_at": "2026-01-01T00:00:00+00:00",
+        "tool": {
+          "name": "bellbriar-harness",
+          "version": "0.3.0"
+        },
+        "rulebook_version": "0.1.0",
+        "rulebook_sha256": "0ed2bae6a54ecb271075cdc39f0e5a8d00afa7fa336a2d5e7bbe994051f47aff",
+        "domain": "example.com",
+        "pack": {
+          "name": "wcag",
+          "version": "1.0.0",
+          "manifest_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "files": 1,
+          "signature_verified": false
+        },
+        "layers": [],
+        "coverage_note": "천연 발효빵",
+        "site": {
+          "site_weighted_pass_rate": 1.0,
+          "pct_pages_tier1_clean": 0.5,
+          "total_fail_findings": 0
+        },
+        "attestation": "A test vector: evidence of nothing.",
+        "signature": null,
+        "inputs": [],
+        "judged": null,
+        "fetch": {
+          "final_url": "https://www.example.com/a",
+          "pages": 2
+        },
+        "pages": [
+          {
+            "path": "https://www.example.com/a",
+            "fetch": {
+              "final_url": "https://www.example.com/a"
+            }
+          },
+          {
+            "path": "https://bank.example/",
+            "fetch": null
+          }
+        ]
+      },
+      "result": "malformed"
+    },
+    {
+      "description": "a page named by another URL than it was fetched from",
+      "bundle": {
+        "bundle_format": "bellbriar-evidence/1",
+        "created_at": "2026-01-01T00:00:00+00:00",
+        "tool": {
+          "name": "bellbriar-harness",
+          "version": "0.3.0"
+        },
+        "rulebook_version": "0.1.0",
+        "rulebook_sha256": "0ed2bae6a54ecb271075cdc39f0e5a8d00afa7fa336a2d5e7bbe994051f47aff",
+        "domain": "example.com",
+        "pack": {
+          "name": "wcag",
+          "version": "1.0.0",
+          "manifest_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "files": 1,
+          "signature_verified": false
+        },
+        "layers": [],
+        "coverage_note": "천연 발효빵",
+        "site": {
+          "site_weighted_pass_rate": 1.0,
+          "pct_pages_tier1_clean": 0.5,
+          "total_fail_findings": 0
+        },
+        "attestation": "A test vector: evidence of nothing.",
+        "signature": null,
+        "inputs": [],
+        "judged": null,
+        "fetch": {
+          "final_url": "https://www.example.com/a",
+          "pages": 2
+        },
+        "pages": [
+          {
+            "path": "https://www.example.com/a",
+            "fetch": {
+              "final_url": "https://www.example.com/a"
+            }
+          },
+          {
+            "path": "https://bank.example/",
+            "fetch": {
+              "final_url": "https://www.example.com/b"
+            }
+          }
+        ]
+      },
+      "result": "malformed"
+    },
+    {
+      "description": "a snapshot input from another host",
+      "bundle": {
+        "bundle_format": "bellbriar-evidence/1",
+        "created_at": "2026-01-01T00:00:00+00:00",
+        "tool": {
+          "name": "bellbriar-harness",
+          "version": "0.3.0"
+        },
+        "rulebook_version": "0.1.0",
+        "rulebook_sha256": "0ed2bae6a54ecb271075cdc39f0e5a8d00afa7fa336a2d5e7bbe994051f47aff",
+        "domain": "example.com",
+        "pack": {
+          "name": "wcag",
+          "version": "1.0.0",
+          "manifest_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "files": 1,
+          "signature_verified": false
+        },
+        "layers": [],
+        "coverage_note": "천연 발효빵",
+        "site": {
+          "site_weighted_pass_rate": 1.0,
+          "pct_pages_tier1_clean": 0.5,
+          "total_fail_findings": 0
+        },
+        "attestation": "A test vector: evidence of nothing.",
+        "signature": null,
+        "inputs": [
+          {
+            "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+            "bytes": 1,
+            "kind": "url-snapshot",
+            "path": "https://bank.example/"
+          }
+        ],
+        "judged": null,
+        "fetch": {
+          "final_url": "https://www.example.com/a",
+          "pages": 1
+        },
+        "pages": [
+          {
+            "path": "https://www.example.com/a",
+            "fetch": {
+              "final_url": "https://www.example.com/a"
+            }
+          }
+        ]
+      },
+      "result": "malformed"
+    },
+    {
+      "description": "a snapshot input in a run that fetched nothing",
+      "bundle": {
+        "bundle_format": "bellbriar-evidence/1",
+        "created_at": "2026-01-01T00:00:00+00:00",
+        "tool": {
+          "name": "bellbriar-harness",
+          "version": "0.3.0"
+        },
+        "rulebook_version": "0.1.0",
+        "rulebook_sha256": "0ed2bae6a54ecb271075cdc39f0e5a8d00afa7fa336a2d5e7bbe994051f47aff",
+        "domain": "example.com",
+        "pack": {
+          "name": "wcag",
+          "version": "1.0.0",
+          "manifest_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "files": 1,
+          "signature_verified": false
+        },
+        "layers": [],
+        "coverage_note": "천연 발효빵",
+        "site": {
+          "site_weighted_pass_rate": 1.0,
+          "pct_pages_tier1_clean": 0.5,
+          "total_fail_findings": 0
+        },
+        "attestation": "A test vector: evidence of nothing.",
+        "signature": null,
+        "inputs": [
+          {
+            "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+            "bytes": 1,
+            "kind": "url-snapshot",
+            "path": "https://www.example.com/a"
+          }
+        ],
+        "judged": null,
+        "fetch": null,
+        "pages": [
+          {
+            "path": "index.html",
+            "fetch": null
+          }
+        ]
+      },
+      "result": "malformed"
+    },
+    {
+      "description": "a build rendered on this machine: every page has a record",
+      "bundle": {
+        "bundle_format": "bellbriar-evidence/1",
+        "created_at": "2026-01-01T00:00:00+00:00",
+        "tool": {
+          "name": "bellbriar-harness",
+          "version": "0.3.0"
+        },
+        "rulebook_version": "0.1.0",
+        "rulebook_sha256": "0ed2bae6a54ecb271075cdc39f0e5a8d00afa7fa336a2d5e7bbe994051f47aff",
+        "domain": "example.com",
+        "pack": {
+          "name": "wcag",
+          "version": "1.0.0",
+          "manifest_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "files": 1,
+          "signature_verified": false
+        },
+        "layers": [],
+        "coverage_note": "천연 발효빵",
+        "site": {
+          "site_weighted_pass_rate": 1.0,
+          "pct_pages_tier1_clean": 0.5,
+          "total_fail_findings": 0
+        },
+        "attestation": "A test vector: evidence of nothing.",
+        "signature": null,
+        "inputs": [
+          {
+            "path": "dist/app.js",
+            "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+            "bytes": 1,
+            "kind": "served"
+          }
+        ],
+        "judged": null,
+        "fetch": null,
+        "pages": [
+          {
+            "path": "dist/a.html",
+            "fetch": {
+              "final_url": "http://127.0.0.1:8123/a"
+            }
+          },
+          {
+            "path": "dist/b.html",
+            "fetch": {
+              "final_url": "http://127.0.0.1:8123/b"
+            }
+          }
+        ]
+      },
+      "result": "fine"
+    },
+    {
+      "description": "a run that fetched nothing, with one page record of two",
+      "bundle": {
+        "bundle_format": "bellbriar-evidence/1",
+        "created_at": "2026-01-01T00:00:00+00:00",
+        "tool": {
+          "name": "bellbriar-harness",
+          "version": "0.3.0"
+        },
+        "rulebook_version": "0.1.0",
+        "rulebook_sha256": "0ed2bae6a54ecb271075cdc39f0e5a8d00afa7fa336a2d5e7bbe994051f47aff",
+        "domain": "example.com",
+        "pack": {
+          "name": "wcag",
+          "version": "1.0.0",
+          "manifest_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "files": 1,
+          "signature_verified": false
+        },
+        "layers": [],
+        "coverage_note": "천연 발효빵",
+        "site": {
+          "site_weighted_pass_rate": 1.0,
+          "pct_pages_tier1_clean": 0.5,
+          "total_fail_findings": 0
+        },
+        "attestation": "A test vector: evidence of nothing.",
+        "signature": null,
+        "inputs": [],
+        "judged": null,
+        "fetch": null,
+        "pages": [
+          {
+            "path": "dist/a.html",
+            "fetch": {
+              "final_url": "http://127.0.0.1:8123/a"
+            }
+          },
+          {
+            "path": "dist/b.html",
+            "fetch": null
+          }
+        ]
+      },
+      "result": "malformed"
+    },
+    {
+      "description": "inputs that are not an array of objects",
+      "bundle": {
+        "bundle_format": "bellbriar-evidence/1",
+        "created_at": "2026-01-01T00:00:00+00:00",
+        "tool": {
+          "name": "bellbriar-harness",
+          "version": "0.3.0"
+        },
+        "rulebook_version": "0.1.0",
+        "rulebook_sha256": "0ed2bae6a54ecb271075cdc39f0e5a8d00afa7fa336a2d5e7bbe994051f47aff",
+        "domain": "example.com",
+        "pack": {
+          "name": "wcag",
+          "version": "1.0.0",
+          "manifest_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "files": 1,
+          "signature_verified": false
+        },
+        "layers": [],
+        "coverage_note": "천연 발효빵",
+        "site": {
+          "site_weighted_pass_rate": 1.0,
+          "pct_pages_tier1_clean": 0.5,
+          "total_fail_findings": 0
+        },
+        "attestation": "A test vector: evidence of nothing.",
+        "signature": null,
+        "inputs": [
+          "dist/a.html"
+        ],
+        "judged": null,
+        "fetch": null,
+        "pages": []
+      },
+      "result": "malformed"
+    },
+    {
+      "description": "a URL run's input that is not a page's snapshot",
+      "bundle": {
+        "bundle_format": "bellbriar-evidence/1",
+        "created_at": "2026-01-01T00:00:00+00:00",
+        "tool": {
+          "name": "bellbriar-harness",
+          "version": "0.3.0"
+        },
+        "rulebook_version": "0.1.0",
+        "rulebook_sha256": "0ed2bae6a54ecb271075cdc39f0e5a8d00afa7fa336a2d5e7bbe994051f47aff",
+        "domain": "example.com",
+        "pack": {
+          "name": "wcag",
+          "version": "1.0.0",
+          "manifest_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "files": 1,
+          "signature_verified": false
+        },
+        "layers": [],
+        "coverage_note": "천연 발효빵",
+        "site": {
+          "site_weighted_pass_rate": 1.0,
+          "pct_pages_tier1_clean": 0.5,
+          "total_fail_findings": 0
+        },
+        "attestation": "A test vector: evidence of nothing.",
+        "signature": null,
+        "inputs": [
+          {
+            "path": "https://bank.example/",
+            "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+            "bytes": 1
+          }
+        ],
+        "judged": null,
+        "fetch": {
+          "final_url": "https://www.example.com/a",
+          "pages": 1
+        },
+        "pages": [
+          {
+            "path": "https://www.example.com/a",
+            "fetch": {
+              "final_url": "https://www.example.com/a"
+            }
+          }
+        ]
+      },
+      "result": "malformed"
+    },
+    {
+      "description": "a run that fetched nothing, with an input naming a site",
+      "bundle": {
+        "bundle_format": "bellbriar-evidence/1",
+        "created_at": "2026-01-01T00:00:00+00:00",
+        "tool": {
+          "name": "bellbriar-harness",
+          "version": "0.3.0"
+        },
+        "rulebook_version": "0.1.0",
+        "rulebook_sha256": "0ed2bae6a54ecb271075cdc39f0e5a8d00afa7fa336a2d5e7bbe994051f47aff",
+        "domain": "example.com",
+        "pack": {
+          "name": "wcag",
+          "version": "1.0.0",
+          "manifest_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "files": 1,
+          "signature_verified": false
+        },
+        "layers": [],
+        "coverage_note": "천연 발효빵",
+        "site": {
+          "site_weighted_pass_rate": 1.0,
+          "pct_pages_tier1_clean": 0.5,
+          "total_fail_findings": 0
+        },
+        "attestation": "A test vector: evidence of nothing.",
+        "signature": null,
+        "inputs": [
+          {
+            "path": "https://bank.example/",
+            "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+            "bytes": 1,
+            "kind": "served"
+          }
+        ],
+        "judged": null,
+        "fetch": null,
+        "pages": [
+          {
+            "path": "dist/a.html",
+            "fetch": null
+          }
+        ]
+      },
+      "result": "malformed"
+    },
+    {
+      "description": "a run that fetched nothing, with a page named by a site",
+      "bundle": {
+        "bundle_format": "bellbriar-evidence/1",
+        "created_at": "2026-01-01T00:00:00+00:00",
+        "tool": {
+          "name": "bellbriar-harness",
+          "version": "0.3.0"
+        },
+        "rulebook_version": "0.1.0",
+        "rulebook_sha256": "0ed2bae6a54ecb271075cdc39f0e5a8d00afa7fa336a2d5e7bbe994051f47aff",
+        "domain": "example.com",
+        "pack": {
+          "name": "wcag",
+          "version": "1.0.0",
+          "manifest_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "files": 1,
+          "signature_verified": false
+        },
+        "layers": [],
+        "coverage_note": "천연 발효빵",
+        "site": {
+          "site_weighted_pass_rate": 1.0,
+          "pct_pages_tier1_clean": 0.5,
+          "total_fail_findings": 0
+        },
+        "attestation": "A test vector: evidence of nothing.",
+        "signature": null,
+        "inputs": [],
+        "judged": null,
+        "fetch": null,
+        "pages": [
+          {
+            "path": "https://bank.example/",
+            "fetch": null
+          }
+        ]
+      },
+      "result": "malformed"
+    },
+    {
+      "description": "a judged page that is not a page of the bundle",
+      "bundle": {
+        "bundle_format": "bellbriar-evidence/1",
+        "created_at": "2026-01-01T00:00:00+00:00",
+        "tool": {
+          "name": "bellbriar-harness",
+          "version": "0.3.0"
+        },
+        "rulebook_version": "0.1.0",
+        "rulebook_sha256": "0ed2bae6a54ecb271075cdc39f0e5a8d00afa7fa336a2d5e7bbe994051f47aff",
+        "domain": "example.com",
+        "pack": {
+          "name": "wcag",
+          "version": "1.0.0",
+          "manifest_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "files": 1,
+          "signature_verified": false
+        },
+        "layers": [],
+        "coverage_note": "천연 발효빵",
+        "site": {
+          "site_weighted_pass_rate": 1.0,
+          "pct_pages_tier1_clean": 0.5,
+          "total_fail_findings": 0
+        },
+        "attestation": "A test vector: evidence of nothing.",
+        "signature": null,
+        "inputs": [],
+        "judged": {
+          "summary": {},
+          "pages": [
+            {
+              "path": "https://bank.example/"
+            }
+          ]
+        },
+        "fetch": null,
+        "pages": [
+          {
+            "path": "a.html",
+            "fetch": null
+          }
+        ]
+      },
+      "result": "malformed"
+    },
+    {
+      "description": "judged pages that are pages of the bundle",
+      "bundle": {
+        "bundle_format": "bellbriar-evidence/1",
+        "created_at": "2026-01-01T00:00:00+00:00",
+        "tool": {
+          "name": "bellbriar-harness",
+          "version": "0.3.0"
+        },
+        "rulebook_version": "0.1.0",
+        "rulebook_sha256": "0ed2bae6a54ecb271075cdc39f0e5a8d00afa7fa336a2d5e7bbe994051f47aff",
+        "domain": "example.com",
+        "pack": {
+          "name": "wcag",
+          "version": "1.0.0",
+          "manifest_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "files": 1,
+          "signature_verified": false
+        },
+        "layers": [],
+        "coverage_note": "천연 발효빵",
+        "site": {
+          "site_weighted_pass_rate": 1.0,
+          "pct_pages_tier1_clean": 0.5,
+          "total_fail_findings": 0
+        },
+        "attestation": "A test vector: evidence of nothing.",
+        "signature": null,
+        "inputs": [],
+        "judged": {
+          "summary": {},
+          "pages": [
+            {
+              "path": "a.html"
+            }
+          ]
+        },
+        "fetch": null,
+        "pages": [
+          {
+            "path": "a.html",
+            "fetch": null
+          }
+        ]
+      },
+      "result": "fine"
+    },
+    {
+      "description": "a page record whose final_url has a user name",
+      "bundle": {
+        "bundle_format": "bellbriar-evidence/1",
+        "created_at": "2026-01-01T00:00:00+00:00",
+        "tool": {
+          "name": "bellbriar-harness",
+          "version": "0.3.0"
+        },
+        "rulebook_version": "0.1.0",
+        "rulebook_sha256": "0ed2bae6a54ecb271075cdc39f0e5a8d00afa7fa336a2d5e7bbe994051f47aff",
+        "domain": "example.com",
+        "pack": {
+          "name": "wcag",
+          "version": "1.0.0",
+          "manifest_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "files": 1,
+          "signature_verified": false
+        },
+        "layers": [],
+        "coverage_note": "천연 발효빵",
+        "site": {
+          "site_weighted_pass_rate": 1.0,
+          "pct_pages_tier1_clean": 0.5,
+          "total_fail_findings": 0
+        },
+        "attestation": "A test vector: evidence of nothing.",
+        "signature": null,
+        "inputs": [],
+        "judged": null,
+        "fetch": {
+          "final_url": "https://www.example.com/a",
+          "pages": 1
+        },
+        "pages": [
+          {
+            "path": "https://login.bank.example:443@www.example.com/a",
+            "fetch": {
+              "final_url": "https://login.bank.example:443@www.example.com/a"
+            }
+          }
+        ]
+      },
+      "result": "malformed"
+    },
+    {
+      "description": "pages and inputs that are null",
+      "bundle": {
+        "bundle_format": "bellbriar-evidence/1",
+        "created_at": "2026-01-01T00:00:00+00:00",
+        "tool": {
+          "name": "bellbriar-harness",
+          "version": "0.3.0"
+        },
+        "rulebook_version": "0.1.0",
+        "rulebook_sha256": "0ed2bae6a54ecb271075cdc39f0e5a8d00afa7fa336a2d5e7bbe994051f47aff",
+        "domain": "example.com",
+        "pack": {
+          "name": "wcag",
+          "version": "1.0.0",
+          "manifest_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "files": 1,
+          "signature_verified": false
+        },
+        "layers": [],
+        "coverage_note": "천연 발효빵",
+        "site": {
+          "site_weighted_pass_rate": 1.0,
+          "pct_pages_tier1_clean": 0.5,
+          "total_fail_findings": 0
+        },
+        "attestation": "A test vector: evidence of nothing.",
+        "signature": null,
+        "inputs": null,
+        "judged": null,
+        "fetch": {
+          "final_url": "https://www.example.com/a",
+          "pages": 0
+        },
+        "pages": null
+      },
+      "result": "malformed"
+    },
+    {
+      "description": "judged pages that are null, as if absent",
+      "bundle": {
+        "bundle_format": "bellbriar-evidence/1",
+        "created_at": "2026-01-01T00:00:00+00:00",
+        "tool": {
+          "name": "bellbriar-harness",
+          "version": "0.3.0"
+        },
+        "rulebook_version": "0.1.0",
+        "rulebook_sha256": "0ed2bae6a54ecb271075cdc39f0e5a8d00afa7fa336a2d5e7bbe994051f47aff",
+        "domain": "example.com",
+        "pack": {
+          "name": "wcag",
+          "version": "1.0.0",
+          "manifest_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "files": 1,
+          "signature_verified": false
+        },
+        "layers": [],
+        "coverage_note": "천연 발효빵",
+        "site": {
+          "site_weighted_pass_rate": 1.0,
+          "pct_pages_tier1_clean": 0.5,
+          "total_fail_findings": 0
+        },
+        "attestation": "A test vector: evidence of nothing.",
+        "signature": null,
+        "inputs": [],
+        "judged": {
+          "summary": {},
+          "pages": null
+        },
+        "fetch": null,
+        "pages": [
+          {
+            "path": "a.html",
+            "fetch": null
+          }
+        ]
+      },
+      "result": "fine"
+    },
+    {
+      "description": "a page with no fetch member",
+      "bundle": {
+        "bundle_format": "bellbriar-evidence/1",
+        "created_at": "2026-01-01T00:00:00+00:00",
+        "tool": {
+          "name": "bellbriar-harness",
+          "version": "0.3.0"
+        },
+        "rulebook_version": "0.1.0",
+        "rulebook_sha256": "0ed2bae6a54ecb271075cdc39f0e5a8d00afa7fa336a2d5e7bbe994051f47aff",
+        "domain": "example.com",
+        "pack": {
+          "name": "wcag",
+          "version": "1.0.0",
+          "manifest_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "files": 1,
+          "signature_verified": false
+        },
+        "layers": [],
+        "coverage_note": "천연 발효빵",
+        "site": {
+          "site_weighted_pass_rate": 1.0,
+          "pct_pages_tier1_clean": 0.5,
+          "total_fail_findings": 0
+        },
+        "attestation": "A test vector: evidence of nothing.",
+        "signature": null,
+        "inputs": [],
+        "judged": null,
+        "fetch": null,
+        "pages": [
+          {
+            "path": "a.html"
+          }
+        ]
+      },
+      "result": "malformed"
+    }
+  ],
+  "domain_spellings": [
+    {
+      "domain": "example.com",
+      "result": "fine"
+    },
+    {
+      "domain": "www.cornerbakery.example",
+      "result": "fine"
+    },
+    {
+      "domain": "xn--bcher-kva.de",
+      "result": "fine"
+    },
+    {
+      "domain": "under_score.example",
+      "result": "fine"
+    },
+    {
+      "domain": "localhost",
+      "result": "fine"
+    },
+    {
+      "domain": "192.0.2.1",
+      "result": "fine"
+    },
+    {
+      "domain": "::1",
+      "result": "fine"
+    },
+    {
+      "domain": "::ffff:7f00:1",
+      "result": "fine"
+    },
+    {
+      "domain": "",
+      "result": "malformed"
+    },
+    {
+      "domain": "WWW.CornerBakery.example",
+      "result": "malformed"
+    },
+    {
+      "domain": "example.com.",
+      "result": "malformed"
+    },
+    {
+      "domain": "a..example",
+      "result": "malformed"
+    },
+    {
+      "domain": "cornerbаkery.example",
+      "result": "malformed"
+    },
+    {
+      "domain": "bücher.de",
+      "result": "malformed"
+    },
+    {
+      "domain": "https://example.com/",
+      "result": "malformed"
+    },
+    {
+      "domain": "example.com:443",
+      "result": "malformed"
+    },
+    {
+      "domain": "1.2.3",
+      "result": "malformed"
+    },
+    {
+      "domain": "01.2.3.4",
+      "result": "malformed"
+    },
+    {
+      "domain": "example.0x1f",
+      "result": "malformed"
+    },
+    {
+      "domain": "[::1]",
+      "result": "malformed"
+    },
+    {
+      "domain": "0:0:0:0:0:0:0:1",
+      "result": "malformed"
+    },
+    {
+      "domain": "::ffff:127.0.0.1",
+      "result": "malformed"
+    }
+  ],
+  "bundle": {
+    "unsigned_bundle": {
+      "bundle_format": "bellbriar-evidence/1",
+      "created_at": "2026-01-01T00:00:00+00:00",
+      "tool": {
+        "name": "bellbriar-harness",
+        "version": "0.3.0"
+      },
+      "rulebook_version": "0.1.0",
+      "rulebook_sha256": "0ed2bae6a54ecb271075cdc39f0e5a8d00afa7fa336a2d5e7bbe994051f47aff",
+      "domain": "example.com",
+      "fetch": {
+        "final_url": "https://www.example.com/",
+        "host": "www.example.com",
+        "pages": 0
+      },
+      "pack": {
+        "name": "wcag",
+        "version": "1.0.0",
+        "manifest_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "files": 1,
+        "signature_verified": false
+      },
+      "inputs": [
+        {
+          "path": "fixtures/good.html",
+          "sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+          "bytes": 1263
+        }
+      ],
+      "layers": [],
+      "coverage_note": "천연 발효빵",
+      "site": {
+        "site_weighted_pass_rate": 1.0,
+        "pct_pages_tier1_clean": 0.5,
+        "total_fail_findings": 0
+      },
+      "pages": [],
+      "judged": null,
+      "attestation": "A test vector: evidence of nothing.",
+      "signature": null
+    },
+    "canonical_body_utf8": "{\"attestation\":\"A test vector: evidence of nothing.\",\"bundle_format\":\"bellbriar-evidence/1\",\"coverage_note\":\"천연 발효빵\",\"created_at\":\"2026-01-01T00:00:00+00:00\",\"domain\":\"example.com\",\"fetch\":{\"final_url\":\"https://www.example.com/\",\"host\":\"www.example.com\",\"pages\":0},\"inputs\":[{\"bytes\":1263,\"path\":\"fixtures/good.html\",\"sha256\":\"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\"}],\"judged\":null,\"layers\":[],\"pack\":{\"files\":1,\"manifest_sha256\":\"0000000000000000000000000000000000000000000000000000000000000000\",\"name\":\"wcag\",\"signature_verified\":false,\"version\":\"1.0.0\"},\"pages\":[],\"rulebook_sha256\":\"0ed2bae6a54ecb271075cdc39f0e5a8d00afa7fa336a2d5e7bbe994051f47aff\",\"rulebook_version\":\"0.1.0\",\"site\":{\"pct_pages_tier1_clean\":0.5,\"site_weighted_pass_rate\":1,\"total_fail_findings\":0},\"tool\":{\"name\":\"bellbriar-harness\",\"version\":\"0.3.0\"}}",
+    "bundle_digest_sha256": "0e3a1d15bca0f4c3193b536cb22b7b53660dfa665a343a4558ce436b2a3845a2",
+    "statement": {
+      "statement_format": "bellbriar-signature/1",
+      "bundle_digest_sha256": "0e3a1d15bca0f4c3193b536cb22b7b53660dfa665a343a4558ce436b2a3845a2",
+      "attestation_class": "self-signed",
+      "key_id": "172f109161589572",
+      "signer": "vector-signer",
+      "signed_at": "2026-01-01T00:00:01+00:00",
+      "bundle_format": "bellbriar-evidence/1",
+      "domain": "example.com",
+      "host": "www.example.com",
+      "pack": "wcag",
+      "pack_version": "1.0.0",
+      "pack_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "rulebook_version": "0.1.0",
+      "rulebook_sha256": "0ed2bae6a54ecb271075cdc39f0e5a8d00afa7fa336a2d5e7bbe994051f47aff"
+    },
+    "canonical_statement_utf8": "{\"attestation_class\":\"self-signed\",\"bundle_digest_sha256\":\"0e3a1d15bca0f4c3193b536cb22b7b53660dfa665a343a4558ce436b2a3845a2\",\"bundle_format\":\"bellbriar-evidence/1\",\"domain\":\"example.com\",\"host\":\"www.example.com\",\"key_id\":\"172f109161589572\",\"pack\":\"wcag\",\"pack_sha256\":\"0000000000000000000000000000000000000000000000000000000000000000\",\"pack_version\":\"1.0.0\",\"rulebook_sha256\":\"0ed2bae6a54ecb271075cdc39f0e5a8d00afa7fa336a2d5e7bbe994051f47aff\",\"rulebook_version\":\"0.1.0\",\"signed_at\":\"2026-01-01T00:00:01+00:00\",\"signer\":\"vector-signer\",\"statement_format\":\"bellbriar-signature/1\"}",
+    "statement_digest_sha256": "9795cafea3bca0173394fd707c52b1da1645184bcc67158bd307bc136340a392",
+    "signing_context_hex": "62656c6c62726961722d7369676e61747572652f3100",
+    "signed_message_hex": "62656c6c62726961722d7369676e61747572652f31009795cafea3bca0173394fd707c52b1da1645184bcc67158bd307bc136340a392",
+    "signature_b64": "kRyrNVqVdh+aQIHhTrOqaoe7f/KF4JCz6ZbsaUKAd1JqtI3XFmgv5URUHtXZ/J9ZZ59EuvE1Bd0nyXf35rn/AA==",
+    "signature_block": {
+      "alg": "Ed25519",
+      "context": "bellbriar-signature/1",
+      "key_id": "172f109161589572",
+      "statement": {
+        "statement_format": "bellbriar-signature/1",
+        "bundle_digest_sha256": "0e3a1d15bca0f4c3193b536cb22b7b53660dfa665a343a4558ce436b2a3845a2",
+        "attestation_class": "self-signed",
+        "key_id": "172f109161589572",
+        "signer": "vector-signer",
+        "signed_at": "2026-01-01T00:00:01+00:00",
+        "bundle_format": "bellbriar-evidence/1",
+        "domain": "example.com",
+        "host": "www.example.com",
+        "pack": "wcag",
+        "pack_version": "1.0.0",
+        "pack_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "rulebook_version": "0.1.0",
+        "rulebook_sha256": "0ed2bae6a54ecb271075cdc39f0e5a8d00afa7fa336a2d5e7bbe994051f47aff"
+      },
+      "signature_b64": "kRyrNVqVdh+aQIHhTrOqaoe7f/KF4JCz6ZbsaUKAd1JqtI3XFmgv5URUHtXZ/J9ZZ59EuvE1Bd0nyXf35rn/AA=="
+    },
+    "verify_result": "signature valid (self-signed: it shows that the holder of this key signed this statement and that the bundle has not changed since; not that its results are correct or unedited); every bound field matches; the bundle records the page as fetched from 'www.example.com'; the bundle records rulebook '0.1.0' (sha256 0ed2bae6a54ecb27…), NOT the digest of the one bellbriar-harness 1.0.0rc1 ships: a custom rulebook or another release's, whose tiers and rules may differ; its attestation text is NOT the one bellbriar-harness 1.0.0rc1 writes (another release's, or edited): read it as the words of whoever made the bundle; it carries pack 'wcag', which this release never writes: the claim of whoever made the bundle; it holds what bellbriar-harness 1.0.0rc1 does not write (another release's, or added or edited), which is the word of whoever made the bundle: its coverage note and a list of layers without the static-dom, accessibility-tree, interaction, rendered and judge layers. PUBLISHED TEST KEY: its private key is printed in the format specification, so anyone can sign with it; this signature is evidence of nothing"
+  },
+  "pack": {
+    "manifest_body": {
+      "name": "wcag",
+      "version": "1.0.0",
+      "rulebook_min": "0.1.0",
+      "files": {
+        "SKILL.md": "0e93c596a07ba57c5deb3e03fb0b170a7dd3b8931a9dac257ec2c2cce7e8d696"
+      }
+    },
+    "canonical_body_utf8": "{\"files\":{\"SKILL.md\":\"0e93c596a07ba57c5deb3e03fb0b170a7dd3b8931a9dac257ec2c2cce7e8d696\"},\"name\":\"wcag\",\"rulebook_min\":\"0.1.0\",\"version\":\"1.0.0\"}",
+    "body_digest_sha256": "7e3aafc27de7371f7d9a4eedcddde88e572cb7057b544ba88c06f15d01f2fcae",
+    "signing_context_hex": "62656c6c62726961722d7061636b2f3100",
+    "signed_message_hex": "62656c6c62726961722d7061636b2f31007e3aafc27de7371f7d9a4eedcddde88e572cb7057b544ba88c06f15d01f2fcae",
+    "signature_block": {
+      "alg": "Ed25519",
+      "context": "bellbriar-pack/1",
+      "key_id": "172f109161589572",
+      "signature_b64": "zyP2nsZdS/yoFs4AxEWdNS7OfJuj97P/EJGAveDtcfc7O1Dh18D295pF+/ST72T/N6BvHWmH6nvyC9jw501PBw=="
+    }
+  },
+  "signature_blocks": [
+    {
+      "description": "the vector's own block",
+      "signature_block": {
+        "alg": "Ed25519",
+        "context": "bellbriar-signature/1",
+        "key_id": "172f109161589572",
+        "statement": {
+          "statement_format": "bellbriar-signature/1",
+          "bundle_digest_sha256": "0e3a1d15bca0f4c3193b536cb22b7b53660dfa665a343a4558ce436b2a3845a2",
+          "attestation_class": "self-signed",
+          "key_id": "172f109161589572",
+          "signer": "vector-signer",
+          "signed_at": "2026-01-01T00:00:01+00:00",
+          "bundle_format": "bellbriar-evidence/1",
+          "domain": "example.com",
+          "host": "www.example.com",
+          "pack": "wcag",
+          "pack_version": "1.0.0",
+          "pack_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "rulebook_version": "0.1.0",
+          "rulebook_sha256": "0ed2bae6a54ecb271075cdc39f0e5a8d00afa7fa336a2d5e7bbe994051f47aff"
+        },
+        "signature_b64": "kRyrNVqVdh+aQIHhTrOqaoe7f/KF4JCz6ZbsaUKAd1JqtI3XFmgv5URUHtXZ/J9ZZ59EuvE1Bd0nyXf35rn/AA=="
+      },
+      "result": "valid"
+    },
+    {
+      "description": "an extra member",
+      "signature_block": {
+        "alg": "Ed25519",
+        "context": "bellbriar-signature/1",
+        "key_id": "172f109161589572",
+        "statement": {
+          "statement_format": "bellbriar-signature/1",
+          "bundle_digest_sha256": "0e3a1d15bca0f4c3193b536cb22b7b53660dfa665a343a4558ce436b2a3845a2",
+          "attestation_class": "self-signed",
+          "key_id": "172f109161589572",
+          "signer": "vector-signer",
+          "signed_at": "2026-01-01T00:00:01+00:00",
+          "bundle_format": "bellbriar-evidence/1",
+          "domain": "example.com",
+          "host": "www.example.com",
+          "pack": "wcag",
+          "pack_version": "1.0.0",
+          "pack_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "rulebook_version": "0.1.0",
+          "rulebook_sha256": "0ed2bae6a54ecb271075cdc39f0e5a8d00afa7fa336a2d5e7bbe994051f47aff"
+        },
+        "signature_b64": "kRyrNVqVdh+aQIHhTrOqaoe7f/KF4JCz6ZbsaUKAd1JqtI3XFmgv5URUHtXZ/J9ZZ59EuvE1Bd0nyXf35rn/AA==",
+        "verified_by": "Bellbriar"
+      },
+      "result": "malformed"
+    },
+    {
+      "description": "an extra member that is null",
+      "signature_block": {
+        "alg": "Ed25519",
+        "context": "bellbriar-signature/1",
+        "key_id": "172f109161589572",
+        "statement": {
+          "statement_format": "bellbriar-signature/1",
+          "bundle_digest_sha256": "0e3a1d15bca0f4c3193b536cb22b7b53660dfa665a343a4558ce436b2a3845a2",
+          "attestation_class": "self-signed",
+          "key_id": "172f109161589572",
+          "signer": "vector-signer",
+          "signed_at": "2026-01-01T00:00:01+00:00",
+          "bundle_format": "bellbriar-evidence/1",
+          "domain": "example.com",
+          "host": "www.example.com",
+          "pack": "wcag",
+          "pack_version": "1.0.0",
+          "pack_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "rulebook_version": "0.1.0",
+          "rulebook_sha256": "0ed2bae6a54ecb271075cdc39f0e5a8d00afa7fa336a2d5e7bbe994051f47aff"
+        },
+        "signature_b64": "kRyrNVqVdh+aQIHhTrOqaoe7f/KF4JCz6ZbsaUKAd1JqtI3XFmgv5URUHtXZ/J9ZZ59EuvE1Bd0nyXf35rn/AA==",
+        "log": null
+      },
+      "result": "malformed"
+    },
+    {
+      "description": "alg that is not Ed25519",
+      "signature_block": {
+        "alg": "RS256",
+        "context": "bellbriar-signature/1",
+        "key_id": "172f109161589572",
+        "statement": {
+          "statement_format": "bellbriar-signature/1",
+          "bundle_digest_sha256": "0e3a1d15bca0f4c3193b536cb22b7b53660dfa665a343a4558ce436b2a3845a2",
+          "attestation_class": "self-signed",
+          "key_id": "172f109161589572",
+          "signer": "vector-signer",
+          "signed_at": "2026-01-01T00:00:01+00:00",
+          "bundle_format": "bellbriar-evidence/1",
+          "domain": "example.com",
+          "host": "www.example.com",
+          "pack": "wcag",
+          "pack_version": "1.0.0",
+          "pack_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "rulebook_version": "0.1.0",
+          "rulebook_sha256": "0ed2bae6a54ecb271075cdc39f0e5a8d00afa7fa336a2d5e7bbe994051f47aff"
+        },
+        "signature_b64": "kRyrNVqVdh+aQIHhTrOqaoe7f/KF4JCz6ZbsaUKAd1JqtI3XFmgv5URUHtXZ/J9ZZ59EuvE1Bd0nyXf35rn/AA=="
+      },
+      "result": "malformed"
+    },
+    {
+      "description": "context that is the pack format",
+      "signature_block": {
+        "alg": "Ed25519",
+        "context": "bellbriar-pack/1",
+        "key_id": "172f109161589572",
+        "statement": {
+          "statement_format": "bellbriar-signature/1",
+          "bundle_digest_sha256": "0e3a1d15bca0f4c3193b536cb22b7b53660dfa665a343a4558ce436b2a3845a2",
+          "attestation_class": "self-signed",
+          "key_id": "172f109161589572",
+          "signer": "vector-signer",
+          "signed_at": "2026-01-01T00:00:01+00:00",
+          "bundle_format": "bellbriar-evidence/1",
+          "domain": "example.com",
+          "host": "www.example.com",
+          "pack": "wcag",
+          "pack_version": "1.0.0",
+          "pack_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "rulebook_version": "0.1.0",
+          "rulebook_sha256": "0ed2bae6a54ecb271075cdc39f0e5a8d00afa7fa336a2d5e7bbe994051f47aff"
+        },
+        "signature_b64": "kRyrNVqVdh+aQIHhTrOqaoe7f/KF4JCz6ZbsaUKAd1JqtI3XFmgv5URUHtXZ/J9ZZ59EuvE1Bd0nyXf35rn/AA=="
+      },
+      "result": "malformed"
+    },
+    {
+      "description": "no alg",
+      "signature_block": {
+        "context": "bellbriar-signature/1",
+        "key_id": "172f109161589572",
+        "statement": {
+          "statement_format": "bellbriar-signature/1",
+          "bundle_digest_sha256": "0e3a1d15bca0f4c3193b536cb22b7b53660dfa665a343a4558ce436b2a3845a2",
+          "attestation_class": "self-signed",
+          "key_id": "172f109161589572",
+          "signer": "vector-signer",
+          "signed_at": "2026-01-01T00:00:01+00:00",
+          "bundle_format": "bellbriar-evidence/1",
+          "domain": "example.com",
+          "host": "www.example.com",
+          "pack": "wcag",
+          "pack_version": "1.0.0",
+          "pack_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "rulebook_version": "0.1.0",
+          "rulebook_sha256": "0ed2bae6a54ecb271075cdc39f0e5a8d00afa7fa336a2d5e7bbe994051f47aff"
+        },
+        "signature_b64": "kRyrNVqVdh+aQIHhTrOqaoe7f/KF4JCz6ZbsaUKAd1JqtI3XFmgv5URUHtXZ/J9ZZ59EuvE1Bd0nyXf35rn/AA=="
+      },
+      "result": "malformed"
+    },
+    {
+      "description": "no context",
+      "signature_block": {
+        "alg": "Ed25519",
+        "key_id": "172f109161589572",
+        "statement": {
+          "statement_format": "bellbriar-signature/1",
+          "bundle_digest_sha256": "0e3a1d15bca0f4c3193b536cb22b7b53660dfa665a343a4558ce436b2a3845a2",
+          "attestation_class": "self-signed",
+          "key_id": "172f109161589572",
+          "signer": "vector-signer",
+          "signed_at": "2026-01-01T00:00:01+00:00",
+          "bundle_format": "bellbriar-evidence/1",
+          "domain": "example.com",
+          "host": "www.example.com",
+          "pack": "wcag",
+          "pack_version": "1.0.0",
+          "pack_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "rulebook_version": "0.1.0",
+          "rulebook_sha256": "0ed2bae6a54ecb271075cdc39f0e5a8d00afa7fa336a2d5e7bbe994051f47aff"
+        },
+        "signature_b64": "kRyrNVqVdh+aQIHhTrOqaoe7f/KF4JCz6ZbsaUKAd1JqtI3XFmgv5URUHtXZ/J9ZZ59EuvE1Bd0nyXf35rn/AA=="
+      },
+      "result": "malformed"
+    },
+    {
+      "description": "key_id that is a number",
+      "signature_block": {
+        "alg": "Ed25519",
+        "context": "bellbriar-signature/1",
+        "key_id": 172,
+        "statement": {
+          "statement_format": "bellbriar-signature/1",
+          "bundle_digest_sha256": "0e3a1d15bca0f4c3193b536cb22b7b53660dfa665a343a4558ce436b2a3845a2",
+          "attestation_class": "self-signed",
+          "key_id": "172f109161589572",
+          "signer": "vector-signer",
+          "signed_at": "2026-01-01T00:00:01+00:00",
+          "bundle_format": "bellbriar-evidence/1",
+          "domain": "example.com",
+          "host": "www.example.com",
+          "pack": "wcag",
+          "pack_version": "1.0.0",
+          "pack_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "rulebook_version": "0.1.0",
+          "rulebook_sha256": "0ed2bae6a54ecb271075cdc39f0e5a8d00afa7fa336a2d5e7bbe994051f47aff"
+        },
+        "signature_b64": "kRyrNVqVdh+aQIHhTrOqaoe7f/KF4JCz6ZbsaUKAd1JqtI3XFmgv5URUHtXZ/J9ZZ59EuvE1Bd0nyXf35rn/AA=="
+      },
+      "result": "malformed"
+    },
+    {
+      "description": "signature_b64 that is null",
+      "signature_block": {
+        "alg": "Ed25519",
+        "context": "bellbriar-signature/1",
+        "key_id": "172f109161589572",
+        "statement": {
+          "statement_format": "bellbriar-signature/1",
+          "bundle_digest_sha256": "0e3a1d15bca0f4c3193b536cb22b7b53660dfa665a343a4558ce436b2a3845a2",
+          "attestation_class": "self-signed",
+          "key_id": "172f109161589572",
+          "signer": "vector-signer",
+          "signed_at": "2026-01-01T00:00:01+00:00",
+          "bundle_format": "bellbriar-evidence/1",
+          "domain": "example.com",
+          "host": "www.example.com",
+          "pack": "wcag",
+          "pack_version": "1.0.0",
+          "pack_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "rulebook_version": "0.1.0",
+          "rulebook_sha256": "0ed2bae6a54ecb271075cdc39f0e5a8d00afa7fa336a2d5e7bbe994051f47aff"
+        },
+        "signature_b64": null
+      },
+      "result": "malformed"
+    },
+    {
+      "description": "statement that is a string",
+      "signature_block": {
+        "alg": "Ed25519",
+        "context": "bellbriar-signature/1",
+        "key_id": "172f109161589572",
+        "statement": "signed",
+        "signature_b64": "kRyrNVqVdh+aQIHhTrOqaoe7f/KF4JCz6ZbsaUKAd1JqtI3XFmgv5URUHtXZ/J9ZZ59EuvE1Bd0nyXf35rn/AA=="
+      },
+      "result": "malformed"
+    },
+    {
+      "description": "statement that is null",
+      "signature_block": {
+        "alg": "Ed25519",
+        "context": "bellbriar-signature/1",
+        "key_id": "172f109161589572",
+        "statement": null,
+        "signature_b64": "kRyrNVqVdh+aQIHhTrOqaoe7f/KF4JCz6ZbsaUKAd1JqtI3XFmgv5URUHtXZ/J9ZZ59EuvE1Bd0nyXf35rn/AA=="
+      },
+      "result": "malformed"
+    },
+    {
+      "description": "a __proto__ member",
+      "signature_block": {
+        "alg": "Ed25519",
+        "context": "bellbriar-signature/1",
+        "key_id": "172f109161589572",
+        "statement": {
+          "statement_format": "bellbriar-signature/1",
+          "bundle_digest_sha256": "0e3a1d15bca0f4c3193b536cb22b7b53660dfa665a343a4558ce436b2a3845a2",
+          "attestation_class": "self-signed",
+          "key_id": "172f109161589572",
+          "signer": "vector-signer",
+          "signed_at": "2026-01-01T00:00:01+00:00",
+          "bundle_format": "bellbriar-evidence/1",
+          "domain": "example.com",
+          "host": "www.example.com",
+          "pack": "wcag",
+          "pack_version": "1.0.0",
+          "pack_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "rulebook_version": "0.1.0",
+          "rulebook_sha256": "0ed2bae6a54ecb271075cdc39f0e5a8d00afa7fa336a2d5e7bbe994051f47aff"
+        },
+        "signature_b64": "kRyrNVqVdh+aQIHhTrOqaoe7f/KF4JCz6ZbsaUKAd1JqtI3XFmgv5URUHtXZ/J9ZZ59EuvE1Bd0nyXf35rn/AA==",
+        "__proto__": {
+          "alg": "Ed25519"
+        }
+      },
+      "result": "malformed"
+    },
+    {
+      "description": "a statement with a member the format does not define",
+      "signature_block": {
+        "alg": "Ed25519",
+        "context": "bellbriar-signature/1",
+        "key_id": "172f109161589572",
+        "statement": {
+          "statement_format": "bellbriar-signature/1",
+          "bundle_digest_sha256": "0e3a1d15bca0f4c3193b536cb22b7b53660dfa665a343a4558ce436b2a3845a2",
+          "attestation_class": "self-signed",
+          "key_id": "172f109161589572",
+          "signer": "vector-signer",
+          "signed_at": "2026-01-01T00:00:01+00:00",
+          "bundle_format": "bellbriar-evidence/1",
+          "domain": "example.com",
+          "host": "www.example.com",
+          "pack": "wcag",
+          "pack_version": "1.0.0",
+          "pack_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "rulebook_version": "0.1.0",
+          "rulebook_sha256": "0ed2bae6a54ecb271075cdc39f0e5a8d00afa7fa336a2d5e7bbe994051f47aff",
+          "certified": "WCAG AA"
+        },
+        "signature_b64": "kRyrNVqVdh+aQIHhTrOqaoe7f/KF4JCz6ZbsaUKAd1JqtI3XFmgv5URUHtXZ/J9ZZ59EuvE1Bd0nyXf35rn/AA=="
+      },
+      "result": "malformed"
+    },
+    {
+      "description": "a statement with a __proto__ member",
+      "signature_block": {
+        "alg": "Ed25519",
+        "context": "bellbriar-signature/1",
+        "key_id": "172f109161589572",
+        "statement": {
+          "statement_format": "bellbriar-signature/1",
+          "bundle_digest_sha256": "0e3a1d15bca0f4c3193b536cb22b7b53660dfa665a343a4558ce436b2a3845a2",
+          "attestation_class": "self-signed",
+          "key_id": "172f109161589572",
+          "signer": "vector-signer",
+          "signed_at": "2026-01-01T00:00:01+00:00",
+          "bundle_format": "bellbriar-evidence/1",
+          "domain": "example.com",
+          "host": "www.example.com",
+          "pack": "wcag",
+          "pack_version": "1.0.0",
+          "pack_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "rulebook_version": "0.1.0",
+          "rulebook_sha256": "0ed2bae6a54ecb271075cdc39f0e5a8d00afa7fa336a2d5e7bbe994051f47aff",
+          "__proto__": null
+        },
+        "signature_b64": "kRyrNVqVdh+aQIHhTrOqaoe7f/KF4JCz6ZbsaUKAd1JqtI3XFmgv5URUHtXZ/J9ZZ59EuvE1Bd0nyXf35rn/AA=="
+      },
+      "result": "malformed"
+    },
+    {
+      "description": "the pre-0.3.0 bare-digest form",
+      "signature_block": {
+        "alg": "Ed25519",
+        "key_id": "172f109161589572",
+        "digest_sha256": "0e3a1d15bca0f4c3193b536cb22b7b53660dfa665a343a4558ce436b2a3845a2",
+        "signature_b64": "kRyrNVqVdh+aQIHhTrOqaoe7f/KF4JCz6ZbsaUKAd1JqtI3XFmgv5URUHtXZ/J9ZZ59EuvE1Bd0nyXf35rn/AA=="
+      },
+      "result": "malformed"
+    },
+    {
+      "description": "signature_b64 without its padding",
+      "signature_block": {
+        "alg": "Ed25519",
+        "context": "bellbriar-signature/1",
+        "key_id": "172f109161589572",
+        "statement": {
+          "statement_format": "bellbriar-signature/1",
+          "bundle_digest_sha256": "0e3a1d15bca0f4c3193b536cb22b7b53660dfa665a343a4558ce436b2a3845a2",
+          "attestation_class": "self-signed",
+          "key_id": "172f109161589572",
+          "signer": "vector-signer",
+          "signed_at": "2026-01-01T00:00:01+00:00",
+          "bundle_format": "bellbriar-evidence/1",
+          "domain": "example.com",
+          "host": "www.example.com",
+          "pack": "wcag",
+          "pack_version": "1.0.0",
+          "pack_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "rulebook_version": "0.1.0",
+          "rulebook_sha256": "0ed2bae6a54ecb271075cdc39f0e5a8d00afa7fa336a2d5e7bbe994051f47aff"
+        },
+        "signature_b64": "kRyrNVqVdh+aQIHhTrOqaoe7f/KF4JCz6ZbsaUKAd1JqtI3XFmgv5URUHtXZ/J9ZZ59EuvE1Bd0nyXf35rn/AA"
+      },
+      "result": "invalid"
+    },
+    {
+      "description": "key_id of another key",
+      "signature_block": {
+        "alg": "Ed25519",
+        "context": "bellbriar-signature/1",
+        "key_id": "0000000000000000",
+        "statement": {
+          "statement_format": "bellbriar-signature/1",
+          "bundle_digest_sha256": "0e3a1d15bca0f4c3193b536cb22b7b53660dfa665a343a4558ce436b2a3845a2",
+          "attestation_class": "self-signed",
+          "key_id": "172f109161589572",
+          "signer": "vector-signer",
+          "signed_at": "2026-01-01T00:00:01+00:00",
+          "bundle_format": "bellbriar-evidence/1",
+          "domain": "example.com",
+          "host": "www.example.com",
+          "pack": "wcag",
+          "pack_version": "1.0.0",
+          "pack_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "rulebook_version": "0.1.0",
+          "rulebook_sha256": "0ed2bae6a54ecb271075cdc39f0e5a8d00afa7fa336a2d5e7bbe994051f47aff"
+        },
+        "signature_b64": "kRyrNVqVdh+aQIHhTrOqaoe7f/KF4JCz6ZbsaUKAd1JqtI3XFmgv5URUHtXZ/J9ZZ59EuvE1Bd0nyXf35rn/AA=="
+      },
+      "result": "invalid"
+    }
+  ],
+  "small_order_parts": [
+    {
+      "description": "R with a part of order 8",
+      "public_hex": "ab09aea58dae707abe74fb7d31af56285d78ac02cd7f11aec1cf6c4d782aee96",
+      "signed_message_hex": "62656c6c62726961722d7369676e61747572652f31009795cafea3bca0173394fd707c52b1da1645184bcc67158bd307bc136340a392",
+      "signature_block": {
+        "alg": "Ed25519",
+        "context": "bellbriar-signature/1",
+        "key_id": "172f109161589572",
+        "statement": {
+          "statement_format": "bellbriar-signature/1",
+          "bundle_digest_sha256": "0e3a1d15bca0f4c3193b536cb22b7b53660dfa665a343a4558ce436b2a3845a2",
+          "attestation_class": "self-signed",
+          "key_id": "172f109161589572",
+          "signer": "vector-signer",
+          "signed_at": "2026-01-01T00:00:01+00:00",
+          "bundle_format": "bellbriar-evidence/1",
+          "domain": "example.com",
+          "host": "www.example.com",
+          "pack": "wcag",
+          "pack_version": "1.0.0",
+          "pack_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "rulebook_version": "0.1.0",
+          "rulebook_sha256": "0ed2bae6a54ecb271075cdc39f0e5a8d00afa7fa336a2d5e7bbe994051f47aff"
+        },
+        "signature_b64": "kzqGl0V3tz6tKSuY06B2aUzzXB/CUK9O71snZplD8bW4UwqFuYS/0pN5c121CHWxR61YuM6050OTRb+z+OnxCw=="
+      },
+      "equations": {
+        "cofactorless": false,
+        "cofactorless_k_not_reduced": false,
+        "cofactored": true
+      },
+      "result": "invalid"
+    },
+    {
+      "description": "a key with a part of order 8",
+      "public_hex": "51bf35c84963ec7dd7a2a6e0b58c5d4780e362b76a5553b4b50f320a023af62c",
+      "signed_message_hex": "62656c6c62726961722d7369676e61747572652f3100ebe8d50d5567986d5d3e23544dbcd2ecf7e23075f2d63aed04e9e7a02bd3115a",
+      "signature_block": {
+        "alg": "Ed25519",
+        "context": "bellbriar-signature/1",
+        "key_id": "098e6568f0c13c92",
+        "statement": {
+          "statement_format": "bellbriar-signature/1",
+          "bundle_digest_sha256": "0e3a1d15bca0f4c3193b536cb22b7b53660dfa665a343a4558ce436b2a3845a2",
+          "attestation_class": "self-signed",
+          "key_id": "098e6568f0c13c92",
+          "signer": "vector-signer",
+          "signed_at": "2026-01-01T00:00:01+00:00",
+          "bundle_format": "bellbriar-evidence/1",
+          "domain": "example.com",
+          "host": "www.example.com",
+          "pack": "wcag",
+          "pack_version": "1.0.0",
+          "pack_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "rulebook_version": "0.1.0",
+          "rulebook_sha256": "0ed2bae6a54ecb271075cdc39f0e5a8d00afa7fa336a2d5e7bbe994051f47aff"
+        },
+        "signature_b64": "iPZJktkPn/IC3X9qexEJ+MS+/7BBYLtixy/o2/PAiS6lyUMD1vDNnRbLVgZxtjhMgCwSoSQOaH4wOzpS7xc0Dg=="
+      },
+      "equations": {
+        "cofactorless": false,
+        "cofactorless_k_not_reduced": false,
+        "cofactored": true
+      },
+      "result": "invalid"
+    },
+    {
+      "description": "a key with a part of order 8, and R with the part that cancels it",
+      "public_hex": "51bf35c84963ec7dd7a2a6e0b58c5d4780e362b76a5553b4b50f320a023af62c",
+      "signed_message_hex": "62656c6c62726961722d7369676e61747572652f3100ebe8d50d5567986d5d3e23544dbcd2ecf7e23075f2d63aed04e9e7a02bd3115a",
+      "signature_block": {
+        "alg": "Ed25519",
+        "context": "bellbriar-signature/1",
+        "key_id": "098e6568f0c13c92",
+        "statement": {
+          "statement_format": "bellbriar-signature/1",
+          "bundle_digest_sha256": "0e3a1d15bca0f4c3193b536cb22b7b53660dfa665a343a4558ce436b2a3845a2",
+          "attestation_class": "self-signed",
+          "key_id": "098e6568f0c13c92",
+          "signer": "vector-signer",
+          "signed_at": "2026-01-01T00:00:01+00:00",
+          "bundle_format": "bellbriar-evidence/1",
+          "domain": "example.com",
+          "host": "www.example.com",
+          "pack": "wcag",
+          "pack_version": "1.0.0",
+          "pack_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "rulebook_version": "0.1.0",
+          "rulebook_sha256": "0ed2bae6a54ecb271075cdc39f0e5a8d00afa7fa336a2d5e7bbe994051f47aff"
+        },
+        "signature_b64": "znR0qzc4m8f5vKDEPAlnnFHpWJY9liyfYfENauIhxxEekvft8YQvV5l0BEPEmYLjdWeu9VkYCqd7wcqza9nACQ=="
+      },
+      "equations": {
+        "cofactorless": true,
+        "cofactorless_k_not_reduced": false,
+        "cofactored": true
+      },
+      "result": "valid"
+    }
+  ]
+}

@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Sourdough &amp; rye loaves — Corner Bakery, Flushing</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root{--header-h:64px}
+    html{scroll-padding-top:calc(var(--header-h) + 8px)}
+    body{margin:0;font:16px/1.5 Georgia,serif;color:#1f2430;background:#faf8f3}
+    .skip-link{position:absolute;top:-40px;left:8px;z-index:100;background:#fff;color:#1a1a1a;padding:8px 12px}
+    .skip-link:focus{top:8px}
+    .visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+    :focus-visible{outline:2px solid #1a4fd6;outline-offset:2px}
+    a{color:#14417d;text-decoration:underline}
+    header{min-height:var(--header-h);display:flex;align-items:center;gap:24px;padding:0 16px;background:#fff;border-bottom:1px solid #d8d2c4}
+    .nav{display:flex;gap:16px;list-style:none;margin:0;padding:0}
+    .nav button{font:inherit;background:none;border:1px solid #6b6455;border-radius:4px;padding:6px 10px;min-width:24px;min-height:24px}
+    .subnav{list-style:none;margin:4px 0 0;padding:8px;border:1px solid #d8d2c4;background:#fff}
+    main{max-width:960px;margin:0 auto;padding:24px 16px}
+    .card{border:1px solid #d8d2c4;border-radius:6px;padding:12px;max-width:280px;background:#fff}
+    .card a{display:block;color:inherit}
+    .card img{max-width:100%;height:auto}
+    .price{font-weight:700}
+    button{font:inherit;min-width:24px;min-height:24px}
+    .field-error{color:#8a2a2a}
+    table{border-collapse:collapse}
+    caption{text-align:left;font-weight:700;padding:4px 0}
+    th,td{border:1px solid #d8d2c4;padding:6px 10px;text-align:left}
+    footer{border-top:1px solid #d8d2c4;margin-top:32px;padding:16px;background:#fff}
+    @media (prefers-reduced-motion: reduce){
+      *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+  <header>
+    <a href="/">Corner Bakery</a>
+    <nav aria-label="Primary">
+      <ul class="nav">
+        <li><a href="/breads" aria-current="page">Breads</a></li>
+        <li>
+          <button type="button" aria-expanded="false" aria-controls="nav-about">About</button>
+          <ul id="nav-about" class="subnav" hidden>
+            <li><a href="/about/story">Our story</a></li>
+            <li><a href="/about/bakers">Our bakers</a></li>
+          </ul>
+        </li>
+        <li><a href="/contact">Contact</a></li>
+      </ul>
+    </nav>
+    <a href="/cart" aria-label="Cart, 0 items">
+      <svg aria-hidden="true" viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M7 4h-2l-1 2v2h2l3.6 7.6-1.4 2.4a2 2 0 0 0 1.8 3h9v-2h-9l1.1-2h7.4a2 2 0 0 0 1.8-1.1l3.2-6.4-1.8-.9-3.2 6.4h-6.9l-3.4-7z"/></svg>
+    </a>
+  </header>
+
+  <main id="main" tabindex="-1">
+    <h1>Sourdough &amp; rye loaves</h1>
+    <p>Baked every morning in Flushing. Order online for same-day pickup.</p>
+
+    <h2>This week's loaves</h2>
+    <article class="card">
+      <a href="/p/sourdough">
+        <img src="sourdough.jpg" alt="" width="264" height="176">
+        <h3>Sourdough loaf</h3>
+        <p class="price">$8.00</p>
+      </a>
+      <fieldset>
+        <legend>Size</legend>
+        <label><input type="radio" name="size" value="small" checked> Small</label>
+        <label><input type="radio" name="size" value="large"> Large</label>
+      </fieldset>
+      <button type="button" data-add="sourdough">Add to cart<span class="visually-hidden">: Sourdough loaf</span></button>
+    </article>
+
+    <h2>Why our starter matters</h2>
+    <p><img src="starter-jar.jpg" alt="Glass jar of bubbling sourdough starter beside a bag of rye flour" width="320" height="213"></p>
+    <p>Our starter is fed twice daily with stone-milled rye. <span lang="ko">천연 발효빵</span> is what our Union Street neighbors call it.</p>
+
+    <h2>Hours</h2>
+    <table>
+      <caption>Bakery hours</caption>
+      <tr><th scope="col">Day</th><th scope="col">Hours</th></tr>
+      <tr><td>Monday–Friday</td><td>7am–3pm</td></tr>
+      <tr><td>Saturday</td><td>8am–2pm</td></tr>
+    </table>
+
+    <h2>Find us</h2>
+    <p>37-14 Union St, Flushing, NY 11354. From the 7 train at Main St, walk two blocks north on Union St.</p>
+    <iframe src="https://maps.example.com/embed?q=corner-bakery" title="Map to Corner Bakery, 37-14 Union St, Flushing" width="400" height="240"></iframe>
+
+    <h2>Get updates</h2>
+    <form action="/subscribe" method="post" novalidate>
+      <div id="error-summary" role="alert" tabindex="-1" hidden>
+        <h3>There is a problem</h3>
+        <ul></ul>
+      </div>
+      <p>
+        <label for="email">Email address</label><br>
+        <input id="email" name="email" type="email" autocomplete="email" aria-describedby="email-err">
+      </p>
+      <p id="email-err" class="field-error"></p>
+      <button type="submit">Subscribe</button>
+    </form>
+  </main>
+
+  <footer>
+    <ul style="list-style:none;margin:0;padding:0;display:flex;gap:16px">
+      <li><a href="/accessibility">Accessibility</a></li>
+      <li><a href="/privacy">Privacy</a></li>
+      <li><a href="/terms">Terms</a></li>
+    </ul>
+  </footer>
+
+  <p id="live-status" role="status" class="visually-hidden"></p>
+
+  <script>
+    document.querySelectorAll('.nav > li > button').forEach(function (btn) {
+      var panel = document.getElementById(btn.getAttribute('aria-controls'));
+      btn.addEventListener('click', function () {
+        var open = btn.getAttribute('aria-expanded') === 'true';
+        btn.setAttribute('aria-expanded', String(!open));
+        panel.hidden = open;
+      });
+      panel.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+          btn.setAttribute('aria-expanded', 'false');
+          panel.hidden = true;
+          btn.focus();
+        }
+      });
+    });
+    var live = document.getElementById('live-status');
+    document.querySelectorAll('[data-add]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        live.textContent = 'Sourdough loaf added. Cart, 1 item.';
+        document.querySelector('[aria-label^="Cart"]')
+          .setAttribute('aria-label', 'Cart, 1 item');
+      });
+    });
+  </script>
+</body>
+</html>

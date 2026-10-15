@@ -1,0 +1,5 @@
+# The image is built from the release's wheel and the pinned versions
+# (docker/Dockerfile), and nothing else from the checkout reaches it.
+*
+!dist/*.whl
+!docker/requirements.txt
