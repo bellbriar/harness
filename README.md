@@ -22,7 +22,9 @@ repository, and `action/README.md` lists the Action's inputs.
 **On your machine**, with [pipx](https://pipx.pypa.io/) or
 [uv](https://docs.astral.sh/uv/), which keep it apart from your other
 Python packages (Homebrew's and Debian's Pythons refuse a system-wide
-`pip install`). It needs Python 3.11 or later.
+`pip install`). It needs Python 3.11 or later. It runs on Linux and
+macOS; on Windows the commands stop and say so, and it runs in WSL (the
+Windows Subsystem for Linux) or from the container image below.
 
 ```bash
 pipx install 'bellbriar-harness[browser]'   # or: uv tool install 'bellbriar-harness[browser]'

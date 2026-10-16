@@ -2545,13 +2545,33 @@ _R6_RENDERED = (
 )
 
 
+def _chromium_draws(markup: str, element_id: str) -> bool:
+    """Does the Chromium the runs use give the element a box of some size,
+    as it does a drawing's <a> whose conditions pass? Asked of the browser
+    alone, apart from the harness."""
+    from playwright.sync_api import sync_playwright
+    with sync_playwright() as p:
+        browser = p.chromium.launch(args=["--no-sandbox"])
+        try:
+            page = browser.new_page()
+            page.set_content(markup)
+            return page.evaluate(
+                "id => { const r = document.getElementById(id)"
+                ".getBoundingClientRect(); return r.width > 0 "
+                "&& r.height > 0; }", element_id)
+        finally:
+            browser.close()
+
+
 @unittest.skipUnless(HAVE_BROWSER, _WHY)
 class TestDrawingCaptureR6Round6(unittest.TestCase):
     """R6K-2, R6K-3, R6K-7, rendered: a box that never paints, whose
     conditions pass, holds links in the tree; a requiredExtensions with
     white space after it passes, before it fails; a <g> with role region
     or form and no name cuts what it holds with no box as a group does
-    (each measured in Chromium 141)."""
+    (each measured in Chromium 141). Chromium 156 draws an <a> whose
+    requiredExtensions starts with white space (s7), so s7 follows the
+    browser the run uses (L143)."""
 
     def test_names(self):
         site = _echo_site(self, lambda t: PAGE.format(
@@ -2564,7 +2584,9 @@ class TestDrawingCaptureR6Round6(unittest.TestCase):
         failed = " ".join(f["snippet"] for p in report["pages"]
                           for f in p["findings"] if f["verdict"] == "fail"
                           and f["rule_id"] == "bb-link-name")
-        for i, _markup, fails in _R6_RENDERED:
+        for i, markup, fails in _R6_RENDERED:
+            if i == "s7":
+                fails = _chromium_draws(markup, i)
             with self.subTest(case=i):
                 self.assertEqual(f'id="{i}"' in failed, fails)
 

@@ -885,6 +885,42 @@ when it ships, and its present-tense description enters the docs.
   block). *In 1.0:* No packs or pack key ship; CANONICALIZATION §1 and §7
   call the format a draft, outside the freeze. *Comes back:* With packs
   (L3): bring CANONICALIZATION §7 up to §6 before a release ships one.
+- **L141.** Native Windows. The suite, run on Windows in CI for 1.0.0rc1
+  (Python 3.11 to 3.14), found a bundle recording a page's path with
+  backslashes (fixtures\\good.html) where Linux and macOS record
+  fixtures/good.html; two outputs named for one file through a symbolic link
+  not refused (R5B-14); a name with a drive (C:/a.html) recorded otherwise
+  than elsewhere (R5F-1); and parts of the suite itself that assume POSIX
+  (os.geteuid and signal.SIGKILL, files read without encoding="utf-8", POSIX
+  paths in fixtures). 12 failures and 10 errors in all; that run's CI log
+  has the rest. *In 1.0:* On Windows, bellbriar-eval, bellbriar-lint and
+  bellbriar-evidence stop before doing anything (exit 2) and point to WSL
+  and the container image (support.py). CI tests Linux and macOS only; the
+  package's classifiers name Linux and macOS; the Action stops on a Windows
+  runner and says to use a Linux one. *Comes back:* A customer needs native
+  Windows: fix each difference, make the suite run there, and put Windows
+  back in CI.
+- **L142.** justhtml after 3.13.0. 3.13.1 (October 12, 2026) parses
+  &lt;!doctype
+  html&gt;&lt;svg&gt;&amp;\#xFFFD;&lt;/svg&gt;&lt;frameset&gt;&lt;frame&gt;
+  to a body holding the drawing, where the tree the suite recorded from
+  Chromium has the frameset (tests/test_html5_parsing.py); every test job in
+  CI failed on it. *In 1.0:* pyproject.toml pins justhtml==3.13.0, as the
+  image's requirements already did. *Comes back:* A justhtml release: run
+  the suite, and compare any changed tree with Chromium's, before the pin
+  moves.
+- **L143.** Browsers after Chromium 153. The harness's readings were
+  measured in Chromium 141; the image and the browser extra run Chromium 153
+  (Playwright 1.63.0). In CI, Playwright 1.64.0's Chromium 156 drew a
+  drawing's &lt;a&gt; whose requiredExtensions starts with white space (s7,
+  R6 round 6), which Chromium 141 does not draw. The static rules, and the
+  capture's own reading of a part's conditions (used where the browser
+  paints nothing to measure), still fail such a part, as 141 does. *In 1.0:*
+  The browser extra pins playwright==1.63.0, the version the image runs. The
+  s7 test asks the running browser whether it draws the part. *Comes back:*
+  Before the pin moves: measure the new Chromium where the harness reads as
+  141 does (requiredExtensions with white space first, and the other
+  measured readings), and run the suite.
 
 ## Not on this roadmap
 

@@ -583,8 +583,13 @@ def _keygen(prefix: str, force: bool) -> int:
 def main(argv=None) -> int:
     """bellbriar-evidence: _main, with everything it prints escaped as
     redact.console_text escapes it (R4G-5), ending quietly with status 2
-    when the reader of its output stops reading (R5D-15)."""
+    when the reader of its output stops reading (R5D-15). On Windows it
+    stops first (support.py)."""
     from .redact import run_escaped
+    from .support import refuse_unsupported
+    refused = refuse_unsupported("bellbriar-evidence")
+    if refused is not None:
+        return refused
     return run_escaped(_main, argv)
 
 

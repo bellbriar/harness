@@ -2,8 +2,8 @@
 # copy it there (action.yml at its root), tag a release v1.0.0, and move
 # the v1 tag to it. It runs the harness from its container image, so a job
 # needs no Python, Playwright or Chromium setup: Linux runners only (the
-# image is a Linux container, for x86-64 and ARM64). On macOS or Windows,
-# install the harness with pipx or uv instead (README).
+# image is a Linux container, for x86-64 and ARM64). On macOS, install
+# the harness with pipx or uv instead (README); it does not run on Windows.
 name: Bellbriar accessibility evaluation
 description: >-
   Run the Bellbriar accessibility harness on built pages or URLs; fail the
@@ -45,6 +45,10 @@ runs:
       run: |
         set -euo pipefail
         set -f        # no wildcard in an input is ever expanded
+        if [ "$RUNNER_OS" = "Windows" ]; then
+          echo "::error::bellbriar/eval-action runs a Linux container, and the harness does not run on Windows; run the job on a Linux runner (runs-on: ubuntu-latest)"
+          exit 2
+        fi
         if [ "$RUNNER_OS" != "Linux" ]; then
           echo "::error::bellbriar/eval-action runs a Linux container; on $RUNNER_OS install the harness with pipx or uv instead"
           exit 2

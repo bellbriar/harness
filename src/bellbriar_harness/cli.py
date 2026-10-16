@@ -1682,8 +1682,14 @@ def main(argv=None) -> int:
     """bellbriar-eval: _main, with everything it prints escaped as
     redact.console_text escapes it (R4G-5), ending quietly with status 2
     when the reader of its output stops reading (R5D-15). In a context of
-    its own, so the run's secrets (redact.set_run_secrets) end with it."""
+    its own, so the run's secrets (redact.set_run_secrets) end with it.
+    On Windows it stops first (support.py)."""
     from .redact import run_escaped
+    from .support import refuse_unsupported
+
+    refused = refuse_unsupported("bellbriar-eval")
+    if refused is not None:
+        return refused
 
     def run(a):
         try:

@@ -3,7 +3,7 @@
 What each release changes, newest first. The release workflow refuses a
 version tag whose version has no section here, or whose section still
 says it is unreleased: the release commit replaces "unreleased" with the
-day it is published.
+day it is published (UTC).
 
 ## Versions
 
@@ -43,7 +43,9 @@ HTML report's layout, and the wording of messages.
 
 ## 1.0.0 — unreleased
 
-The first release. It needs Python 3.11 or later.
+The first release. It needs Python 3.11 or later. It runs on Linux and
+macOS: on Windows the three commands stop and say so, and WSL (the
+Windows Subsystem for Linux) or the container image runs it.
 
 - `bellbriar-eval` evaluates built pages (a folder of files, served on
   this machine for a browser with `--render`) or live ones (`--url`,
@@ -69,7 +71,7 @@ or another tool does, is listed in `docs/ROADMAP.md` ("Not in 1.0"):
 among it the keyboard and focus checks, remote signing, rule packs and
 the judge.
 
-## 1.0.0rc1 — 2026-10-15
+## 1.0.0rc1 — 2026-10-16
 
 A release candidate for 1.0.0, published to rehearse the release:
 CHANGELOG.md's 1.0.0 section lists what it holds. To install it, ask pip

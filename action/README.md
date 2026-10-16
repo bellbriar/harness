@@ -6,9 +6,9 @@ on built pages or URLs in a GitHub Actions job, from its container image
 1) or the run cannot be completed (exit 2), or when Docker cannot start it
 (Docker's own exit status, such as 125 when the image cannot be pulled). Linux runners only, x86-64 or
 ARM64, and not in a job that runs in a container (`container:`): there the
-image would see the host's folders and network, not the job's. On macOS or
-Windows, install the harness with `pipx install bellbriar-harness` or
-`uv tool install bellbriar-harness`.
+image would see the host's folders and network, not the job's. On macOS,
+install the harness with `pipx install bellbriar-harness` or
+`uv tool install bellbriar-harness`. The harness does not run on Windows.
 
 ```yaml
 jobs:

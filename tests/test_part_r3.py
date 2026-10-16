@@ -977,8 +977,12 @@ class TestReviewOfR3(unittest.TestCase):
         self.addCleanup(shutil.rmtree, d, True)
         folder = os.path.join(os.fsencode(str(d)), b"names")
         os.mkdir(folder)
-        with open(os.path.join(folder, b"caf\xe9.html"), "wb") as fh:
-            fh.write(PAGE.format('<a href="/x"></a>').encode())
+        try:
+            with open(os.path.join(folder, b"caf\xe9.html"), "wb") as fh:
+                fh.write(PAGE.format('<a href="/x"></a>').encode())
+        except (OSError, ValueError):
+            # APFS, macOS's, refuses the name (EILSEQ).
+            self.skipTest("this file system refuses names that are not UTF-8")
         code, _out, err = run(os.fsdecode(folder), "--json", d / "r.json",
                               "--html", d / "r.html", "--fail-on", "never")
         self.assertEqual(code, 0, err)

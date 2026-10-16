@@ -43,10 +43,12 @@ page, so every report and bundle records the harness version, the Python
 it ran on, and the versions of the libraries that parse and query the
 markup (`tool`: justhtml, beautifulsoup4, soupsieve, expat; with a browser,
 Playwright and axe-core, and each page's Chromium in its capture record).
-The package asks pip for justhtml's major version 3 and soupsieve's 2.9
-line, from 2.9.2: soupsieve's later versions change what a page's
-selectors match (L133). A run does not check the versions it finds, which
-its record names (L134).
+The package asks pip for justhtml 3.13.0 exactly, as 3.13.1 builds a
+tree Chromium does not (L142), and for soupsieve's 2.9 line, from 2.9.2:
+soupsieve's later versions change what a page's selectors match (L133).
+Its `browser` extra asks for Playwright 1.63.0, whose Chromium the
+container image runs too (L143). A run does not check the versions it
+finds, which its record names (L134).
 A re-run of a saved snapshot records, as `tool.from_snapshot`, the
 axe-core whose results the snapshot holds and the Chromium that
 captured it (L53). Two reports are

@@ -1842,8 +1842,8 @@ class TestWorkflows(unittest.TestCase):
     def test_the_test_matrix(self):
         wf = _yaml(ROOT / ".github" / "workflows" / "bellbriar-eval.yml")
         matrix = wf["jobs"]["test"]["strategy"]["matrix"]
-        self.assertEqual(set(matrix["os"]), {"ubuntu-latest", "macos-latest",
-                                             "windows-latest"})
+        # Not Windows, where the commands stop (L141).
+        self.assertEqual(set(matrix["os"]), {"ubuntu-latest", "macos-latest"})
         self.assertEqual(matrix["python-version"],
                          ["3.11", "3.12", "3.13", "3.14"])
         self.assertIn({"os": "macos-15-intel", "python-version": "3.13"},

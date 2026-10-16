@@ -250,8 +250,7 @@ line, where shell history, process listings and CI logs keep it, and no
 message repeats what either option was given: typed there by mistake, a
 key would reach the log with the message. The render child, and the
 browser under it, inherit neither the variable `--sign-key-env` names nor
-`BELLBRIAR_SIGN_KEY` and `BELLBRIAR_HTTP_PASSWORD` (on Windows, compared
-ignoring case, as Windows compares them).
+`BELLBRIAR_SIGN_KEY` and `BELLBRIAR_HTTP_PASSWORD`.
 `verify` reports a public key that is not 64 hex characters as "could
 not verify" (exit 2), never as INVALID, and names a private key passed
 in its place (a key file marked private, or the private half of the key

@@ -28,7 +28,8 @@ keywords = ["accessibility", "a11y", "wcag", "ada", "section-508", "audit",
 classifiers = [
     "Environment :: Console",
     "Intended Audience :: Developers",
-    "Operating System :: OS Independent",
+    "Operating System :: MacOS",
+    "Operating System :: POSIX :: Linux",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.11",
@@ -45,7 +46,10 @@ classifiers = [
 # supported Python, so Intel Macs stay below 49.
 # justhtml parses a page's own HTML as a browser does (the WHATWG tree
 # construction, tested against WPT); the parse engine it exposes is used
-# directly (bellbriar_harness.html5), so a new major version needs a check.
+# directly (bellbriar_harness.html5). It is held to 3.13.0: 3.13.1 builds
+# a tree Chromium does not (U+FFFD in a drawing, then <frameset>: the
+# suite's recorded trees), so each release needs the suite before the pin
+# moves (the ship list's L142).
 # soupsieve matches a page's own CSS selectors (what its stylesheets hide,
 # which selectors Chromium keeps: style.py), so it decides verdicts too. The
 # suite, the field sweeps and the image ran 2.9.2. 2.10 reworked matching
@@ -57,17 +61,18 @@ dependencies = [
     "beautifulsoup4>=4.12",
     "cryptography>=42; sys_platform != 'darwin' or platform_machine != 'x86_64'",
     "cryptography>=42,<49; sys_platform == 'darwin' and platform_machine == 'x86_64'",
-    "justhtml>=3.13,<4",
+    "justhtml==3.13.0",
     "soupsieve>=2.9.2,<2.10",
 ]
 
 [project.optional-dependencies]
 # After installing this extra, fetch the browser binary:
 #   python -m playwright install chromium
-# 1.52 brings Chromium 136, which fires no DOM mutation events (they would
-# run a page's code inside the capture; the capture refuses a browser that
-# fires them) and has everything the capture reads with.
-browser = ["playwright>=1.52"]
+# Held to 1.63.0, whose Chromium (153) the container image runs too:
+# 1.64.0 brings Chromium 156, which draws a part of a drawing that
+# Chromium 141, where the harness's readings were measured, does not (the
+# ship list's L143).
+browser = ["playwright==1.63.0"]
 # PyYAML: the tests read the workflows, the Action and Dependabot's file.
 dev = ["pytest>=8", "pyyaml>=6"]
 

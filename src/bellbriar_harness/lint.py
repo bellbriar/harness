@@ -2138,12 +2138,13 @@ def _git_exe() -> str | None:
     current folder: Windows looks in the current folder first, so a git.exe
     planted in the folder being linted would run. On Windows only git.exe
     counts: a .cmd or .bat shim runs through cmd.exe, which reinterprets
-    the arguments."""
+    the arguments. Folders are compared as real paths: on macOS a folder
+    in /private/var can be named in /var, through a symbolic link."""
     name = "git.exe" if os.name == "nt" else "git"
-    here = os.path.normcase(os.path.abspath(os.getcwd()))
+    here = os.path.normcase(os.path.realpath(os.getcwd()))
     for d in os.environ.get("PATH", "").split(os.pathsep):
         if not d or not os.path.isabs(d) \
-                or os.path.normcase(os.path.abspath(d)) == here:
+                or os.path.normcase(os.path.realpath(d)) == here:
             continue
         cand = os.path.join(d, name)
         if os.path.isfile(cand) and os.access(cand, os.X_OK):
@@ -2198,6 +2199,17 @@ def _why(result) -> str:
 
 #: What _git_ignored returns for a folder git says is in no repository.
 NOT_A_REPOSITORY = "not a repository"
+#: What git says (in English: _GIT_SAFE_ENV) for a folder in no work tree,
+#: or one whose .git file makes no repository: one that names no
+#: repository ("not a git repository" up to 2.55, "gitfile does not
+#: point to a valid repository" from 2.56), names nothing, or is not a
+#: .git file's form. git reads such a folder as part of the repository
+#: around it: that one's listing of what it ignores covers the folder
+#: (measured with git 2.43, and with 2.55 for a .git file that names no
+#: repository).
+_NO_REPOSITORY = (b"not a git repository",
+                  b"does not point to a valid repository",
+                  b"no path in gitfile", b"invalid gitfile format")
 
 
 def _git_ignored(folder: Path, notes: list | None = None):
@@ -2218,7 +2230,8 @@ def _git_ignored(folder: Path, notes: list | None = None):
     if top is None:
         return None
     if top.returncode != 0:
-        return NOT_A_REPOSITORY if b"not a git repository" in top.stderr \
+        return NOT_A_REPOSITORY if any(m in top.stderr
+                                       for m in _NO_REPOSITORY) \
             else note(top)
     if top.stdout.strip():
         own = _git(folder, "check-ignore", "-q", "--no-index", ".")
@@ -2513,8 +2526,13 @@ LINT_FORMAT = "bellbriar-lint/1"
 def main(argv=None) -> int:
     """bellbriar-lint: _main, with everything it prints escaped as
     redact.console_text escapes it (R4G-5), ending quietly with status 2
-    when the reader of its output stops reading (R5D-15)."""
+    when the reader of its output stops reading (R5D-15). On Windows it
+    stops first (support.py)."""
     from .redact import run_escaped
+    from .support import refuse_unsupported
+    refused = refuse_unsupported("bellbriar-lint")
+    if refused is not None:
+        return refused
     return run_escaped(_main, argv)
 
 

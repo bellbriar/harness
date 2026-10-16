@@ -151,7 +151,7 @@ class TestTheExampleToolSignsInRange(unittest.TestCase):
         ranges = self.tool.declared_ranges()
         self.assertEqual({name: req for name, (req, _) in ranges.items()},
                          {"beautifulsoup4": "beautifulsoup4>=4.12",
-                          "justhtml": "justhtml>=3.13,<4",
+                          "justhtml": "justhtml==3.13.0",
                           "soupsieve": "soupsieve>=2.9.2,<2.10"})
         try:
             import tomllib                                   # noqa: F401
@@ -175,7 +175,8 @@ class TestTheExampleToolSignsInRange(unittest.TestCase):
                 ("soupsieve", "2.9.2.post1", False),
                 ("soupsieve", "3.0.0rc1", False), ("soupsieve", None, False),
                 ("justhtml", "3.13", True), ("justhtml", "3.12.9", False),
-                ("justhtml", "4", False), ("justhtml", "3.99.1", True),
+                ("justhtml", "4", False), ("justhtml", "3.13.1", False),
+                ("justhtml", "3.99.1", False),
                 ("beautifulsoup4", "4.11.1", False),
                 ("beautifulsoup4", "5.0", True)):
             with self.subTest(name=name, version=version):
