@@ -257,9 +257,13 @@ class TestRenderedFetch(unittest.TestCase):
 
     def test_polling_page_does_not_hang_the_wait(self):
         """The fixture polls every 300 ms. `networkidle` times out on that;
-        load-plus-settle must not."""
+        load-plus-settle must not. It ends by the settle cap and the grace
+        after it (docs/REPORT.md, `data_requests_open`): a request open at
+        the cap gets SETTLE_GRACE_MS more, and the DOM as long again, which
+        macOS runners reached (L80)."""
         self.assertLess(self.rendered.wait["waited_ms"],
-                        F.DEFAULT_SETTLE_CAP_MS + 1000)
+                        F.DEFAULT_SETTLE_CAP_MS + 2 * F.SETTLE_GRACE_MS
+                        + 1000)
 
     def test_fetch_block_is_json_safe(self):
         import json

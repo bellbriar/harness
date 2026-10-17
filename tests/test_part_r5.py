@@ -2244,18 +2244,34 @@ class TestNavigationRound3(unittest.TestCase):
 
     def test_before_a_render_deadline_shorter_than_the_load_timeout(self):
         """R5E-6: the reviewer's case: the deadline came first and blamed
-        a script."""
+        a script. The capture's own answer (the page it went to had not
+        arrived) must come before the deadline, which would have the page
+        read as the server sent it instead; the removal of the capture's
+        folder follows, within SCRATCH_PATIENCE_S, and leaves nothing (L80:
+        on macOS runners, removing it first let the deadline come first
+        again)."""
         from tests.test_fetch_hardening import send
         port = _hold(self)
         site = self.site({"/after": send(self.page(
             "onload = function () { setTimeout(function () { location.href ="
             f" 'http://127.0.0.1:{port}/never'; }}, 300); }};"))})
         self.addCleanup(site.stop)
+        folders = []
+        capture = F._isolated_capture
+
+        def recorded(url, deadline_s, scratch, **kw):
+            folders.append(scratch)
+            return capture(url, deadline_s, scratch, **kw)
         start = time.monotonic()
-        with self.assertRaises(F.FetchError) as cm:
+        with mock.patch.object(F, "_isolated_capture", recorded), \
+                self.assertRaises(F.FetchError) as cm:
             F.fetch(site.base + "/after", timeout_ms=30_000, deadline_s=9)
-        self.assertLess(time.monotonic() - start, 9)
+        self.assertLess(time.monotonic() - start,
+                        9 + F.SCRATCH_PATIENCE_S + 1)
         self.assertIn("had not arrived", str(cm.exception))
+        self.assertTrue(folders)
+        for folder in folders:
+            self.assertFalse(os.path.lexists(folder), folder)
 
     def test_a_slow_page_gone_to_is_read(self):
         """R5E-6: a navigation that commits late, within the load timeout,
