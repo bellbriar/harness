@@ -22,7 +22,10 @@ The child also looks after itself, so nothing outlives the harness (OR-9):
   before the deadline (fetch._watch_pending);
 * as it stops on its own, it removes the capture's temporary folder (its
   TMPDIR, which holds the browser's profile), which the parent removes
-  when it outlives the child.
+  when it outlives the child. A capture it answers for itself (the
+  navigation above) leaves the folder to the parent, which has that
+  answer as soon as it is written: removing the folder first held the
+  answer back past a short deadline (L80: on macOS runners, in CI).
 
 Not a command for people to run: the parent writes the request.
 """
@@ -81,14 +84,14 @@ def stop_descendants() -> None:
             pass
 
 
-def _give_up(code: int) -> None:
+def _give_up(code: int, remove_scratch: bool = True) -> None:
     try:
         if os.name == "nt":                            # pragma: no cover
             import subprocess
             subprocess.run(["taskkill", "/PID", str(os.getpid()), "/T", "/F"],
                            capture_output=True, timeout=30)
         stop_descendants()
-        if _SCRATCH is not None:
+        if remove_scratch and _SCRATCH is not None:
             from bellbriar_harness.fetch import remove_capture_scratch
             remove_capture_scratch(_SCRATCH, settle_s=0.5)
     finally:
@@ -121,17 +124,37 @@ def _answer(result) -> None:
     sys.stdout.buffer.flush()
 
 
+def _end_answer() -> None:
+    """End the answer's pipe now, so the parent reads the answer whole
+    without waiting for this process to end. The descriptor is pointed at
+    the null device rather than closed, so no file opened later takes its
+    number."""
+    try:
+        null = os.open(os.devnull, os.O_WRONLY)
+        try:
+            os.dup2(null, sys.stdout.fileno())
+        finally:
+            os.close(null)
+    except (OSError, ValueError):
+        pass
+
+
 def _stuck(exc: BaseException) -> None:
     """The capture waits on a navigation that never commits, and every
     call it makes to the page waits with it (fetch._watch_pending): answer
     with `exc` in its place, unless it has answered, and end, with the
-    browser it leaves (on Windows, the whole tree: _give_up)."""
+    browser it leaves (on Windows, the whole tree: _give_up). The answer
+    reaches the parent as it is written, and the parent removes the
+    capture's folder once this process has ended, so this process leaves
+    it: removing it first held the answer back past a short deadline
+    (L80)."""
     if not _ANSWERING.acquire(blocking=False):
         return
     try:
         _answer(("error", type(exc).__name__, str(exc)))
+        _end_answer()
     finally:
-        _give_up(0)
+        _give_up(0, remove_scratch=False)
 
 
 def main() -> int:
