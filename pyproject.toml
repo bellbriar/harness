@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "bellbriar-harness"
-version = "1.0.0rc1"
+version = "1.0.0"
 description = "Open accessibility eval harness for agent-generated web output (WCAG 2.1 AA baseline, litigation-weighted)"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -32,7 +32,7 @@ keywords = ["accessibility", "a11y", "wcag", "ada", "section-508", "audit",
 classifiers = [
     # 4 - Beta for a pre-release (1.0.0rc1), 5 - Production/Stable for a
     # final version (tests/test_part_s5.py holds the two together).
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
     "Environment :: Console",
     "Intended Audience :: Developers",
     "Operating System :: MacOS",

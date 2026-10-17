@@ -1981,14 +1981,15 @@ class TestTheDocuments(unittest.TestCase):
 
 
     def test_the_sandbox_is_said_as_shown(self):
-        """S5 re-review: README said the sandbox starts under the profile,
-        which CI has yet to show (L81); and the image holds no profile:
-        the repository and the Action ship it."""
-        self.assertIn("the sandbox can start, though this project's CI has "
-                      "yet to show it starting so (docs/ROADMAP.md, L81)",
+        """S5 re-review: README said the sandbox starts under the profile
+        before CI had shown it (L81), which it has since, on x86-64 and
+        ARM64 (1.0.0); and the image holds no profile: the repository and
+        the Action ship it."""
+        self.assertIn("the sandbox starts, as this project's CI shows on "
+                      "x86-64 and ARM64 runners (docs/ROADMAP.md, L81)",
                       _flat("README.md"))
-        self.assertIn("The harness's CI has yet to show the sandbox starting "
-                      "so", _flat("action/README.md"))
+        self.assertIn("The harness's CI shows the sandbox starting so, on "
+                      "x86-64 and ARM64 runners", _flat("action/README.md"))
         roadmap = _flat("docs/ROADMAP.md")
         self.assertIn("the repository and the Action ship Playwright's "
                       "seccomp profile", roadmap)

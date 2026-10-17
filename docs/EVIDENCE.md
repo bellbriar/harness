@@ -1,7 +1,7 @@
 # Evidence bundles and signatures
 
 Anyone can run every layer of the harness and record the run as an
-evidence bundle, and anyone holding a key can sign one. Status at 1.0.0rc1:
+evidence bundle, and anyone holding a key can sign one. Status at 1.0.0:
 the bundle format, offline verification and self-signing are built, and
 self-signed is the only kind of signature this release makes. There is no
 signing service, no hosted runner, no pack pinning and no judge (the ship

@@ -50,8 +50,8 @@ Inputs:
   2) when Chromium's sandbox cannot start; the runner must allow
   unprivileged user namespaces, which Ubuntu 24.04 restricts: an earlier
   step can run `sudo sysctl -w
-  kernel.apparmor_restrict_unprivileged_userns=0`. The harness's CI has
-  yet to show the sandbox starting so (L81 in its
+  kernel.apparmor_restrict_unprivileged_userns=0`. The harness's CI
+  shows the sandbox starting so, on x86-64 and ARM64 runners (L81 in its
   [roadmap](https://github.com/bellbriar/harness/blob/main/docs/ROADMAP.md)).
 
 A job that must run the same thing every time pins both: the Action by its

@@ -104,11 +104,14 @@
      account, SECURITY.md gives security@bellbriar.com (October 13, 2026):
      the address must receive mail (bellbriar.com's mail goes to Proton
      Mail) and be read within SECURITY.md's response times.
-   - After the first release pushes the image: make the
-     `ghcr.io/bellbriar/harness` package public (its Package settings),
-     then re-run the release's `public` job, which pulls it with no
-     credentials, and the jobs after it (`tags`, `release`). Until then
-     customers' runners cannot pull it.
+   - The image: `ghcr.io/bellbriar/harness` takes this repository's
+     visibility, as a package a workflow publishes does (GitHub's
+     default), so it was public from the first release's push
+     (1.0.0rc1, October 17), and the release's `public` job, which
+     pulls it with no credentials, passed. Were it private, customers'
+     runners could not pull it: make it public in its Package settings,
+     then re-run that job and those after it (`tags`, `attest`,
+     `release`).
    - Pin the base image's digest in `docker/Dockerfile`: done October
      15, 2026, for 1.0.0rc1, with the digest the registry gave for
      `v1.63.0-noble`'s multi-platform index (an OCI image index), read by
@@ -136,8 +139,9 @@
    1.0.0rc1 on, which the re-signed example then carries. Add a dated
    `## 1.0.0rc1` section to CHANGELOG.md; run the whole suite; merge, then
    tag the merged commit as it stands on the default branch and push the
-   tag (`git fetch origin && git tag -s v1.0.0rc1 origin/main && git push
-   origin v1.0.0rc1`: a squash or rebase merge leaves your branch's head
+   tag (`git fetch origin && git tag -a v1.0.0rc1 -m v1.0.0rc1 origin/main &&
+   git push origin v1.0.0rc1`, as bellbriar-ops, an annotated tag, not a
+   signed one (L147): a squash or rebase merge leaves your branch's head
    off `main`, the release refuses a tag whose commit is not on it, and
    the tag ruleset forbids moving the tag), and watch every job. Then the
    same steps again for 1.0.0

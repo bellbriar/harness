@@ -42,7 +42,7 @@ version outside the declared ranges says so before it starts.
 Not stable: the console output (it is for people: parse the JSON), the
 HTML report's layout, and the wording of messages.
 
-## 1.0.0 — unreleased
+## 1.0.0 — 2026-10-17
 
 The first release. It needs Python 3.11 or later. It runs on Linux and
 macOS: on Windows the three commands stop and say so, and WSL (the
@@ -71,6 +71,12 @@ What 1.0 leaves out, and where it reads a page otherwise than a browser
 or another tool does, is listed in `docs/ROADMAP.md` ("Not in 1.0"):
 among it the keyboard and focus checks, remote signing, rule packs and
 the judge.
+
+Since 1.0.0rc1: a page that sends the browser on to one that never
+arrives is refused in words of its own before a `--render-deadline`
+shorter than the load timeout, even on a slower machine; on macOS
+runners, 1.0.0rc1 let the deadline come first and blamed a script on
+the page.
 
 ## 1.0.0rc1 — 2026-10-17
 

@@ -1,7 +1,7 @@
 # Roadmap — what is not built, and what "built" will mean
 
 Everything in items 1 to 8 below, but item 1 (built, struck out) and
-the part of item 2 it says is built, is **[not built]** at harness 1.0.0rc1.
+the part of item 2 it says is built, is **[not built]** at harness 1.0.0.
 Nothing here carries a date, because a date in a public repository is a
 promise and we make promises only about what ships. Each item states its
 acceptance criteria so that "done" is checkable rather than announced.
@@ -45,7 +45,7 @@ belong to these layers: contrast, which axe-core checks in the browser
 today, and nine not built (keyboard access and traps, menus and dialogs,
 carousels, focus visibility, error messages, and the two task flows).
 
-*Built at 1.0.0rc1 (rendered, in part):* in `--url` and `--render` runs,
+*Built at 1.0.0 (rendered, in part):* in `--url` and `--render` runs,
 axe-core 4.12.1 (pinned, hash-checked, in an isolated world) checks
 contrast, target size and 27 more WCAG A/AA rules Bellbriar does not
 implement itself, and Bellbriar checks reflow at 320 CSS pixels and
@@ -496,9 +496,11 @@ when it ships, and its present-tense description enters the docs.
   repository and the Action ship Playwright's seccomp profile
   (`docker/seccomp_profile.json`, and the Action's copy beside its
   `action.yml`), which the README gives with `--security-opt` and the
-  Action's `sandbox: required` passes (S5-2). *Comes back:* When CI's image
-  job, which lifts Ubuntu 24.04's restriction on user namespaces, shows the
-  sandbox starting under the profile; L9 then decides the default.
+  Action's `sandbox: required` passes (S5-2); CI's image job shows the
+  sandbox starting under the profile on x86-64 and ARM64 (October 17).
+  *Comes back:* L9 decides the default: CI's image job, which lifts Ubuntu
+  24.04's restriction on user namespaces, has shown the sandbox starting
+  under the profile (October 17).
 - **L84.** The settle step does not watch closed shadow roots or frames: a
   page that changes only inside one can look settled sooner. *In 1.0:* The
   guide says so. *Comes back:* Watch same-origin frames; note when a closed
@@ -919,12 +921,21 @@ when it ships, and its present-tense description enters the docs.
   evaluated, exit 2: a loading shell no longer passes as Tier-1 clean
   (S5-3). *Comes back:* If such pages need a verdict: read the links and
   controls inside those regions as content.
-- **L146.** A page that keeps a data request open (a long poll) is not
-  evaluated unless `--wait-for` names what it shows once loaded: the capture
-  cannot tell such a request from data still on its way. *In 1.0:* Not
-  evaluated, exit 2; `--wait-for SELECTOR` evaluates it (S5-3). *Comes
-  back:* If long-polling pages are common: tell a long poll from a page
-  still loading.
+- **L146.** A page that keeps a data request open (a long poll), or that
+  polls more often than the settle step's quiet period (500 ms by default)
+  so that a request may be open when the wait ends, is not evaluated unless
+  `--wait-for` names what it shows once loaded: the capture cannot tell such
+  a request from data still on its way. *In 1.0:* Not evaluated, exit 2;
+  `--wait-for SELECTOR` evaluates it (S5-3). *Comes back:* If such pages are
+  common: tell a long poll, or a frequent poll, from a page still loading.
+- **L147.** Release tags are annotated, not signed, though H4 asks for
+  signed tags. *In 1.0:* The maintainer pushes an annotated tag as
+  bellbriar-ops. Rulesets let only the repository's admin create `v*` tags,
+  and no one move or delete them; the release checks that the tagged commit
+  is on `main`, and PyPI's attestations name the workflow and the commit.
+  *Comes back:* When the release is used beyond its first testers: sign tags
+  with the maintainer's SSH key, registered on GitHub as a signing key, and
+  PREPUBLISH 15 says so.
 
 ## Not on this roadmap
 
