@@ -178,7 +178,8 @@ class TestThePins(unittest.TestCase):
         self.assertIn("justhtml==3.13.0", project["dependencies"])
         self.assertEqual(project["optional-dependencies"]["browser"],
                          ["playwright==1.63.0"])
-        image = _text("docker/requirements.txt").splitlines()
+        image = re.findall(r"^\S+==\S+", _text("docker/requirements.txt"),
+                           re.M)
         self.assertIn("justhtml==3.13.0", image)
         self.assertIn("playwright==1.63.0", image)
         self.assertIn("v1.63.0-noble@sha256:", _text("docker/Dockerfile"))

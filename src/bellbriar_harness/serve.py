@@ -18,7 +18,12 @@ The server is for that and nothing else:
   other methods, any path outside the root (`..`, a symlink out, a
   folder whose index.html is one), and any path with a segment that starts
   with a dot (`.env`, `.git/`) or that resolves to one, which a build does
-  not serve and another process on the machine must not read;
+  not serve and another process on the machine must not read; nor does it
+  serve a file a build never holds and a page's scripts must not read (a
+  private key, a Terraform state, a database: NEVER_SERVED, S5-2);
+* it answers only requests made to it by its own address (the Host
+  header), so a page on another name that resolves to 127.0.0.1 (DNS
+  rebinding) cannot read the build through it;
 * `base` is the path the build was built for (your bundler's base or
   homepage setting): with base `/app/`, `/app/assets/x.js` is
   `<root>/assets/x.js`, and nothing outside `/app/` is served;
@@ -39,6 +44,26 @@ import socket
 import threading
 import urllib.parse
 from pathlib import Path
+
+#: Files the server never sends, by their suffix or their whole name
+#: (lower case): what a build folder never holds and a page's scripts
+#: must not read when the harness is pointed at a folder that holds more
+#: than the build (S5-2).
+NEVER_SERVED_SUFFIXES = frozenset((
+    ".pem", ".key", ".p12", ".pfx", ".jks", ".keystore", ".ppk", ".kdbx",
+    ".gpg", ".asc", ".tfstate", ".tfvars", ".sqlite", ".sqlite3", ".db"))
+NEVER_SERVED_NAMES = frozenset((
+    "id_rsa", "id_dsa", "id_ecdsa", "id_ed25519", "credentials",
+    "credentials.json", "terraform.tfstate.backup", "npmrc", "pypirc",
+    "netrc"))
+
+
+def never_served(name: str) -> bool:
+    """Is a file of this name one the server never sends (NEVER_SERVED_*)?"""
+    low = name.lower()
+    return (low in NEVER_SERVED_NAMES
+            or any(low.endswith(suffix) for suffix in NEVER_SERVED_SUFFIXES))
+
 
 #: Types static hosts send, where Python's table is missing or dated.
 _TYPES = {
@@ -167,6 +192,8 @@ class BuildServer:
             # A folder's index.html is resolved and checked in its own right:
             # it can be a symlink out of the root too.
             real = self._inside(real / "index.html")
+        if real is not None and never_served(real.name):
+            return None
         return real if real is not None and real.is_file() else None
 
     def _inside(self, path: Path) -> Path | None:
@@ -225,7 +252,18 @@ class BuildServer:
                 self.end_headers()
                 self.wfile.write(body)
 
+            def _own_host(self) -> bool:
+                """Was this request made to the server by its own address?
+                A page on another name that resolves here (DNS rebinding)
+                sends that name (S5-2)."""
+                port = server._httpd.server_address[1]
+                host = (self.headers.get("Host") or "").strip().lower()
+                return host in (f"127.0.0.1:{port}", f"localhost:{port}")
+
             def _serve(self, head: bool) -> None:
+                if not self._own_host():
+                    self._refuse(421)
+                    return
                 file = server.resolve(self.path)
                 if file is None:
                     with server._lock:

@@ -105,6 +105,23 @@
         "third_party_needs_review_findings": {"$ref": "#/$defs/count"}
       }
     },
+    "wait": {
+      "type": ["object", "null"],
+      "required": ["strategy", "quiet_ms", "cap_ms", "waited_ms", "settled",
+                   "data_requests", "data_requests_open", "wait_for",
+                   "scroll_steps"],
+      "properties": {
+        "strategy": {"const": "load+scroll+dom-and-data-settle"},
+        "quiet_ms": {"type": "integer", "minimum": 0},
+        "cap_ms": {"type": "integer", "minimum": 0},
+        "waited_ms": {"type": "integer", "minimum": 0},
+        "settled": {"type": "boolean"},
+        "data_requests": {"type": "integer", "minimum": 0},
+        "data_requests_open": {"type": "integer", "minimum": 0},
+        "wait_for": {"type": ["string", "null"]},
+        "scroll_steps": {"type": "integer", "minimum": 0}
+      }
+    },
     "baseline": {
       "type": "object",
       "required": ["sha256", "generated_at", "findings", "new_findings",
@@ -156,7 +173,7 @@
         "fetched_at": {"type": "string"},
         "browser": {"type": ["object", "null"]},
         "viewport": {"type": ["object", "null"]},
-        "wait": {"type": ["object", "null"]},
+        "wait": {"$ref": "#/$defs/wait"},
         "instrumented": {"type": "boolean"},
         "provenance_attr": {"type": ["string", "null"]},
         "attribution": {"type": ["object", "null"]},

@@ -28,7 +28,9 @@ closed root, noted when deeper), and scroll-revealed content in the
 snapshot; fetched-host verification against `--domain` (the host or
 its `www.` form; a subdomain only with `--include-subdomains`, and the
 host bound into the signature beside the domain); HTTP status and
-redirect recording; `load`-plus-scroll-plus-DOM-settle waiting.
+redirect recording; waiting for the load, a scroll through the page, and
+the DOM and the page's data requests to settle (`--wait-for` for what a
+page shows once its data has arrived).
 
 What it did **not** do on its own: add a layer. The rulebook added part
 of the rendered layer on top of it (item 2); the interaction layer
@@ -243,7 +245,7 @@ when it ships, and its present-tense description enters the docs.
 - **L30.** Parsing through JustHTML's private internals: three engine
   methods hooked and six module constants patched (select scope, search,
   template parent, element budget, CDATA). *In 1.0:* JustHTML pinned to
-  3.13–3.x; the WPT and Chromium tree tests fail on any change. *Comes
+  3.13.0 (L142); the WPT and Chromium tree tests fail on any change. *Comes
   back:* Before any JustHTML upgrade; offer the hooks upstream so the pin
   can loosen.
 - **L31.** Trees unlike Chromium's: 6 of 1,605 WPT documents (a lone &lt;?,
@@ -398,11 +400,6 @@ when it ships, and its present-tense description enters the docs.
   1.0:* Needs a framework's auto-import registry or type information. *Comes
   back:* Read Nuxt's components.d.ts and unplugin-vue-components'
   declarations.
-- **L63.** Lint has no --exclude: test and spec files (\*.spec.ts,
-  \_\_tests\_\_) and other paths a project does not ship are linted. *In
-  1.0:* Build folders, what git ignores, minified bundles and links out of
-  the folder are already skipped. *Comes back:* Add --exclude GLOB (and a
-  config file).
 - **L64.** The lint scan runs git to read .gitignore (hardened: no transport
   or lazy fetch, no fsmonitor, git only from absolute PATH folders, a time
   budget, a note when git refuses). *In 1.0:* A Python reader must match git
@@ -495,17 +492,13 @@ when it ships, and its present-tense description enters the docs.
 - **L81.** In the container, Chromium runs without its sandbox: Docker's
   default seccomp profile refuses the user namespaces it needs. *In 1.0:*
   Each capture records it; `--require-sandbox` refuses such a run; the image
-  runs as an ordinary user; the README and the Action's README say so.
-  *Comes back:* Ship a seccomp profile that allows them (Playwright
-  publishes one), test it on a Docker host, and document `--security-opt`.
-- **L82.** The image's base is pinned by tag, not digest, and its Python
-  dependencies by version, not hash. *In 1.0:* Dependabot proposes updates;
-  PREPUBLISH item 14 pins the base image's digest before the first release.
-  *Comes back:* Hash-pin `docker/requirements.txt` (`pip --require-hashes`)
-  once the build can reach PyPI.
-- **L83.** The ARM64 image is built before PyPI but never run. *In 1.0:* The
-  x86-64 image runs the fixtures before PyPI, and again after it is pushed.
-  *Comes back:* Run the image check on an ARM64 runner in the release.
+  runs as an ordinary user; the README and the Action's README say so; the
+  repository and the Action ship Playwright's seccomp profile
+  (`docker/seccomp_profile.json`, and the Action's copy beside its
+  `action.yml`), which the README gives with `--security-opt` and the
+  Action's `sandbox: required` passes (S5-2). *Comes back:* When CI's image
+  job, which lifts Ubuntu 24.04's restriction on user namespaces, shows the
+  sandbox starting under the profile; L9 then decides the default.
 - **L84.** The settle step does not watch closed shadow roots or frames: a
   page that changes only inside one can look settled sooner. *In 1.0:* The
   guide says so. *Comes back:* Watch same-origin frames; note when a closed
@@ -836,15 +829,6 @@ when it ships, and its present-tense description enters the docs.
   the image ran; a test holds :has() rules to Chromium's names. *Comes
   back:* 1.x: pass soupsieve's NOSTRICT flag, run the suite, a field sweep
   and the Chromium measurements on the new version, then widen the range.
-- **L134.** A run with libraries outside the ranges the package declares
-  (installed by force, or run from a source folder, as the example's
-  re-signing was) is neither refused nor flagged: its tool record names
-  their versions, and with soupsieve 3.0 the :has() reading of L133 applies.
-  *In 1.0:* pip holds an installed package to its ranges; the script that
-  signs the worked example refuses libraries outside them, and the release
-  check refuses an example that records one (R7-2). *Comes back:* 1.x: check
-  the libraries' versions when a run starts, and say so, or refuse, when one
-  is outside its range.
 - **L135.** A token whose backslash escapes mix a script's octal ones with
   CSS's hex ones, which read `\61` as different characters ("1" and "a"), is
   not found; nor one with a character after a backslash that a script and
@@ -863,7 +847,7 @@ when it ships, and its present-tense description enters the docs.
   exponential (R6G-6). *Comes back:* If a page is seen writing one so.
 - **L137.** Python 3.10: 1.0 needs Python 3.11 or later. *In 1.0:* The
   secret searches stay linear with atomic groups and possessive quantifiers,
-  which Python 3.11 added (R6G-2); the CI tests 3.11 to 3.14. *Comes back:*
+  which Python 3.11 added (R6G-2); the CI tests 3.11 to 3.15. *Comes back:*
   If someone needs 3.10, whose own support ends in October 2026 (PEP 619).
 - **L138.** A memory limit for `verify` and `inspect`: they need about 50
   times a bundle's size in memory (an 8 MB file took 422 MB) and read files
@@ -872,13 +856,16 @@ when it ships, and its present-tense description enters the docs.
   Before a service verifies bundles others made: count containers while
   parsing, or lower the limit.
 - **L139.** The release's build images and tools pinned by digest:
-  setup-buildx and setup-qemu pull `moby/buildkit:buildx-stable-1` and
-  `tonistiigi/binfmt:latest` by tag, and build and setuptools are pinned by
-  version, not by hash, with their own dependencies unpinned. *In 1.0:* The
-  actions are pinned by commit, build and setuptools by version
-  (`tools/build-constraints.txt`), and a final version needs the base image
-  pinned by digest. *Comes back:* When their digests and hashes are looked
-  up from the registries and checked.
+  setup-buildx pulls `moby/buildkit:buildx-stable-1` by tag, and BuildKit's
+  SBOM step `docker/buildkit-syft-scanner:stable-1` by tag (setup-qemu,
+  which pulled `tonistiigi/binfmt:latest`, left the release in S5-5); build
+  and setuptools are pinned by version, not by hash, with their own
+  dependencies unpinned. *In 1.0:* The actions are pinned by commit, the
+  base image by digest (which a final version's release check requires), the
+  image's Python packages by hash (`docker/requirements.txt`, S5), and build
+  and setuptools by version (`tools/build-constraints.txt`). *Comes back:*
+  When their digests and hashes are looked up from the registries and
+  checked.
 - **L140.** `bellbriar-pack/1` frozen with the other formats: its
   verification lacks what CANONICALIZATION §6 gives a bundle (strict
   parsing, canonical Base64, the small-order checks, a closed signature
@@ -921,6 +908,23 @@ when it ships, and its present-tense description enters the docs.
   Before the pin moves: measure the new Chromium where the harness reads as
   141 does (requiredExtensions with white space first, and the other
   measured readings), and run the suite.
+- **L144.** bellbriar-lint has no configuration file: its `--exclude`
+  patterns, and its other options, go on the command line. *In 1.0:*
+  `--exclude PATTERN`, repeatable (S5-4). *Comes back:* If projects ask to
+  keep their lint settings in a file.
+- **L145.** A page with nothing beyond its scripts but a loading indicator
+  (a status, alert, log, timer or marquee region, a progress bar, an
+  aria-busy region, a spinner) is not evaluated, even where the indicator
+  holds a link or a control (an error message's "Try again"). *In 1.0:* Not
+  evaluated, exit 2: a loading shell no longer passes as Tier-1 clean
+  (S5-3). *Comes back:* If such pages need a verdict: read the links and
+  controls inside those regions as content.
+- **L146.** A page that keeps a data request open (a long poll) is not
+  evaluated unless `--wait-for` names what it shows once loaded: the capture
+  cannot tell such a request from data still on its way. *In 1.0:* Not
+  evaluated, exit 2; `--wait-for SELECTOR` evaluates it (S5-3). *Comes
+  back:* If long-polling pages are common: tell a long poll from a page
+  still loading.
 
 ## Not on this roadmap
 

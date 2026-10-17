@@ -17,7 +17,14 @@ mapped to this one, a folder mounted at /work. It checks that:
   says it was rendered, by Chromium, and whether its sandbox was on, and
   that axe-core ran there, the copy whose SHA-256 the package pins
   (`AXE_SHA256`): a page's static rules pass it without axe-core too;
-* fixtures/bad.html, rendered, fails it (exit 1).
+* fixtures/bad.html, rendered, fails it (exit 1);
+* the run names no library version outside the ranges the release
+  declares.
+
+It also says whether Chromium's sandbox starts when the container has
+Playwright's seccomp profile (docker/seccomp_profile.json, which the
+Action's `sandbox: required` passes): that depends on the host allowing
+unprivileged user namespaces, so it is reported, not required.
 
 Exit 0 when all hold, 1 when one does not, 2 when docker cannot run.
 """
@@ -86,7 +93,7 @@ def main(argv=None) -> int:
                 return 1
         user = (f"{os.getuid()}:{os.getgid()}" if hasattr(os, "getuid")
                 else "1000:1000")
-        base = ["docker", "run", "--rm", "--init", "--ipc=host",
+        base = ["docker", "run", "--rm", "--init", "--shm-size=2g",
                 "--user", user, "-e", "HOME=/tmp",
                 "-v", f"{ROOT / 'fixtures'}:/work/fixtures:ro",
                 "-v", f"{out}:/out", "-w", "/work", image]
@@ -101,6 +108,11 @@ def main(argv=None) -> int:
             print(f"image_check: docker could not run {image}: "
                   f"{version.stderr.strip()[-800:]}", file=sys.stderr)
             return 2
+        platform = subprocess.run(["docker", "image", "inspect", "--format",
+                                   "{{.Os}}/{{.Architecture}}", image],
+                                  env=env, capture_output=True, text=True)
+        if platform.returncode == 0:
+            print(f"image_check: {image} is {platform.stdout.strip()}")
         if version.stdout.strip() != f"bellbriar-harness {_version()}":
             problems.append(f"--version says {version.stdout.strip()!r} "
                             f"(exit {version.returncode}), not "
@@ -108,6 +120,11 @@ def main(argv=None) -> int:
                             f"{version.stderr.strip()[-500:]}")
         good = run("fixtures/good.html", "--render", "--fail-on", "tier1",
                    "--json", "/out/good.json")
+        if "library versions" in good.stderr:
+            # The image's pins lie within the release's ranges (L134).
+            problems.append("the image runs library versions outside the "
+                            "ranges the release declares: "
+                            f"{good.stderr.strip()[-600:]}")
         if good.returncode != 0:
             problems.append(f"fixtures/good.html, rendered: exit "
                             f"{good.returncode}, not 0: "
@@ -136,6 +153,18 @@ def main(argv=None) -> int:
             problems.append(f"fixtures/bad.html, rendered: exit "
                             f"{bad.returncode}, not 1: "
                             f"{bad.stderr.strip()[-800:]}")
+        # The sandbox under Playwright's seccomp profile: reported only.
+        profile = ROOT / "docker" / "seccomp_profile.json"
+        sandboxed = subprocess.run(
+            base[:4] + ["--security-opt", f"seccomp={profile}"] + base[4:]
+            + ["fixtures/good.html", "--render", "--require-sandbox",
+               "--fail-on", "tier1"],
+            env=env, capture_output=True, text=True, timeout=600)
+        print("image_check: with docker/seccomp_profile.json, Chromium's "
+              "sandbox " + ("started" if sandboxed.returncode == 0 else
+                            f"did not start (exit {sandboxed.returncode}: "
+                            "the host may not allow unprivileged user "
+                            "namespaces)"))
     for p in problems:
         print(f"image_check: {p}", file=sys.stderr)
     if problems:

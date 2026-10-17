@@ -1,16 +1,32 @@
-# The versions the image installs (docker/Dockerfile reads this file as pip
-# constraints): the harness's dependencies and Playwright's, pinned so a
-# rebuild of a release installs what was tested (R4A-4). playwright must be
-# the version of the Dockerfile's base image, whose browsers it holds
-# (tests/test_part_r4.py checks). Dependabot proposes updates; the CI's
-# image job tests each.
-beautifulsoup4==4.15.0
-cffi==2.1.1
-cryptography==50.0.1
-greenlet==3.5.6
-justhtml==3.13.0
-playwright==1.63.0
-pycparser==3.0
-pyee==13.0.1
-soupsieve==2.9.2
-typing_extensions==4.16.0
+# What the image installs (docker/Dockerfile installs it with pip
+# --require-hashes, so each file must match a hash below): the harness's
+# dependencies and Playwright's, pinned so a rebuild of a release installs
+# what was tested (R4A-4). The hashes are the wheels pip in the image takes
+# on x86-64 and ARM64, which tools/hash_requirements.py writes. playwright
+# must be the version of the Dockerfile's base image, whose browsers it
+# holds (tests/test_part_r4.py checks). Dependabot proposes updates, hashes
+# included; the CI's image job tests each.
+beautifulsoup4==4.15.0 \
+    --hash=sha256:d6f88de62e1d4e38ecb1077eb9724cd0eff29d2a08ca16a401e9b9e93f117cf9
+cffi==2.1.1 \
+    --hash=sha256:68e62fe11f30d5ca8289242866f0a5291402d8529ca2178ab8afc5c9694ae890 \
+    --hash=sha256:c1453022f490d2459a11819d83ad1d586e9ff65a12ac3e705ffebd46d3685dcf
+cryptography==50.0.1 \
+    --hash=sha256:51afcfceb15597cf2635068e4ac9a56b2abde622edde17f37d85fd7b5306497a \
+    --hash=sha256:e2ca8fd1b6b4b82a1c4cb02841d0837e3c12336c2e24b520ab8ab3b969733d8f
+greenlet==3.5.6 \
+    --hash=sha256:975736b002ed080d124cf81a79cb7e05cb26d6b3f5c7a7b651c0fcce70353aa1 \
+    --hash=sha256:e85880b538e59a59f55117b81f208a6660ad5ac328aad9305f812d9b8bc67a0f
+justhtml==3.13.0 \
+    --hash=sha256:b1628903f7888cd814520c5a569acdf1713717d2a2cb8a3f7874e6e002f93f48
+playwright==1.63.0 \
+    --hash=sha256:354e15b29503565fc598b89f16fbe070459343bef9d7498a93e304864000c6a7 \
+    --hash=sha256:ad21bc07516b187965a7521c5cf0df0bd657b17482eaad74335272d35a2b07de
+pycparser==3.0 \
+    --hash=sha256:b727414169a36b7d524c1c3e31839a521725078d7b2ff038656844266160a992
+pyee==13.0.1 \
+    --hash=sha256:af2f8fede4171ef667dfded53f96e2ed0d6e6bd7ee3bb46437f77e3b57689228
+soupsieve==2.9.2 \
+    --hash=sha256:8089a26fd974ca7a1f30276d3d8492ab266ab15af581642dfe8aa162e0c1c823
+typing_extensions==4.16.0 \
+    --hash=sha256:481caa481374e813c1b176ada14e97f1f67a4539ce9cfeb3f350d78d6370c2e8

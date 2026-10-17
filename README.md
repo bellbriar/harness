@@ -6,6 +6,9 @@ Section 504 rule, and the one pled in court — weighted toward what
 plaintiff firms plead (provisional tiers: our reading of complaints, not
 yet a count of them), not the spec's full surface area.
 
+Source, documents and issues: https://github.com/bellbriar/harness (the
+files this page names, such as `docs/REPORT.md`, are there).
+
 ## Install
 
 **In GitHub Actions**, one step, with nothing to set up (Linux runners):
@@ -40,16 +43,23 @@ so. On Linux, Chromium also needs system libraries:
 **In a container**, with Python, Chromium and its fonts installed:
 
 ```bash
-docker run --rm --init --ipc=host --user "$(id -u):$(id -g)" \
+docker run --rm --init --shm-size=2g --user "$(id -u):$(id -g)" \
   -v "$PWD:/work" ghcr.io/bellbriar/harness:1 dist --render --html report.html
 ```
 
 In the container Chromium runs without its sandbox, and each capture
 records that: Docker's default security profile refuses the user
 namespaces the sandbox needs. Give the container a seccomp profile that
-allows them (Playwright publishes one) on a host that allows them too, and
-the sandbox starts; `--require-sandbox` refuses a run without it. Evaluate
-pages you do not control only where the job holds no secrets.
+allows them (`--security-opt seccomp=docker/seccomp_profile.json`, a copy
+of the one Playwright publishes) on a host that allows them too (on Ubuntu
+24.04, `sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0`),
+and the sandbox can start, though this project's CI has yet to show it
+starting so (docs/ROADMAP.md, L81); `--require-sandbox` refuses a run
+without it.
+Without the sandbox, a page that takes the browser over can write what the
+container can: mount a repository's `.git` read-only (`-v
+"$PWD/.git:/work/.git:ro"`), as the Action does, and evaluate pages you do
+not control only where the job holds no secrets.
 
 ## Quickstart
 
@@ -91,7 +101,8 @@ replaces a manual audit.
   focus visibility, screen-reader announcements, and content adequacy are
   *not* evaluated. Deterministic automation detects a
   minority of WCAG failures; every report states exactly which layers ran,
-  and how many Tier-1 rules that covers (17 of 27 today: 16 in a file run).
+  and how many Tier-1 rules that covers (17 of 27 today: 16 in a file run;
+  4 of those only report for review and never fail).
 - **Not a compliance certification and not legal advice.** Output is
   measured findings with methodology attached, nothing more.
 - **Not an overlay.** Nothing here injects anything into your site.
@@ -167,6 +178,49 @@ replaces a manual audit.
 bellbriar-eval ./dist --html report.html --json report.json   # files, as they are
 bellbriar-eval ./dist --fail-on tier1      # CI gate: exit 1 on Tier-1 fails
 ```
+
+A folder is read for its pages, the `.html`, `.htm`, `.xhtml`, `.xht` and
+`.xhtm` files in it and its subfolders; a file named on the command line
+must be one of those too, so a source file (`.jsx`, `.vue`: what
+`bellbriar-lint` reads) is never judged as a page. `bellbriar-eval --help`
+lists every option, with the exit statuses: 0 when the gate passes, 1 when
+it fails, 2 when the run could not be completed.
+
+**In CI.** The gate (`--fail-on`, `tier1` by default) counts the FAIL
+findings in the site's own markup, of the rules in the tiers it names:
+`tier1`, `tier2` (Tiers 1 and 2) or `any`; a vendor's widget's are
+reported, not counted. `--strict` adds the review findings that are pled
+in complaints or a best practice, at moderate impact or above. The run
+exits 1 when the gate fails, and 2, whatever the gate says, when a page
+could not be read or analysed (it could not be fetched or parsed, or ran
+past its budget) or a rule raised an error; and 2 when the gate found no
+failure but had nothing to pass: no page that could be evaluated, or no
+Tier-1 rule that applied. A page NOT EVALUATED for what it is, an app
+shell or a page still loading, is listed as such, has no pass rate and is
+never counted clean; the gate counts any failure it shows.
+What a CI job should also know:
+
+- A `--url` run reads only the HTML the server sends when no browser can
+  start, and says so; `--require-render` makes that exit 2. `--render`
+  always needs the browser.
+- A capture waits for the DOM to stop changing and for the page's data
+  requests (fetch, XHR) to answer, up to 8 seconds, and 2 more for
+  requests still open then and those they lead to; a page still loading
+  after that is not evaluated. `--wait-for SELECTOR` waits up to 30
+  seconds for an element the page shows once its data has arrived, and a
+  page that shows it is read whatever requests are still open: name one
+  that only the data brings (`#orders li`), not the frame a loading page
+  shows too (`main`).
+- `--render` serves files only: a client-side route with no file of its
+  own (a single-page app's `/about`) is not served, and is evaluated by a
+  `--url` run against a preview of the site.
+- A capture that has not finished after `--render-deadline` seconds (120
+  by default) is stopped, and the page read as the server sent it (with
+  `--render`, as the file it is), or, with `--require-render`, the run
+  exits 2. A page whose analysis runs past `--page-budget` seconds (120
+  by default) is stopped and not evaluated, and the run exits 2.
+- A file run reads a page's own `<style>` elements, not its linked
+  stylesheets; a rendered run reads what the browser applied.
 
 **Reports.** `--html` writes a single-file report for people: what the
 run covered, its numbers, then the findings grouped by rule — why the
@@ -537,7 +591,7 @@ bellbriar-evidence verify examples/evidence/signed-bundle-example.json \
 #   statement and that the bundle has not changed since; not that its results are correct or
 #   unedited); every bound field matches; no fetched host is recorded: the domain
 #   'cornerbakery.example' is the operator's statement, and nothing was fetched from it; the
-#   bundle records rulebook '1.0.0' (sha256 060ab534d96c6428…), the digest of the one
+#   bundle records rulebook '1.0.0' (sha256 bcd1499723002b80…), the digest of the one
 #   bellbriar-harness 1.0.0rc1 ships; its attestation text is the one bellbriar-harness
 #   1.0.0rc1 writes. DEMONSTRATION KEY: it signs only the harness's worked example and is in
 #   no trust path; this signature is not evidence from any production signer
@@ -552,8 +606,11 @@ maintainer step.
 
 ## Lint the source, gate the output
 
-`bellbriar-lint` mechanizes the deterministic slice of the WCAG pack's
-failure-signature table at the *source* level (JSX/TSX/Vue/HTML/CSS) —
+`bellbriar-lint` mechanizes the deterministic slice of the failure
+signatures in Bellbriar's WCAG pack (the rules an AI coding agent is given
+while it writes a site; the pack is not distributed with the harness, and
+each lint finding names the pack rule it comes from) at the *source* level
+(JSX/TSX/Vue/HTML/CSS) —
 div-click handlers, stripped focus outlines, conditional live regions,
 junk alt expressions, menu roles inside site navigation, zoom blocking,
 and friends — so the habit is caught on the line where it was typed:
@@ -606,9 +663,15 @@ like), whatever git ignores there, files that look minified (a `.js`,
 `.mjs` or `.css` file with `.min.` in its name, or with a line of code
 over 5,000 characters not counting long strings and `data:` URIs),
 and symbolic links to files outside the folder; a file or folder named on
-the command line is always linted. When git cannot read a folder's ignore
-rules (a folder another user owns, say), the scan says so and lints what
-they would have skipped. A file the linter cannot read is reported as a
+the command line is always linted. `--exclude PATTERN`, repeatable, leaves
+out more: each file and folder the shell-style pattern matches, by its
+path below the named folder or by its name (`--exclude '*.stories.tsx'
+--exclude src/legacy`; `*` matches `/` too, and a pattern ending in `/`
+matches folders only). The run says how many folders it left out (and so
+did not enter) and how many files besides, and names a pattern that
+matched nothing. When git cannot read a
+folder's ignore rules (a folder another user owns, say), the scan says so
+and lints what they would have skipped. A file the linter cannot read is reported as a
 warning (`bl-lint-error`; in SARIF, a notification at level error) and the
 run goes on. `bellbriar-lint` exits 2 when it finds nothing to lint, or
 can lint none of the files it found, so a wrong path cannot pass as
@@ -719,13 +782,19 @@ Apache-2.0 (LICENSE, with the copyright notice in NOTICE), except
 axe-core, which ships unmodified in `src/bellbriar_harness/vendor/axe-core/`
 under its own license, the Mozilla Public License 2.0 (its `README.md`
 there says where to get its source code; the code it bundles is under the
-MIT and ISC licenses), and the web-platform-tests data the tests use
-(`tests/data/wpt-tree-construction/`, in the source distribution only),
-under the 3-Clause BSD License, first written in html5lib-tests under the
-MIT License. The package metadata states all five:
+MIT and ISC licenses); the WHATWG Encoding Standard's labels and indexes
+in `src/bellbriar_harness/encodings_data.py`, under the 3-Clause BSD
+License, as the standard licenses what source code incorporates of it
+(`LICENSE-whatwg-encoding.txt` beside it); and the web-platform-tests
+data the tests use (`tests/data/wpt-tree-construction/`, in the source
+distribution only), under the 3-Clause BSD License, first written in
+html5lib-tests under the MIT License. The package metadata states all five:
 `Apache-2.0 AND MPL-2.0 AND MIT AND ISC AND BSD-3-Clause`. **No telemetry.** The harness sends nothing
 about you or your runs anywhere. What reaches the network is what you
 ask for: a URL run requests the pages you name, and a rendered run
 (`--url` or `--render`) lets the browser load whatever those pages or
 your built files load, from any origin; `--install-browser` downloads
 Chromium through Playwright. Signing and verifying happen locally.
+Reports, bundles and snapshots quote the pages they were made from, so
+they can hold personal data those pages showed (docs/EVIDENCE.md,
+"Personal data in what a run writes").

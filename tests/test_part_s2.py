@@ -129,13 +129,13 @@ class TestPythonFloor(unittest.TestCase):
         self.assertIn('requires-python = ">=3.11"', pyproject)
         versions = re.findall(r'"Programming Language :: Python :: (3\.\d+)"',
                               pyproject)
-        self.assertEqual(versions, ["3.11", "3.12", "3.13", "3.14"])
+        self.assertEqual(versions, ["3.11", "3.12", "3.13", "3.14", "3.15"])
         self.assertIn("It needs Python 3.11 or later.", _flat("README.md"))
         self.assertIn("It needs Python 3.11 or later.", _flat("CHANGELOG.md"))
         matrix = _yaml(".github/workflows/bellbriar-eval.yml")[
             "jobs"]["test"]["strategy"]["matrix"]
         self.assertEqual(matrix["python-version"],
-                         ["3.11", "3.12", "3.13", "3.14"])
+                         ["3.11", "3.12", "3.13", "3.14", "3.15"])
         self.assertGreaterEqual(sys.version_info[:2], (3, 11))
 
     def test_no_document_offers_3_10(self):
@@ -274,8 +274,10 @@ class TestPyPIFiles(unittest.TestCase):
                         index("pypi", uses("pypa/gh-action-pypi-publish")))
         self.assertEqual(wf["pypi"]["permissions"],
                          {"contents": "read", "id-token": "write"})
+        # S5-5: the images are built from the run's files before PyPI;
+        # their version tag waits for PyPI to hold those files.
         self.assertLess(index("image", check(True)),
-                        index("image", uses("docker/build-push-action")))
+                        index("image", lambda s: s.get("id") == "index"))
         run = wf["release"]["steps"][index("release", check(True))]["run"]
         self.assertLess(run.index("tools/pypi_files.py --all"),
                         run.index("gh release create"))

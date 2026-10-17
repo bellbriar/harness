@@ -519,7 +519,32 @@ def run_page(html: str | bytes, path: str, rulebook: dict,
     on it (L106); the Chromium it names is the page's capture_browser
     (L53).
     """
+    from . import budget
     page = PageResult(path=path)
+    clock = budget.begin()
+    try:
+        done = _run_page(page, html, path, rulebook, provenance_attr,
+                         reader, snapshot)
+        # Work after the last look at the clock counts too: a page whose
+        # analysis ran past its budget is stopped, whenever that was seen.
+        budget.check()
+        return done
+    except budget.Exceeded as exc:
+        # Stopped: what ran is not kept, as a page cut short is not one
+        # whose rules all ran, and the run is incomplete, as it is for a
+        # page that could not be read (S5-4).
+        page.results = []
+        page.evaluable = False
+        page.parse_error = str(exc)
+        page.not_evaluable_reason = exc.reason
+        return page
+    finally:
+        budget.end(clock)
+
+
+def _run_page(page, html, path, rulebook, provenance_attr, reader,
+              snapshot) -> PageResult:
+    """run_page, inside the page's analysis budget (budget.py)."""
     try:
         ctx = PageContext.parse(html, path=path,
                                 provenance_attr=provenance_attr,
@@ -638,6 +663,8 @@ def _snapshot_refused(ctx, provenance_attr: str, page) -> str:
 
 
 def _run_check(rule_id: str, fn, ctx) -> RuleResult | None:
+    from .budget import check
+    check()
     try:
         return fn(ctx)
     except Exception as exc:                            # noqa: BLE001

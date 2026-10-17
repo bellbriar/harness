@@ -99,10 +99,10 @@ class TestSoupsieveStaysOn29(unittest.TestCase):
                                  allowed)
 
     def test_the_image_pins_one_inside_it(self):
-        pins = dict(line.split("==") for line in (
+        # Each pin's name and version, with or without its hashes.
+        pins = dict(re.findall(r"^([A-Za-z0-9._-]+)==([^\s\\]+)", (
             ROOT / "docker" / "requirements.txt").read_text(
-                encoding="utf-8").splitlines()
-            if line and not line.startswith("#"))
+                encoding="utf-8"), re.M))
         version = tuple(int(x) for x in pins["soupsieve"].split("."))
         self.assertTrue((2, 9, 2) <= version < (2, 10), pins["soupsieve"])
 
@@ -150,7 +150,7 @@ class TestTheExampleToolSignsInRange(unittest.TestCase):
     def test_it_reads_the_ranges_pip_reads(self):
         ranges = self.tool.declared_ranges()
         self.assertEqual({name: req for name, (req, _) in ranges.items()},
-                         {"beautifulsoup4": "beautifulsoup4>=4.12",
+                         {"beautifulsoup4": "beautifulsoup4>=4.12,<5",
                           "justhtml": "justhtml==3.13.0",
                           "soupsieve": "soupsieve>=2.9.2,<2.10"})
         try:
@@ -178,7 +178,8 @@ class TestTheExampleToolSignsInRange(unittest.TestCase):
                 ("justhtml", "4", False), ("justhtml", "3.13.1", False),
                 ("justhtml", "3.99.1", False),
                 ("beautifulsoup4", "4.11.1", False),
-                ("beautifulsoup4", "5.0", True)):
+                ("beautifulsoup4", "4.99", True),
+                ("beautifulsoup4", "5.0", False)):
             with self.subTest(name=name, version=version):
                 self.assertEqual(outside(**{name: version}) == [], ok)
 

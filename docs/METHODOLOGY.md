@@ -44,8 +44,8 @@ any number is quoted.
 ## Weights and tiers
 Tier 1 = complaint-boilerplate rules (×5) · Tier 2 = regularly pled or
 settlement-cited (×2) · Tier 3 = rarely filed, still graded (×1) ·
-Tier 0 = policy rules (settlement furniture, exclusion residual duties; ×0,
-reported only). A rule that never fails — basis `policy`, `best-practice`
+Tier 0 = policy rules (settlement terms, and duties that remain for
+content outside evaluation, such as document files; ×0, reported only). A rule that never fails — basis `policy`, `best-practice`
 or `review` — also weighs ×0, whatever its tier: an applicable rule that
 cannot fail would be a free pass in the rate. Weights are provisional
 until the complaint-tagging corpus lands; they ship in `rulebook.json` and

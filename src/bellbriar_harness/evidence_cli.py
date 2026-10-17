@@ -385,7 +385,8 @@ def _inspect(bundle_path: str) -> int:
     else:
         _say(f"signature   Ed25519 key_id={_clip(kid)}{flag} "
              f"class={_clip(cls)}{cls_note} "
-             f"signer={_clip(_field(stmt, 'signer'))} "
+             f"signer={_clip(_field(stmt, 'signer'))} (the signer's own "
+             f"words, not checked) "
              f"at={_clip(_field(stmt, 'signed_at'))}")
     if isinstance(sig, dict) and sig:
         odd = [m for m, want in (("alg", SIGNATURE_ALG),

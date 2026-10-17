@@ -39,9 +39,13 @@ this one does not know, still verifies. `pack` and `judged` are always null in t
 bundles this release writes: packs and the judge are not in 1.0, and the
 fields stay so that they can return without a new format. (`verify`
 names a pack or judged results it finds in any bundle as its maker's
-claim.) Each finding about an
-element carries its locator (`selector`: one CSS selector per tree, the
-guide's "Where a finding is"). A run gated against a `--baseline` report
+claim.) A page's findings are its report's (docs/REPORT.md,
+`pages[i].findings[j]`), with `scored` in place of the report's `owned`
+and without `about`, `fingerprint` and `in_baseline`; each says what kind
+of verdict it is (`verdict_basis`: sc, heuristic, policy, best-practice
+or review), so the bundle says it without the rulebook beside it. Each
+finding about an element carries its locator (`selector`: one CSS
+selector per tree, the guide's "Where a finding is"). A run gated against a `--baseline` report
 records it (`baseline`: the report's SHA-256, when it was made, how many
 findings it lists, and how many of the run's findings, and of its FAIL
 findings in the site's own markup, it does not list; docs/REPORT.md). Its
@@ -337,3 +341,48 @@ fetches the pages you name (and, rendered, whatever they load). Signing
 and verifying are local. `--http-user` credentials go only to the run's
 one origin, and only when it asks for them. `--render` serves the build on 127.0.0.1 only, for the
 length of the run. There is no telemetry.
+
+## Personal data in what a run writes
+A report, a bundle or a saved snapshot records what the pages showed the
+run, so it holds personal data wherever they did. Treat each as you treat
+the pages it was made from: a run over a site's account pages, signed in,
+is as sensitive as those pages.
+
+- **Findings quote the page.** Each finding's `snippet` is the start of
+  the element's markup (at most 180 characters), its `selector` can name
+  the element's id, and a message can quote the element's text (`Generic
+  link text "click here"`). A name, an email address or an order number
+  in a failing element's markup is in its snippet.
+- **Snapshots are whole pages.** `--save-snapshot` and `--save-snapshots`
+  write each page's markup as it was captured. A bundle names a snapshot
+  by its SHA-256 (`snapshot_sha256`), never by its content.
+- **URLs keep their paths.** Query and fragment values, path parameters'
+  values and a user name and password in a URL are recorded as `REDACTED`
+  (docs/REPORT.md, the page's `path`); a value in the path itself
+  (`/users/jane-doe`) is kept, as nothing tells it from a page's name.
+- **Credentials are not recorded.** Neither the `--http-user` user name
+  nor its password is written anywhere; a capture record says only that
+  credentials were sent (`redacted` lists `http-credentials`).
+- **Who and when.** A signature names its signer as the signer chose
+  (`signer`, free text: a name, a team, a role), with the key's id and
+  `signed_at`; a bundle records when it was made (`created_at`) and when
+  each page was fetched (`fetched_at`).
+- **Files by the names the run was given.** A file is recorded by its
+  path as the command line named it, when that path is relative and has
+  no `..` (`bellbriar-eval site/dist` records `site/dist/index.html`), and
+  otherwise from the file or folder named on (`/srv/client/dist` records
+  `dist/index.html`): never absolute, and never with a home directory in
+  it (`/home/alice`, `/Users/alice`, `/root`, the operator's own), which
+  is left out with what is above it. The machine's name, the account that
+  ran it and the environment's variables are not recorded; a capture's
+  notes say only whether Chromium's sandbox ran, and why not (running as
+  root, say).
+
+The harness keeps nothing itself: it writes only the files its options
+name, where they name them. Each page a browser captures has a temporary
+folder of its own, which holds the browser's profile for it (its cache,
+cookies and storage) and is removed when the capture ends, at its
+deadline too; a run that is itself stopped mid-capture leaves it to the
+capture process, which removes it as it stops, unless that process is
+stopped first (a folder named `bellbriar-capture-…` in the system's
+temporary folder).

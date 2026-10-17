@@ -172,8 +172,10 @@
    `pipx install bellbriar-harness`, `ghcr.io/bellbriar/harness:1`, private
    vulnerability reporting (SECURITY.md) and the DCO check (CONTRIBUTING.md).
    None exists until the first release. Create the repository
-   `bellbriar/eval-action` with `action/action.yml` and `action/README.md`
-   at its root, once the 1.0.0 image is public (item 14); tag it `v1.0.0`
+   `bellbriar/eval-action` with every file of `action/` at its root
+   (`action.yml`, `README.md`, `LICENSE`, `NOTICE` and
+   `seccomp_profile.json`, which `sandbox: required` reads beside
+   `action.yml`), once the 1.0.0 image is public (item 14); tag it `v1.0.0`
    and a `v1` that follows it; run `examples/ci/bellbriar-eval.yml`
    against it. Then try each install line of the README on a clean
    machine, and confirm item 14's settings, before announcing the release.

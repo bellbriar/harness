@@ -47,8 +47,10 @@ The package asks pip for justhtml 3.13.0 exactly, as 3.13.1 builds a
 tree Chromium does not (L142), and for soupsieve's 2.9 line, from 2.9.2:
 soupsieve's later versions change what a page's selectors match (L133).
 Its `browser` extra asks for Playwright 1.63.0, whose Chromium the
-container image runs too (L143). A run does not check the versions it
-finds, which its record names (L134).
+container image runs too (L143). A run whose versions lie outside these
+ranges (beautifulsoup4 from 4.12, below 5, too) says so on standard error
+before it starts, as its verdicts can differ; its record names the
+versions it used.
 A re-run of a saved snapshot records, as `tool.from_snapshot`, the
 axe-core whose results the snapshot holds and the Chromium that
 captured it (L53). Two reports are
@@ -196,9 +198,8 @@ sentence saying what they cover. A file run's, verbatim:
 
 > This run covers the static DOM layer only. Keyboard operability, focus
 > visibility, contrast, reflow, screen-reader announcements, and content
-> adequacy were NOT evaluated. A passing result here is necessary, not
-> sufficient, and is not a determination of WCAG conformance or legal
-> compliance.
+> adequacy were NOT evaluated. A passing result here is not sufficient,
+> and is not a determination of WCAG conformance or legal compliance.
 
 and a rendered run's:
 
@@ -207,13 +208,14 @@ and a rendered run's:
 > rules) and reflow at 320 CSS pixels. Keyboard operability (beyond
 > whether scrollable regions can take focus), focus visibility,
 > screen-reader announcements, and content adequacy were NOT evaluated. A
-> passing result here is necessary, not sufficient, and is not a
-> determination of WCAG conformance or legal compliance.
+> passing result here is not sufficient, and is not a determination of
+> WCAG conformance or legal compliance.
 
 (on a run where some pages were not rendered it names how many were).
 Removing that banner from a report voids the report's meaning. Until the
 interaction layer ships, a documented human keyboard-and-screen-reader
-pass fills the gap — the WCAG pack contains the checklist.
+pass fills the gap (Bellbriar's WCAG pack, which is not distributed with
+the harness, has a checklist for it).
 
 ### How the page is obtained, and why it matters
 
@@ -1010,11 +1012,15 @@ against. Check against a key the signer published through a channel you
 trust, never against one that arrives with the bundle: anyone can sign
 with a key of their own. The harness's own worked example is signed with
 a demonstration key that is in no trust path, and `verify` says so in its
-result. Two kinds of key mean nothing, and `verify` answers "could not
-verify" (exit 2) for them, never VALID: the format specification's
-published test key, whose private half is printed there, and a key no one
-can hold a private key for: a point of small order, under which anyone
-can make a "signature" without one, or no point of the curve at all.
+result. Two kinds of key mean nothing, and `bellbriar-evidence verify`
+answers "could not verify" (exit 2) for them, never VALID: the format
+specification's published test key, whose private half is printed there,
+and a key no one can hold a private key for: a point of small order,
+under which anyone can make a "signature" without one, or no point of the
+curve at all. (The library's `bundle.verify_bundle`, which checks the
+specification's test vectors, accepts the test key, and its reason says
+the signature is evidence of nothing; it refuses the others as the
+command does.)
 
 ### Three kinds of signature, and which exist
 

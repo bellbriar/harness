@@ -388,7 +388,9 @@ class TestStyleKeys(unittest.TestCase):
         self.assertEqual(_scope_as_root(":scope > body .x"), ":root > body .x")
         self.assertEqual(_scope_as_root('[a=":scope"]'), '[a=":scope"]')
         self.assertEqual(_rightmost_key(r"#\31 x"), ("id", "1x"))
-        self.assertEqual(_rightmost_key('[data-x="].y"]'), None)
+        # Its attribute (S5: an attribute is a key), never the ".y" in the
+        # value.
+        self.assertEqual(_rightmost_key('[data-x="].y"]'), ("attr", "data-x"))
         # :scope hid every element before: only the root matches it.
         self.assertEqual(fails(page('<div><a href="/x">x</a></div>',
                                     "<style>:scope div{display:none}</style>"

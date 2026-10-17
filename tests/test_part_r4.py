@@ -19,8 +19,9 @@
   H5     tools/repo_guard.py: no key, golden set or pack in the repository.
   A11    The release workflow (Trusted Publishing), the container image and
          the Action.
-  CI     The test workflow's matrix: Linux, macOS (Intel too), Windows,
-         Python 3.11 to 3.14 (3.10 until Part S, which requires 3.11).
+  CI     The test workflow's matrix: Linux and macOS (Intel too; Windows
+         until S4, L141), Python 3.11 to 3.15 (3.10 until Part S, which
+         requires 3.11).
   H7     The README leads with the install paths and what is checked.
   A9     bellbriar-lint --format sarif.
   A10    --baseline: the gate counts only findings an earlier report does
@@ -1845,7 +1846,7 @@ class TestWorkflows(unittest.TestCase):
         # Not Windows, where the commands stop (L141).
         self.assertEqual(set(matrix["os"]), {"ubuntu-latest", "macos-latest"})
         self.assertEqual(matrix["python-version"],
-                         ["3.11", "3.12", "3.13", "3.14"])
+                         ["3.11", "3.12", "3.13", "3.14", "3.15"])
         self.assertIn({"os": "macos-15-intel", "python-version": "3.13"},
                       matrix["include"])
         steps = json.dumps(wf["jobs"]["test"]["steps"])
@@ -1877,35 +1878,58 @@ class TestWorkflows(unittest.TestCase):
                          {"contents": "read", "id-token": "write"})
         self.assertEqual(pypi["environment"]["name"], "pypi")
         self.assertIn("pypa/gh-action-pypi-publish@", json.dumps(pypi["steps"]))
-        # Only the publishing job may mint an identity token.
-        others = [n for n, j in jobs.items() if n != "pypi"
+        # Only the publishing job may mint an identity token, and the job
+        # that attests what the run built, which runs nothing but the
+        # attestation action (S5-5).
+        others = [n for n, j in jobs.items() if n not in ("pypi", "attest")
                   and "id-token" in json.dumps(j.get("permissions", {}))]
         self.assertEqual(others, [])
+        attest = jobs["attest"]
+        self.assertEqual({s["uses"].split("@")[0] for s in attest["steps"]},
+                         {"actions/download-artifact", "docker/login-action",
+                          "actions/attest-build-provenance"})
+        self.assertFalse([s for s in attest["steps"] if "run" in s])
+        self.assertNotIn("environment", attest)
         # R4A-5, R4A-6: the whole suite, and the image built and run, before
         # PyPI, which cannot be undone.
         self.assertEqual(jobs["tests"]["uses"],
                          "./.github/workflows/bellbriar-eval.yml")
         self.assertEqual(set(pypi["needs"]),
-                         {"tests", "build", "smoke", "image-test"})
+                         {"tests", "build", "smoke", "image-build"})
         self.assertIn("tools/image_check.py",
-                      json.dumps(jobs["image-test"]["steps"]))
+                      json.dumps(jobs["image-build"]["steps"]))
         self.assertIn("tools/check_dist.py", json.dumps(jobs["build"]))
         build = json.dumps(jobs["build"]["steps"])
         self.assertIn("merge-base --is-ancestor", build)
         self.assertIn("tools/release_notes.py", build)
         self.assertEqual(jobs["image"]["permissions"]["packages"], "write")
-        self.assertEqual(set(jobs["image"]["needs"]), {"build", "pypi"})
+        self.assertEqual(set(jobs["image"]["needs"]),
+                         {"build", "pypi", "image-build"})
         image = json.dumps(jobs["image"]["steps"])
-        self.assertIn("linux/amd64,linux/arm64", image)             # R4A-11
+        built = jobs["image-build"]
+        # R4A-11, S5-5: x86-64 and ARM64, each built and run on its own
+        # hardware (no emulation), pushed by digest before PyPI.
+        self.assertEqual(
+            built["strategy"]["matrix"]["include"],
+            [{"platform": "linux/amd64", "runner": "ubuntu-24.04"},
+             {"platform": "linux/arm64", "runner": "ubuntu-24.04-arm"}])
+        self.assertEqual(built["runs-on"], "${{ matrix.runner }}")
+        steps = json.dumps(built["steps"])
+        self.assertIn("push-by-digest=true", steps)
+        self.assertIn('"no-cache": true', steps)
+        self.assertNotIn("cache-from", steps)
+        self.assertNotIn("setup-qemu", (ROOT / ".github" / "workflows" /
+                                        "release.yml").read_text())
+        self.assertIn('tools/image_check.py \\"ghcr.io/bellbriar/harness@'
+                      '$DIGEST\\"', steps)
         # R4D-6: the image holds software under many licenses.
+        self.assertIn("org.opencontainers.image.licenses=NOASSERTION", steps)
         self.assertIn("org.opencontainers.image.licenses=NOASSERTION", image)
-        # R4D-2: both architectures build before PyPI; the version tag
-        # alone is pushed, and the floating tags follow the run of the
-        # pushed image (R4A-13).
-        self.assertIn("linux/amd64,linux/arm64",
-                      json.dumps(jobs["image-test"]["steps"]))
-        self.assertIn("ghcr.io/bellbriar/harness:${{ needs.build.outputs."
-                      "version }}", image)
+        # R4D-2: the version tag alone, on the two images that ran, after
+        # PyPI; the floating tags follow the run of the pushed image
+        # (R4A-13).
+        self.assertIn("imagetools create", image)
+        self.assertIn('-t \\"ghcr.io/bellbriar/harness:$VERSION\\"', image)
         self.assertEqual(set(jobs["tags"]["needs"]),
                          {"build", "image", "public"})
         self.assertIn("tools/release_tags.py",
@@ -1918,19 +1942,29 @@ class TestWorkflows(unittest.TestCase):
         self.assertIn("--released released.txt --pypi pypi.json", tags)
         self.assertEqual(wf["concurrency"], {"group": "release",
                                              "cancel-in-progress": False})
-        # R4H-12: the published image's labels and annotations are read
-        # before PyPI too.
-        meta = [[s for s in jobs[j]["steps"] if s.get("id") == "meta"]
-                for j in ("image-test", "image")]
-        self.assertEqual(meta[0], meta[1])
-        self.assertTrue(meta[0])
-        self.assertIn("steps.meta.outputs.annotations",
-                      json.dumps(jobs["image-test"]["steps"]))
+        # R4H-12: the published image's labels and annotations are the
+        # ones it was built with, before PyPI.
+        meta = [s for s in built["steps"] if s.get("id") == "meta"]
+        self.assertTrue(meta)
+        self.assertIn("steps.meta.outputs.annotations", steps)
         # R4F-8: the version label is the release's, on the index too.
         self.assertIn("org.opencontainers.image.version=${{ needs.build."
-                      "outputs.version }}", image)
-        self.assertIn("steps.meta.outputs.annotations", image)
-        self.assertIn("imagetools create", json.dumps(jobs["tags"]["steps"]))
+                      "outputs.version }}", steps)
+        self.assertIn('index:org.opencontainers.image.version=$VERSION',
+                      image)
+        tags_steps = json.dumps(jobs["tags"]["steps"])
+        self.assertIn("imagetools create", tags_steps)
+        # S5-5: a pre-release rehearses the command that moves them: the
+        # same lines, with --dry-run (S5 re-review).
+        self.assertIn("dry=(--dry-run)", tags_steps)
+        self.assertEqual(tags_steps.count("imagetools create"), 1)
+        self.assertIn('imagetools create \\"${dry[@]}\\" \\"${args[@]}\\"',
+                      tags_steps)
+        # S5 re-review: nothing is pushed before the suite has passed.
+        self.assertEqual(set(built["needs"]), {"build", "tests", "smoke"})
+        # S5-5: the public pull on each architecture.
+        self.assertEqual(jobs["public"]["strategy"]["matrix"]["runner"],
+                         ["ubuntu-24.04", "ubuntu-24.04-arm"])
         # R4D-1: a version the image steps would refuse is refused first.
         self.assertIn("release_tags.py --check", build)
         # R4D-9: a re-run after a partial upload.
@@ -2069,14 +2103,24 @@ class TestWorkflows(unittest.TestCase):
                          r"v(\d+\.\d+\.\d+)-noble(@sha256:[0-9a-f]{64})?$",
                          docker, re.M)
         self.assertIsNotNone(base, "the base image is Playwright's")
-        pins = dict(line.split("==") for line in (
+        # Each pin's name and version, with or without its hashes.
+        pins = dict(re.findall(r"^([A-Za-z0-9._-]+)==([^\s\\]+)", (
             ROOT / "docker" / "requirements.txt").read_text(
-                encoding="utf-8").splitlines()
-            if line and not line.startswith("#"))
+                encoding="utf-8"), re.M))
         # The Playwright package is the base image's, whose browsers it
         # holds (R4A-4).
         self.assertEqual(pins["playwright"], base.group(1))
-        self.assertIn("--constraint /tmp/requirements.txt", docker)
+        # Every file checked against its hash (S5), then the wheel alone.
+        self.assertIn("--require-hashes --no-deps -r /tmp/requirements.txt",
+                      docker)
+        self.assertIn('--no-deps "${wheel}"', docker)
+        text = (ROOT / "docker" / "requirements.txt").read_text(
+            encoding="utf-8")
+        for name in pins:
+            with self.subTest(pin=name):
+                self.assertRegex(text, re.compile(
+                    rf"^{re.escape(name)}==[^\s\\]+ \\\n"
+                    r"\s+--hash=sha256:[0-9a-f]{64}", re.M))
         for name in ("beautifulsoup4", "justhtml", "cryptography",
                      "soupsieve"):
             self.assertIn(name, pins)
@@ -2093,7 +2137,7 @@ class TestWorkflows(unittest.TestCase):
         # pasted into it (script injection).
         self.assertNotIn("${{", step["run"])
         self.assertEqual(set(step["env"]), {"BB_ARGS", "BB_VERSION",
-                                            "BB_PASS_ENV"})
+                                            "BB_PASS_ENV", "BB_SANDBOX"})
 
     @unittest.skipUnless(shutil.which("bash"), "bash")
     def test_the_actions_arguments_are_never_a_shell(self):

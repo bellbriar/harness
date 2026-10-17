@@ -1,0 +1,9 @@
+Bellbriar Harness: its GitHub Action
+Copyright 2026 Bellbriar, Inc.
+
+This product is licensed under the Apache License, Version 2.0 (LICENSE).
+
+seccomp_profile.json is Playwright's (https://github.com/microsoft/playwright,
+utils/docker/seccomp_profile.json at v1.63.0), Copyright (c) Microsoft
+Corporation, under the Apache License 2.0; it is derived from Docker's
+default seccomp profile (Moby, Apache License 2.0).

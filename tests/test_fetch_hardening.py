@@ -330,7 +330,7 @@ class TestFallbackReason(unittest.TestCase):
                 ("BrowserType.launch: Executable doesn't exist at /home/u/.cache/"
                  "ms-playwright/chromium/chrome\n╔══╗",
                  "BrowserType.launch: the Chromium build Playwright uses is not "
-                 "installed (python -m playwright install chromium)"),
+                 "installed (bellbriar-eval --install-browser installs it)"),
                 ("Page.content: Target page, context or browser has been closed",
                  "Page.content: the page, context or browser closed or crashed"),
                 ("anything else the page wrote", "RuntimeError: failed")):

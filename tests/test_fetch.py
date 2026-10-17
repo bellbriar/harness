@@ -235,7 +235,7 @@ class TestRenderedFetch(unittest.TestCase):
         self.assertEqual(r.browser["name"], "chromium")
         self.assertTrue(r.browser["version"])
         self.assertEqual(r.viewport, F.DEFAULT_VIEWPORT)
-        self.assertEqual(r.wait["strategy"], "load+scroll+dom-settle")
+        self.assertEqual(r.wait["strategy"], "load+scroll+dom-and-data-settle")
         self.assertEqual(r.attribution["policy"], "vendor-list")
         self.assertIn(self.site.third.base, r.attribution["extra_third_party"])
         self.assertIsInstance(r.wait["waited_ms"], int)

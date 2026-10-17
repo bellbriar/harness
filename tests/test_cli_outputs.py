@@ -85,8 +85,18 @@ class TestCollect(unittest.TestCase):                         # P1-04
         self.assertEqual(code, 0)
         self.assertIn("evaluated 3 file(s)", err)
 
-    def test_a_named_file_is_taken_whatever_it_is_called(self):
-        page = self.tmp / "page.php"
+    def test_a_named_file_is_an_html_file(self):
+        """S5-3: a named file was read as a page whatever it was called, so
+        `bellbriar-eval src/App.tsx` judged source as if it were a page."""
+        for name in ("page.php", "App.tsx", "page"):
+            with self.subTest(name=name):
+                page = self.tmp / name
+                shutil.copy(BAD, page)
+                code, _, err = run(str(page), "--fail-on", "never")
+                self.assertEqual(code, 2, err)
+                self.assertIn(f"not an HTML file: {page}", err)
+                self.assertIn("bellbriar-lint reads source files", err)
+        page = self.tmp / "PAGE.HTM"
         shutil.copy(BAD, page)
         self.assertEqual(run(str(page), "--fail-on", "tier1")[0], 1)
 

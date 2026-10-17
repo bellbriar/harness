@@ -1141,16 +1141,17 @@ class TestWithheld(unittest.TestCase):
 
     def test_names_ignoring_case_on_windows(self):
         # A set of its own: other tests add the names they pass.
+        # A name with no word of a secret's (S5: KEY is one, secret_like).
         with mock.patch.object(F, "WITHHELD_ENV", {
                 "BELLBRIAR_SIGN_KEY", "BELLBRIAR_HTTP_PASSWORD",
-                "bb_r5_lower_key"}):
+                "bb_r5_lower_name"}):
             with mock.patch("os.name", "nt"):
-                self.assertTrue(F.withheld("BB_R5_LOWER_KEY"))
+                self.assertTrue(F.withheld("BB_R5_LOWER_NAME"))
                 self.assertTrue(F.withheld("bellbriar_sign_key"))
                 self.assertFalse(F.withheld("PATH"))
             if os.name != "nt":
-                self.assertFalse(F.withheld("BB_R5_LOWER_KEY"))
-                self.assertTrue(F.withheld("bb_r5_lower_key"))
+                self.assertFalse(F.withheld("BB_R5_LOWER_NAME"))
+                self.assertTrue(F.withheld("bb_r5_lower_name"))
 
 
 class TestReadingBundles(unittest.TestCase):
@@ -1235,12 +1236,15 @@ class TestReadingBundles(unittest.TestCase):
                                 "names a file in the --save-snapshots "
                                 "folder" in err, err)
         if hasattr(os, "symlink"):
+            # S5: an output is never written through a link, so a link to
+            # another output is refused as a link (a hard link is still
+            # the same file: R5D-8).
             os.symlink(d / "real.json", d / "alias.json")
             code, _out, err = run(FIXTURES / "good.html", "--json",
                                   d / "real.json", "--bundle",
                                   d / "alias.json")
             self.assertEqual(code, 2, err)
-            self.assertIn("name the same file", err)
+            self.assertIn("alias.json (--bundle): it is a symbolic link", err)
 
     def test_no_bundle_from_a_run_that_exits_2(self):
         """R5B-15: no page could be evaluated."""
@@ -3491,9 +3495,9 @@ class TestRunEndsRound5(unittest.TestCase):
         (d / "b.json").write_text('{"old": "bundle"}')
         real = cli._write
 
-        def failing(path, data):
+        def failing(path, data, *kind):
             return "denied" if str(path) == str(d / "b.json") \
-                else real(path, data)
+                else real(path, data, *kind)
         with mock.patch.object(cli, "_write", failing):
             code, _out, err = run(FIXTURES / "good.html", "--bundle",
                                   d / "b.json", "--fail-on", "never")

@@ -1480,8 +1480,8 @@ def _tag_findings(text: str, path: str, tags: list) -> list[Finding]:
                 add("bl-autoplay-media", WARN,
                     f"<{media}> autoplays sound, with native controls — "
                     "they meet 1.4.2 when users can see and reach them, "
-                    "but the pack bans autoplaying sound: confirm, or "
-                    "remove autoplay.", ref)
+                    "but Bellbriar's WCAG pack bars autoplaying sound: "
+                    "confirm, or remove autoplay.", ref)
             else:
                 unread = [what for what, state in (
                     ("autoplays", autoplay), ("is muted", muted),
@@ -1490,8 +1490,8 @@ def _tag_findings(text: str, path: str, tags: list) -> list[Finding]:
                     f"<{media}> may autoplay sound: the linter cannot read "
                     f"whether it {' or '.join(unread)} (a bound expression "
                     "or a spread). If it can autoplay unmuted with no "
-                    "controls, the gate fails it (1.4.2); the pack bans "
-                    "autoplaying sound either way.", ref)
+                    "controls, the gate fails it (1.4.2); Bellbriar's WCAG "
+                    "pack bars autoplaying sound either way.", ref)
 
         if name.lower() == "meta":
             # Same bounds as the eval rule: an instant redirect (0) and a
@@ -2251,12 +2251,86 @@ def _git_ignored(folder: Path, notes: list | None = None):
     return files, folders
 
 
-def _walk(root: Path, notes: list | None = None) -> list[Path]:
+class Excludes:
+    """--exclude: shell-style patterns (fnmatch: `*` matches any characters,
+    "/" too) for what a folder scan leaves out. A pattern is matched against
+    the path of each file and folder relative to the folder named on the
+    command line, and against its name alone; a pattern ending in "/"
+    matches folders only, and an absolute one is matched against the
+    absolute path. A folder that matches is not entered. A file named on
+    the command line is linted whatever matches it. Which patterns matched
+    nothing, and how much each left out, is said (excluded())."""
+
+    def __init__(self, patterns=()):
+        self.patterns = []
+        for raw in patterns:
+            text = _nfc(raw)
+            folders_only = text.endswith("/")
+            text = text.rstrip("/")
+            while text.startswith("./"):
+                text = text[2:]
+            if not text:
+                raise ValueError(f"--exclude {raw!r} names nothing")
+            self.patterns.append((raw, text, folders_only,
+                                  os.path.isabs(text)))
+        self.hits = {raw: 0 for raw in patterns}
+        self.files = 0
+        self.folders = 0
+
+    def __bool__(self) -> bool:
+        return bool(self.patterns)
+
+    def matches(self, path: Path, root: Path, folder: bool) -> bool:
+        if not self.patterns:
+            return False
+        import fnmatch
+        rel = _nfc(path.relative_to(root).as_posix())
+        name = _nfc(path.name)
+        absolute = None
+        matched = False
+        for raw, pattern, folders_only, is_abs in self.patterns:
+            if folders_only and not folder:
+                continue
+            if is_abs:
+                if absolute is None:
+                    absolute = _nfc(Path(os.path.abspath(path)).as_posix())
+                hit = fnmatch.fnmatchcase(absolute, pattern)
+            else:
+                hit = (fnmatch.fnmatchcase(rel, pattern)
+                       or fnmatch.fnmatchcase(name, pattern))
+            if hit:
+                self.hits[raw] += 1        # each pattern that matches it
+                matched = True
+        if matched:
+            if folder:
+                self.folders += 1
+            else:
+                self.files += 1
+        return matched
+
+    def said(self) -> list[str]:
+        """The notes a run with --exclude adds: what was left out, and each
+        pattern that matched nothing (a mistyped one excludes nothing). A
+        folder left out is not entered, so its files are not counted."""
+        out = []
+        if self.files or self.folders:
+            out.append(f"--exclude left out {self.folders} folder(s), not "
+                       f"entered, and {self.files} file(s) besides")
+        for raw, hits in self.hits.items():
+            if not hits:
+                out.append(f"--exclude {raw!r} matched nothing")
+        return out
+
+
+def _walk(root: Path, notes: list | None = None,
+          exclude: Excludes | None = None) -> list[Path]:
     """The lintable files under root (P3-10). A scan never enters a folder
-    in SKIP_DIRS below root, nor anything git ignores there; a nested
-    repository or submodule is read with its own ignore rules, as git reads
-    it. Symbolic links to folders are not followed. Without git, or outside
-    a work tree, only SKIP_DIRS applies."""
+    in SKIP_DIRS below root, nor anything git ignores there, nor what
+    --exclude names (Excludes); a nested repository or submodule is read
+    with its own ignore rules, as git reads it. Symbolic links to folders
+    are not followed. Without git, or outside a work tree, only SKIP_DIRS
+    and --exclude apply."""
+    exclude = exclude if exclude is not None else Excludes()
     out: list[Path] = []
     rules: dict = {}         # folder -> (base, files, folders) or None
     top = os.path.realpath(root)
@@ -2282,11 +2356,17 @@ def _walk(root: Path, notes: list | None = None) -> list[Path]:
             name = _nfc(p.relative_to(rule[0]).as_posix())
             return (name + "/" in rule[2]) if folder else (name in rule[1])
 
-        dirnames[:] = [d for d in dirnames if d not in SKIP_DIRS
+        # --exclude is read first: a pattern that names what the scan
+        # skips anyway (node_modules) matched it, and is not said to have
+        # matched nothing.
+        dirnames[:] = [d for d in dirnames
+                       if not exclude.matches(here / d, root, True)
+                       and d not in SKIP_DIRS
                        and not is_ignored(here / d, folder=True)]
         for name in filenames:
             f = here / name
-            if f.suffix.lower() in ALL_EXTS and f.is_file() \
+            if f.suffix.lower() in ALL_EXTS and \
+                    not exclude.matches(f, root, False) and f.is_file() \
                     and not is_ignored(f):
                 if f.is_symlink() and os.path.commonpath(
                         [top, os.path.realpath(f)]) != top:
@@ -2330,13 +2410,15 @@ def _minified(path: Path, text: str) -> bool:
         for line in text.splitlines())
 
 
-def collect(paths: list[str], notes: list | None = None) -> list[Path]:
+def collect(paths: list[str], notes: list | None = None,
+            exclude: Excludes | None = None) -> list[Path]:
     """The files to lint. A file named on the command line is always
-    linted; a folder is scanned for lintable files (_walk). SKIP_DIRS is
-    matched only below the named folder: matching the whole path skipped
-    entire checkouts that live under a folder named build, dist or out
-    (Bitbucket Pipelines clones into .../pipelines/agent/build). What the
-    scan could not do (read git's ignore rules) is added to `notes`."""
+    linted; a folder is scanned for lintable files (_walk). SKIP_DIRS and
+    --exclude (`exclude`) are matched only below the named folder:
+    matching the whole path skipped entire checkouts that live under a
+    folder named build, dist or out (Bitbucket Pipelines clones into
+    .../pipelines/agent/build). What the scan could not do (read git's
+    ignore rules) is added to `notes`, and so is what --exclude did."""
     _GIT_STALLED.clear()
     out: list = []                      # (file, named on the command line)
     for p in paths:
@@ -2344,9 +2426,11 @@ def collect(paths: list[str], notes: list | None = None) -> list[Path]:
         if pp.is_file():
             out.append((pp, True))
         elif pp.is_dir():
-            out += [(f, False) for f in _walk(pp, notes)]
+            out += [(f, False) for f in _walk(pp, notes, exclude)]
         else:
             raise FileNotFoundError(p)
+    if exclude and notes is not None:
+        notes += exclude.said()
     # A file named twice, or named and inside a folder named too, is one
     # file, linted once (R4E-5): the same name in the same real folder,
     # however the path to that folder is spelled (R4G-6; a link to a file
@@ -2488,7 +2572,7 @@ def sarif(findings: list, notes: list) -> dict:
         "ruleId": f.rule_id,
         "ruleIndex": index[f.rule_id],
         "level": "error" if f.severity == ERROR else "warning",
-        "message": {"text": f"{f.message} (pack: {f.ref})"},
+        "message": {"text": f"{f.message} (WCAG pack rule {f.ref})"},
         "locations": [{"physicalLocation": {
             "artifactLocation": {"uri": uri(f.path)},
             "region": {"startLine": max(int(f.line or 1), 1)}}}],
@@ -2544,7 +2628,12 @@ def _main(argv: list[str] | None = None) -> int:
                     "run bellbriar-eval on built output too.")
     ap.add_argument("paths", nargs="+", help="source files or directories")
     ap.add_argument("--fail-on", choices=[ERROR, WARN, "never"],
-                    default=ERROR)
+                    default=ERROR,
+                    help="exit 1 on findings of this severity or worse: "
+                         f"{ERROR} (the default: patterns that are wrong "
+                         f"essentially always), {WARN} (also those a human "
+                         "or the gate must confirm), or never; exit 2 when "
+                         "nothing could be read")
     ap.add_argument("--format", choices=["text", "json", "sarif"],
                     default="text",
                     help="text for people; json (bellbriar-lint/1, "
@@ -2555,11 +2644,27 @@ def _main(argv: list[str] | None = None) -> int:
                     help="exit 0 when no lintable files are found (default: "
                          "exit 2, because a clean lint over nothing is not a "
                          "clean lint)")
+    ap.add_argument("--exclude", action="append", default=[],
+                    metavar="PATTERN",
+                    help="leave out of a folder scan each file and folder "
+                         "this shell-style pattern matches (* matches any "
+                         "characters, / too), by its path below the named "
+                         "folder or by its name: --exclude '*.stories.tsx' "
+                         "--exclude src/legacy; a pattern ending in / "
+                         "matches folders only. Repeat it for more. A file "
+                         "named on the command line is linted all the same; "
+                         "what was left out, and a pattern that matched "
+                         "nothing, is said")
     args = ap.parse_args(argv)
 
     notes: list[str] = []
     try:
-        files = collect(args.paths, notes)
+        exclude = Excludes(args.exclude)
+    except ValueError as exc:
+        print(f"[bellbriar-lint] error: {exc}", file=sys.stderr)
+        return 2
+    try:
+        files = collect(args.paths, notes, exclude)
     except FileNotFoundError as exc:
         print(f"[bellbriar-lint] not found: {exc}", file=sys.stderr)
         return 2
@@ -2569,8 +2674,10 @@ def _main(argv: list[str] | None = None) -> int:
         print("[bellbriar-lint] error: no lintable files found in "
               f"{', '.join(args.paths)} (looked for "
               f"{', '.join(sorted(ALL_EXTS))}, outside build and dependency "
-              "folders and what git ignores). Refusing to report a clean "
-              "lint over nothing; pass --allow-empty if that is intended.",
+              "folders" + (", what git ignores and what --exclude leaves out"
+                           if exclude else " and what git ignores")
+              + "). Refusing to report a clean lint over nothing; pass "
+              "--allow-empty if that is intended.",
               file=sys.stderr)
         return 2
 
@@ -2634,7 +2741,8 @@ def _main(argv: list[str] | None = None) -> int:
         for f in findings:
             # A name or a line of source as one line of output (R4I-2).
             print(f"{printable(f.path)}:{f.line} {f.severity:5} "
-                  f"{f.rule_id:28} {printable(f.message)} (pack: {f.ref})")
+                  f"{f.rule_id:28} {printable(f.message)} "
+                  f"(WCAG pack rule {f.ref})")
             if f.snippet:
                 print(f"    | {printable(f.snippet)}")
         print(f"\n{scanned} file(s) scanned — {n_err} error(s), "

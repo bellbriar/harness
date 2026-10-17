@@ -1,13 +1,13 @@
 {
   "rulebook_version": "1.0.0",
-  "conformance_target": "WCAG 2.1 AA (WCAG 2.2 A/AA delta graded separately)",
+  "conformance_target": "WCAG 2.1 AA (a rule for a criterion WCAG 2.2 added at A or AA reports for review and is not graded)",
   "tier_weights": {
     "1": 5,
     "2": 2,
     "3": 1,
     "0": 0
   },
-  "tier_weights_note": "Provisional; recalibrate when the complaint-tagging corpus lands. Tier 0 = policy rules (settlement-shaped or exclusion residual duties), excluded from the weighted score. Rules that never fail (verdict_basis policy, best-practice or review) also weigh 0, whatever their tier.",
+  "tier_weights_note": "Provisional; recalibrate when the complaint-tagging corpus lands. Tier 0 = policy rules (settlement terms, and duties that remain for content outside evaluation, such as document files), excluded from the weighted score. Rules that never fail (verdict_basis policy, best-practice or review) also weigh 0, whatever their tier.",
   "act_note": "act_rules lists the W3C ACT rules (Accessibility Conformance Testing) a rule tests, each by id, title and W3C status, as w3c/wcag's guidelines/act-mapping.json publishes them: approved by the Accessibility Guidelines Working Group; proposed, written by the ACT Rules Community Group and published by W3C but not approved; or deprecated. A rule cites an ACT rule that tests what it tests and maps a criterion it cites (required for conformance, for a rule that can fail); where the two differ, the rule's notes say how. Many checks have no ACT rule. tests/test_citations.py checks every criterion, level, Understanding link, ACT citation and failure technique against tests/data/w3c-citations.json, a snapshot tools/w3c_citations.py makes from W3C's repositories.",
   "citations_checked": {
     "on": "2026-10-11",
@@ -224,7 +224,7 @@
       "pled_pattern": false,
       "act_rules": [],
       "understanding": "https://www.w3.org/WAI/WCAG21/Understanding/name-role-value.html",
-      "notes": "L19: a generic element (<div>, <span>, a custom element) that takes keyboard focus (tabindex 0 or more) and whose role attribute names no known role (role=\"buton\", an abstract role) has no role at all. W3C failure F59 names a control made with script that has no role; focus alone does not show the element is a control (a focusable scroll container is not one), so a FAIL is a probable failure of 4.1.2 (heuristic). ACT 674b10 does not require valid role values on their own because an element's own role can stand in; a generic element has none. Unknown roles elsewhere stay bb-aria-role's best-practice review."
+      "notes": "L19: a generic element (<div>, <span>, a custom element) that takes keyboard focus (tabindex 0 or more) and whose role attribute names no known role (role=\"buton\", an abstract role) has no role at all; so has one with no role attribute and a click or key handler of its own (onclick, onkeydown, onkeyup, onkeypress), as markup writes the control F59 describes (S5-3; a handler a script attaches leaves no trace in markup, and bellbriar-lint reads onClick in source). W3C failure F59 names a control made with script that has no role; focus alone does not show the element is a control (a focusable scroll container is not one), so a FAIL is a probable failure of 4.1.2 (heuristic). ACT 674b10 does not require valid role values on their own because an element's own role can stand in; a generic element has none. Unknown roles elsewhere stay bb-aria-role's best-practice review."
     },
     {
       "id": "bb-html-lang",
@@ -606,7 +606,7 @@
     },
     {
       "id": "bb-doc-links",
-      "name": "Document files flagged (exclusion 10.2)",
+      "name": "Links to document files flagged for review",
       "sc": [],
       "level": "policy",
       "tier": 0,
@@ -620,7 +620,7 @@
     },
     {
       "id": "bb-a11y-statement",
-      "name": "Accessibility statement present (settlement furniture)",
+      "name": "Accessibility statement present (a recurring settlement term)",
       "sc": [],
       "level": "policy",
       "tier": 0,

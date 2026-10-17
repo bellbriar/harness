@@ -11,9 +11,11 @@ on: [push, pull_request]
 permissions:
   contents: read
 
-# Each action is pinned to a commit, the only reference that cannot be
-# moved; the comment names its release. Dependabot (package-ecosystem:
-# github-actions) proposes updates.
+# Each third-party action is pinned to a commit, the only reference that
+# cannot be moved; the comment names its release. Dependabot
+# (package-ecosystem: github-actions) proposes updates. Bellbriar's Action
+# is named by its major version below, so it gets fixes; pin it too (see
+# the gate's comment) for runs that must not change.
 
 jobs:
   eval:
@@ -38,7 +40,8 @@ jobs:
       - run: pipx run --spec "bellbriar-harness==1.*" bellbriar-lint src/ --fail-on error
       # Replace with your own build; the gate reads the built site.
       - run: npm ci && npm run build
-      # The gate fails on WCAG failures (and probable ones). Add --strict to
+      # The gate fails on Tier-1 WCAG failures (and probable ones); give
+      # --fail-on any to fail on those of every tier. Add --strict to
       # also fail on patterns pled in complaints that are not WCAG failures
       # on their own, such as redundant links. For runs that must not
       # change, pin the Action to a commit and give version: the image's

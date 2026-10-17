@@ -70,6 +70,14 @@ def _collect(paths: list[str]) -> list[tuple[Path, str]]:
             unfollowed += sorted(recorded_path(f, p) for f in entries
                                  if f.is_symlink() and f.is_dir())
         elif pp.is_file():
+            if pp.suffix.lower() not in HTML_SUFFIXES:
+                # A source file read as a page fails rules it was never
+                # written for (S5-3).
+                raise FileNotFoundError(
+                    f"not an HTML file: {p} (bellbriar-eval reads built "
+                    "pages: .html, .htm, .xhtml, .xht or .xhtm; "
+                    "bellbriar-lint reads source files such as .jsx, .tsx, "
+                    ".vue and .css)")
             found = [pp]
         elif os.path.islink(p):
             raise FileNotFoundError(f"path not found: {p} links to nothing")
@@ -270,26 +278,146 @@ def _bundle_given(argv) -> str | None:
     return known.bundle_out if isinstance(known.bundle_out, str) else None
 
 
-def _write(path: str, data: bytes) -> str | None:
-    """Write an output file; the reason it failed, or None."""
+def _css_selector(text: str) -> str:
+    """--wait-for's value: a CSS selector soupsieve compiles, so a typo is
+    an error before the run rather than a page that never loads."""
+    import soupsieve
+    value = (text or "").strip()
+    if not value or len(value) > 1000:
+        raise argparse.ArgumentTypeError("give a CSS selector, such as main "
+                                         "h1 or [data-loaded]")
     try:
-        Path(path).write_bytes(data)
-    except OSError as exc:
-        return exc.strerror or str(exc)
+        soupsieve.compile(value)
+    except Exception as exc:                            # noqa: BLE001
+        raise argparse.ArgumentTypeError(
+            f"{value!r} is not a CSS selector ({type(exc).__name__})")
+    lower = value.lower()
+    if ":-soup-" in lower or ":contains(" in lower:
+        # The selector library's own pseudo-classes, which no browser has.
+        raise argparse.ArgumentTypeError(
+            f"{value!r} uses a pseudo-class browsers do not have "
+            "(:contains, :-soup-…): give one Chromium reads")
+    return value
+
+
+#: How a page still loading when captured is said to be (STILL_LOADING).
+_STILL_LOADING_START = "still loading when captured"
+
+
+def _loading_reason(page, fr, wait_for) -> None:
+    """A capture whose data requests had not answered by the end of its
+    wait is not evaluated (STILL_LOADING), unless --wait-for named what the
+    page shows once loaded and it appeared (S5-3)."""
+    from .fetch import SETTLE_GRACE_MS, STILL_LOADING
+    wait = fr.wait if fr is not None and isinstance(fr.wait, dict) else {}
+    if not page.evaluable or fr.mode != "rendered" or wait_for or \
+            not wait.get("data_requests_open"):
+        return
+    page.evaluable = False
+    page.not_evaluable_reason = STILL_LOADING.format(
+        n=wait["data_requests_open"], cap=wait.get("cap_ms"),
+        grace=SETTLE_GRACE_MS)
+
+
+def _write(path: str, data: bytes, kind: str = "an output") -> str | None:
+    """Write an output file (a report, the bundle) as _write_fresh writes
+    a snapshot: never through a link at its name or on its way, so a
+    checkout that plants one cannot make a run write anywhere else
+    (S5-2). The reason it failed, or None."""
+    return _write_fresh(path, data, kind)
+
+
+def _workspace_roots() -> tuple[str, ...]:
+    """The folders a checkout could have planted a link in, as real paths:
+    the current folder, the repository around it (git's top level), and
+    the CI job's workspace (GITHUB_WORKSPACE)."""
+    return _roots_of(os.path.realpath(os.getcwd()),
+                     os.environ.get("GITHUB_WORKSPACE") or "")
+
+
+@functools.lru_cache(maxsize=8)
+def _roots_of(here: str, workspace: str) -> tuple[str, ...]:
+    roots = {here}
+    if workspace:
+        roots.add(os.path.realpath(workspace))
+    try:
+        from .lint import _git
+        got = _git(Path(here), "rev-parse", "--show-toplevel")
+    except Exception:                                   # noqa: BLE001
+        got = None
+    if got is not None and got.returncode == 0:
+        top = got.stdout.decode("utf-8", "replace").strip()
+        if top:
+            roots.add(os.path.realpath(top))
+    return tuple(sorted(roots))
+
+
+def _link_on_path(path: str) -> str | None:
+    """Why `path` cannot be written without following a symbolic link the
+    user did not name, or None: a link at its own name, or a folder on its
+    way that is a link and sits in the current folder, the repository
+    around it or the CI workspace (_workspace_roots), where a checkout
+    (a pull request) could have put it. A link elsewhere (macOS's /tmp,
+    a folder the user reaches the workspace by) is followed: those are the
+    user's own. The path is followed as the file system follows it, each
+    `..` from where the links before it led."""
+    roots = _workspace_roots()
+
+    def planted(folder: str) -> bool:
+        return any(os.path.commonpath([root, folder]) == root
+                   for root in roots)
+    given = Path(path)
+    current = (given.anchor if given.is_absolute()
+               else os.path.realpath(os.getcwd()))
+    parts = [p for p in (given.parts[1:] if given.is_absolute()
+                         else given.parts) if p not in ("", ".")]
+    for i, part in enumerate(parts):
+        if part == "..":
+            current = os.path.dirname(current)
+            continue
+        step = os.path.join(current, part)
+        try:
+            st = os.lstat(step)
+        except FileNotFoundError:
+            return None              # what does not exist holds no link
+        except OSError as exc:
+            return exc.strerror or str(exc)
+        if not stat.S_ISLNK(st.st_mode):
+            current = step
+            continue
+        if i == len(parts) - 1:
+            return ("it is a symbolic link: name the file it points to, "
+                    "or another path")
+        if planted(current):
+            return (f"the folder {step} on its way is a symbolic link: "
+                    "name the folder it points to")
+        current = os.path.realpath(step)
     return None
 
 
 def _unwritable(path: str) -> str | None:
     """Why an output file cannot be written, found before the run: a
-    missing or non-directory parent. A failed write after the run still
-    exits 2 (_write), but this way a run, and a remote signature, is not
-    spent on a typo."""
+    missing or non-directory parent, something at its name that is not a
+    regular file, or a symbolic link on its way (_link_on_path). A failed
+    write after the run still exits 2 (_write), but this way a run, and a
+    remote signature, is not spent on a typo."""
     parent = Path(path).parent
     if not parent.is_dir():
         return ("no such directory" if not parent.exists()
                 else "its parent is not a directory")
     if Path(path).is_dir():
         return "it is a directory"
+    linked = _link_on_path(path)
+    if linked:
+        return linked
+    try:
+        st = os.lstat(path)
+    except OSError:
+        return None
+    if not stat.S_ISREG(st.st_mode):
+        return ("it is not a regular file (a device or a pipe): name a file; "
+                "a report on standard output would mix with the run's own "
+                "lines")
     return None
 
 
@@ -721,6 +849,15 @@ def _render_deadline_default() -> int:
     return DEFAULT_RENDER_DEADLINE_S
 
 
+def _page_budget(text: str) -> float:
+    """--page-budget (budget.parse_seconds)."""
+    from .budget import parse_seconds
+    try:
+        return parse_seconds(text)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError(str(exc)) from None
+
+
 def _seconds(text: str) -> float:
     """--render-deadline: 5 to 86,400 seconds (fetch.check_deadline); 0,
     -5, inf and nan are refused, not quietly read."""
@@ -778,9 +915,21 @@ def _coverage_note(pages: list, captures: list, build: bool) -> str:
 
 
 def _no_page_why(pages: list, args, url_run: bool) -> str:
-    """Why no page of the run could be evaluated, every page being empty
-    to the rules, and what to do about it, by how the pages were read
-    (N27, R4B-14)."""
+    """Why no page of the run could be evaluated, and what to do about it:
+    pages still loading when captured, or pages empty to the rules, by how
+    they were read (N27, R4B-14); pages of both kinds, as each page's
+    warning says (S5-3)."""
+    loading = [p for p in pages if getattr(p, "not_evaluable_reason", "")
+               .startswith(_STILL_LOADING_START)]
+    if loading and len(loading) == len(pages):
+        return ("every page was still loading its data when captured (each "
+                "page's warning above says how many requests were open): "
+                "give --wait-for an element the pages show only once their "
+                "data has arrived.")
+    if loading:
+        return ("some pages were still loading their data when captured, and "
+                "the others were empty to the rules: each page's warning "
+                "above says which, and what to do.")
     modes = [(getattr(p, "fetch", None) or {}).get("mode") for p in pages]
     rendered = sum(1 for m in modes if m == "rendered")
     if modes and rendered == len(modes):
@@ -1059,12 +1208,16 @@ def _shell_reason(page, fr, build: bool) -> None:
         return
     m = _SHELL_TEXT.search(why)
     chars = f" ({m.group(1)} characters of text)" if m else ""
+    beyond = (" beyond a loading indicator (a status or alert message, a "
+              "progress bar or a spinner)" if "beyond a loading indicator"
+              in why else "")
     how = ("this run read it as the file it is" if build else
            "this run read the HTML the server sent")
     page.not_evaluable_reason = (
         "client-rendered app shell: outside its scripts the markup has no "
         "links, images, controls, headings or other content the static "
-        f"rules read{chars}. Its content is built by JavaScript, and {how} "
+        f"rules read{beyond}{chars}. Its content is built by JavaScript, "
+        f"and {how} "
         f"without running it ({fr.fallback_reason or 'it was not rendered'})"
         ", so this cannot show whether the page is accessible.")
 
@@ -1079,7 +1232,7 @@ def _run_urls(args, urls: list, listing: dict, rulebook: dict, domain,
     from . import fetch as F
     from .redact import redact_url
     render_mode = False if args.no_render else (
-        True if args.require_render else None)
+        True if args.require_render or args.wait_for else None)
     pages: list = []
     captures: list = []
     host = None
@@ -1102,7 +1255,9 @@ def _run_urls(args, urls: list, listing: dict, rulebook: dict, domain,
                          third_party_origins=args.third_party_origin,
                          http_credentials=credentials, record_query=keep,
                          deadline_s=args.render_deadline,
-                         require_sandbox=args.require_sandbox)
+                         require_sandbox=args.require_sandbox,
+                         **({"wait_for": args.wait_for} if args.wait_for
+                            else {}))
         except F.FetchError as exc:
             why = safe(str(exc))
             print(f"[bellbriar] {tag}error: {why}", file=sys.stderr)
@@ -1198,6 +1353,7 @@ def _run_urls(args, urls: list, listing: dict, rulebook: dict, domain,
                             reader=fr.reader)
             made.fetch = _capture_record(made, fr)
             _shell_reason(made, fr, build=False)
+            _loading_reason(made, fr, args.wait_for)
             return made
         if key in same:
             kept_label, kept, kept_at = same[key]
@@ -1288,7 +1444,7 @@ def _run_build(args, collected: list, rulebook: dict, safe) -> tuple:
     from . import fetch as F
     from .bundle import recorded_path
     from .serve import BuildServer, build_root
-    render_mode = True if args.require_render else None
+    render_mode = True if args.require_render or args.wait_for else None
     roots = []                       # (argument, its folder as given, real)
     for arg in args.paths:
         folder = build_root(arg)
@@ -1307,6 +1463,21 @@ def _run_build(args, collected: list, rulebook: dict, safe) -> tuple:
                     BuildServer(real, args.render_base))
         print(f"[bellbriar] serving {len(servers)} folder(s) on this machine "
               f"to render {len(collected)} page(s)", file=sys.stderr)
+        # A folder that holds a repository's own files is more than a
+        # build: its pages' scripts can read whatever it holds (S5-2).
+        source = [r for r in servers if any(
+            os.path.exists(os.path.join(r, marker)) for marker in
+            (".git", "package.json", "pyproject.toml", "node_modules"))]
+        if source:
+            print("[bellbriar] note: " + ", ".join(
+                safe(r) for r in source[:3]) + " looks like a source "
+                "folder (it holds .git, package.json, pyproject.toml or "
+                "node_modules), not a build: --render serves its files to "
+                "the pages it renders, and their scripts can read every one "
+                "it sends, which is all but those under a name that starts "
+                "with a dot and those a build never holds (a private key, a "
+                "Terraform state, a database file). Name the build folder "
+                "(dist, build, out) instead.", file=sys.stderr)
         moved = [s for s in servers.values() if not s.port_stable]
         if moved:
             print("[bellbriar] note: another program holds the port "
@@ -1314,8 +1485,18 @@ def _run_build(args, collected: list, rulebook: dict, safe) -> tuple:
                   "that writes its own address into its markup reads "
                   "differently in this run (its findings' fingerprints "
                   "too).", file=sys.stderr)
+        broken = None                 # no browser, or none that starts
         for i, (file, name) in enumerate(collected, 1):
             tag = f"[{i}/{len(collected)}] " if len(collected) > 1 else ""
+            if broken is not None:
+                # Every page would fail as the first did: they are not
+                # tried, and are said once below (S5-3); each one's record
+                # says it was not tried (S5 re-review).
+                pages.append(_unread_page(name, (
+                    "not tried: the browser --render needs could not be "
+                    f"used for an earlier page ({broken})")))
+                captures.append(None)
+                continue
             real = os.path.realpath(file)
             mine = os.path.abspath(file)
             # The folder it was found in, as the run names it: a link is
@@ -1361,7 +1542,10 @@ def _run_build(args, collected: list, rulebook: dict, safe) -> tuple:
                              deadline_s=args.render_deadline,
                              require_sandbox=args.require_sandbox,
                              fallback="read as the file it is",
-                             error_target="fallback")
+                             error_target="fallback",
+                             browser_required=True,
+                             **({"wait_for": args.wait_for} if args.wait_for
+                                else {}))
                 # Whether it went elsewhere first: the status of a page it
                 # went to is not the file's (R4G-1).
                 if fr.mode == "rendered" and (
@@ -1374,7 +1558,7 @@ def _run_build(args, collected: list, rulebook: dict, safe) -> tuple:
                     went = fr.final_url
                     why = (f"when rendered, it navigated to {went}, so the "
                            "browser showed another page")
-                    if args.require_render:
+                    if render_mode is True:      # --require-render, --wait-for
                         raise F.FetchError(why)
                     fr = F.fetch(url, render=False)
                     fr.fallback_reason = f"{why}; read as the file it is"
@@ -1388,6 +1572,13 @@ def _run_build(args, collected: list, rulebook: dict, safe) -> tuple:
                 _say_detail(exc, tag, safe)
                 pages.append(_unread_page(name, why))
                 captures.append(None)
+                if isinstance(exc, F.BrowserUnavailable):
+                    broken = why
+                    rest = len(collected) - i
+                    if rest:
+                        print(f"[bellbriar] error: --render needs a browser "
+                              f"that starts, so the other {rest} page(s) "
+                              "were not tried either", file=sys.stderr)
                 continue
             _report_capture(fr, tag, safe, name=name, said=said)
             page = run_page(fr.html, name, rulebook,
@@ -1401,6 +1592,7 @@ def _run_build(args, collected: list, rulebook: dict, safe) -> tuple:
             page.input_digest = _served_digest(
                 server, file, last=fr.mode != "rendered")
             _shell_reason(page, fr, build=True)
+            _loading_reason(page, fr, args.wait_for)
             pages.append(page)
             captures.append(fr)
     for arg, folder, real in roots:
@@ -1600,13 +1792,16 @@ def _not_regular(path) -> bool:
         return True
 
 
-def _write_fresh(path: str, data: bytes) -> str | None:
+def _write_fresh(path: str, data: bytes,
+                 kind: str = "a snapshot") -> str | None:
     """Write `data` as a new file at `path`, replacing a regular file there
     and keeping its permissions, never writing through it: no other name
     of the file changes with it (a hard link to a snapshot, R5E-8).
     Anything at `path` that is not a regular file (a link, a device, a
-    pipe) is refused, not replaced (R5H-5). The reason it failed, or
-    None; a temporary file is never left behind (R5H-8)."""
+    pipe) is refused, not replaced (R5H-5), and so is a path whose folders
+    below the current one hold a symbolic link (_link_on_path). The
+    reason it failed, or None; a temporary file is never left behind
+    (R5H-8)."""
     import tempfile
     try:
         st = os.lstat(path)
@@ -1616,7 +1811,10 @@ def _write_fresh(path: str, data: bytes) -> str | None:
         return exc.strerror or str(exc)
     if st is not None and not stat.S_ISREG(st.st_mode):
         return ("it is not a regular file (a link, a device or a pipe), and "
-                "a snapshot is written only as one")
+                f"{kind} is written only as one")
+    linked = _link_on_path(path)
+    if linked:
+        return f"{linked}, and {kind} is written only where none is"
     try:
         fd, tmp = tempfile.mkstemp(
             dir=os.path.dirname(os.path.abspath(path)),
@@ -1715,9 +1913,28 @@ def main(argv=None) -> int:
 def _main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(
         prog="bellbriar-eval",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
         description="Accessibility evaluation for agent-generated web "
-                    "output. Every run declares its layer coverage; a "
-                    "passing run is necessary, not sufficient.")
+                    "output. Every run declares its\nlayer coverage; a "
+                    "passing run does not show conformance.",
+        epilog="exit status: 0 when the gate passes, 1 when it fails "
+               "(--fail-on), 2 when\n"
+               "the run could not be completed (a page that could not be "
+               "read or analysed,\na rule that raised an error, a refused "
+               "option or output) or, where the gate\nfound no failure, "
+               "gives it nothing to pass (no page that could be evaluated,"
+               "\nno Tier-1 rule that applied). A page NOT EVALUATED for "
+               "what it is (an app\nshell, a page still loading) is never "
+               "counted clean, and the gate counts any\nfailure it shows."
+               "\n\n"
+               "examples:\n"
+               "  bellbriar-eval dist --render --fail-on tier1 --html "
+               "report.html\n"
+               "  bellbriar-eval --url https://staging.example.com/orders "
+               "\\\n"
+               "      --wait-for '#orders li' --json report.json\n"
+               "  bellbriar-eval dist --render --fail-on any    # every "
+               "tier's failures")
     ap.add_argument("paths", nargs="*",
                     help="HTML files, or directories: every .html, .htm, "
                          ".xhtml, .xht and .xhtm file under one, in any case")
@@ -1757,6 +1974,21 @@ def _main(argv: list[str] | None = None) -> int:
     ap.add_argument("--require-render", action="store_true",
                     help="Fail (exit 2) rather than fall back to server HTML "
                          "(with --render, to the files as they are)")
+    ap.add_argument("--wait-for", metavar="SELECTOR", type=_css_selector,
+                    help="In a browser, wait (up to 30 s) for an element "
+                         "this CSS selector matches before the page is read, "
+                         "such as the main content a client-rendered page "
+                         "builds once its data arrives; a page that never "
+                         "shows one is not evaluated. With it, data requests "
+                         "still open do not stop the page from being read, so "
+                         "name an element that appears only with the data, "
+                         "not the frame a loading page shows too (main). "
+                         "Without it, a capture "
+                         "waits for the DOM to stop changing and the page's "
+                         "data requests to answer, up to 8 s (2 s more for "
+                         "requests still open then, and those they lead to), "
+                         "and a page still loading then is not evaluated. "
+                         "Implies --require-render")
     ap.add_argument("--require-sandbox", action="store_true",
                     help="Refuse the run (exit 2) rather than run Chromium "
                          "without its sandbox where the sandbox cannot start "
@@ -1770,6 +2002,15 @@ def _main(argv: list[str] | None = None) -> int:
                          "server's HTML, or exit 2 with --require-render. A "
                          "page whose scripts never yield would otherwise hang "
                          "the run")
+    ap.add_argument("--page-budget", type=_page_budget, metavar="SECONDS",
+                    default=None,
+                    help="A page whose analysis has not finished after "
+                         "SECONDS (10 to 86400; default 120) is stopped where "
+                         "the harness next looks at the clock, and is NOT "
+                         "EVALUATED; as for a page that could not be read, "
+                         "the run exits 2 and writes no evidence bundle. "
+                         "Within the budget, what a page's analysis finds "
+                         "does not depend on it")
     ap.add_argument("--http-user", metavar="USER",
                     help="User name for HTTP Basic authentication on a "
                          "protected --url (staging, preview). The password "
@@ -1845,10 +2086,14 @@ def _main(argv: list[str] | None = None) -> int:
                          "rulebook it ships. A run where no Tier-1 rule that "
                          "can fail applies cannot pass the gate")
     ap.add_argument("--fail-on", choices=["tier1", "tier2", "any", "never"],
-                    default="tier1", help="CI gate threshold (default: tier1;"
-                                          " deterministic FAIL findings "
-                                          "only, and a FAIL means WCAG is "
-                                          "violated or probably is)")
+                    default="tier1",
+                    help="CI gate threshold, on FAIL findings (a FAIL means "
+                         "WCAG is violated or probably is): tier1 (the "
+                         "default) fails on those of Tier-1 rules, the "
+                         "patterns most pled in complaints; tier2 on Tier-1 "
+                         "and Tier-2; any on every rule's, which a site "
+                         "aiming at WCAG conformance wants; never never "
+                         "fails")
     ap.add_argument("--strict", action="store_true",
                     help="Also fail the gate on review findings marked "
                          "pled in complaints or a best practice, at moderate "
@@ -1890,6 +2135,9 @@ def _main(argv: list[str] | None = None) -> int:
     args = ap.parse_args(argv)
     _BUNDLE_STATE.set({"bundle": args.bundle_out, "written": False,
                        "said": False})
+    if args.page_budget is not None:
+        from .budget import SECONDS
+        SECONDS.set(args.page_budget)
     if args.install_browser:
         # Nothing else applies to it, so nothing else is silently ignored,
         # whatever its value (R4B-16, R4C-11); --require-sandbox makes it
@@ -1940,9 +2188,32 @@ def _main(argv: list[str] | None = None) -> int:
                  "--render run captured")
     if args.render_base != "/" and not args.render:
         ap.error("--render-base is for --render")
+    if args.wait_for and args.no_render:
+        ap.error("--wait-for and --no-render contradict each other")
+    if args.wait_for and not (url_run or args.render):
+        ap.error("--wait-for waits in a browser: it is for a --url run or "
+                 "--render")
     if (args.sign_key or args.sign_key_env) and not args.bundle_out:
         ap.error("--sign-key and --sign-key-env sign the evidence bundle: "
                  "pass --bundle FILE too")
+    # Library versions outside the ranges this release declares: said
+    # before the run, as its verdicts can differ (L134). The tool record
+    # names them too.
+    from .engine import tool_record
+    from .support import untested_libraries
+    browser_run = bool(args.render or (url_run and not args.no_render))
+    untested = untested_libraries(tool_record(browser=browser_run)[
+        "libraries"], browser=browser_run)
+    if untested:
+        print("[bellbriar] WARNING: this run uses library versions outside "
+              f"the ranges bellbriar-harness {__version__} declares, so its "
+              "verdicts can differ from a run within them: "
+              + "; ".join(untested) + ". Install versions within them "
+              "(pipx reinstall bellbriar-harness, or, in the package's "
+              "environment, pip install --force-reinstall "
+              f"'bellbriar-harness{'[browser]' if browser_run else ''}=="
+              f"{__version__}'); the report's tool record names the ones "
+              "used.", file=sys.stderr)
     # Read before the run, so a bad baseline costs no run (A10).
     baseline = None
     if args.baseline:
@@ -2244,9 +2515,11 @@ def _main(argv: list[str] | None = None) -> int:
                   "not 100% — the executed layers had nothing to measure "
                   "here.")
     if site["rule_fail_totals"]:
-        worst = ", ".join(f"{k}×{v}" for k, v in
+        # rule_fail_totals counts pages, not findings (S5-3).
+        worst = ", ".join(f"{k} ({v} page{'' if v == 1 else 's'})"
+                          for k, v in
                           list(site["rule_fail_totals"].items())[:6])
-        print(f"top failing rules: {worst}")
+        print(f"top failing rules, by pages failed: {worst}")
     if baseline is not None:
         _say_baseline(baseline, run, args.fail_on, args.strict)
     held = _strict_findings(run["pages"], rulebook, args.fail_on)
@@ -2318,7 +2591,7 @@ def _main(argv: list[str] | None = None) -> int:
                   file=sys.stderr)
             why = "made"
         else:
-            failed = _write(out, data)
+            failed = _write(out, data, f"the {label}")
             if failed:
                 print(f"[bellbriar] error: cannot write {out}: {failed}",
                       file=sys.stderr)
@@ -2457,7 +2730,7 @@ def _main(argv: list[str] | None = None) -> int:
                   "bellbriar-evidence verify reads; no bundle was written: "
                   "split the run." + _stale(args), file=sys.stderr)
             return 2
-        why = _write(args.bundle_out, data)
+        why = _write(args.bundle_out, data, "an evidence bundle")
         if why:
             print(f"[bellbriar] error: cannot write {args.bundle_out}: {why}"
                   + (" (the signature was made and is lost)"
