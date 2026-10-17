@@ -6,9 +6,9 @@ for people. `bellbriar-lint --format json` writes `bellbriar-lint/1`. This
 page documents every field of both, so scripts can depend on them.
 
 **What stays stable.** Within a format string, no field is removed or
-renamed, and none changes its type or its meaning. A release may add
-fields, and may add values to the lists marked *open* below, so a script
-should ignore fields it does not know. Anything else takes a new format
+renamed, and none changes its type or its meaning. A minor release
+(1.1.0: CHANGELOG.md, "Versions") may add fields, and values to the lists
+marked *open* below, so a script should ignore fields it does not know. Anything else takes a new format
 string (`bellbriar-report/2`). Every report starts with its `format`. The
 JSON Schema `docs/bellbriar-report-1.schema.json` states the fields and
 types below, and the test suite checks real reports against it.
@@ -145,6 +145,20 @@ some of its fields. Objects within it may gain fields.
 | `snapshot_sha256` | string | The SHA-256 of exactly what the rules read |
 | `fallback_reason` | string or null | Why the page was not rendered, in the harness's own words; null when it was |
 | `notes` | array of strings | What else the capture says (the sandbox, content it could not check) |
+
+The capture's `wait`, in a rendered capture:
+
+| Field | Type | What it holds |
+|---|---|---|
+| `strategy` | string | `load+scroll+dom-and-data-settle`: after the load event the page is scrolled through, then waited on until its DOM has not changed, and none of its data requests has been open, for `quiet_ms` |
+| `quiet_ms` | integer | How long the page must stay still: 500 |
+| `cap_ms` | integer | The longest that wait lasts: 8000 |
+| `waited_ms` | integer | How long it lasted |
+| `settled` | boolean | Whether the DOM stopped changing within `cap_ms` |
+| `data_requests` | integer | The page's fetch and XHR requests seen, a known vendor's and a `--third-party-origin`'s left out |
+| `data_requests_open` | integer | How many of them had not answered at the end: those open at `cap_ms`, and those they lead to, get 2000 ms more, until none has been open for `quiet_ms`, and the DOM then as long again to settle; a page with any open is not evaluated, unless `wait_for` names what it shows once loaded |
+| `wait_for` | string or null | The `--wait-for` selector the capture waited for, up to 30 seconds, before the rest of its wait |
+| `scroll_steps` | integer | How many steps the page was scrolled through in |
 
 ### `pages[i].score`
 
@@ -323,7 +337,7 @@ harness's own rules, in the browser too.
 | `path` | string | The file, as the scan found it |
 | `line` | integer | The line |
 | `message` | string | What was found; a release may improve the wording |
-| `ref` | string | The pack's failure-signature reference |
+| `ref` | string | The rule of Bellbriar's WCAG pack the finding comes from (the pack is not distributed with the harness) |
 | `snippet` | string | The line, trimmed, at most 160 characters |
 
 `bellbriar-lint --format sarif` writes the same findings as SARIF 2.1.0
@@ -331,7 +345,7 @@ harness's own rules, in the browser too.
 scanning reads: one run whose tool is `bellbriar-lint`, a rule for each
 rule id found (with a one-line description), and a result for each
 finding on its file and line, its level `error` or `warning` as the
-finding's severity, its message ending with the pack reference. A file
+finding's severity, its message ending with the WCAG pack rule. A file
 inside the folder the scan ran in is named by its path relative to that
 folder, any other by an absolute `file:` URI; bytes of a name that are not
 UTF-8 are percent-encoded. What the scan could not do is in the run's

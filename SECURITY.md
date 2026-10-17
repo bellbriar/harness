@@ -40,6 +40,13 @@ reports.
 
 Security fixes go into the latest release. 1.0 is the first release.
 
+## Keeping Chromium current
+
+The container image and the `browser` extra pin one Playwright release,
+and the Chromium it brings. We move them to each new Playwright release
+within 30 days of it, once the suite and the browser measurements pass
+on its Chromium, or say in an issue why we have not.
+
 ## Running it safely
 
 A rendered run executes the page's scripts in Chromium. Chromium's sandbox

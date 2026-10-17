@@ -7,11 +7,12 @@ For the one wheel and one source distribution in the folder:
 
 * both name the version in pyproject.toml;
 * the wheel's metadata states the license expression and carries the
-  license files (LICENSE, NOTICE, axe-core's two), and the cryptography
-  pin for Intel Macs;
-* the wheel holds the rulebook and the vendored axe-core, the copy whose
-  SHA-256 the package pins (axe.AXE_SHA256), and nothing outside the
-  package and its metadata;
+  license files (LICENSE, NOTICE, axe-core's two, the WHATWG Encoding
+  Standard's and the test data's), and the cryptography pin for Intel
+  Macs;
+* the wheel holds the rulebook, the vendored axe-core, the copy whose
+  SHA-256 the package pins (axe.AXE_SHA256), and the WHATWG license beside
+  the data it covers, and nothing outside the package and its metadata;
 * the source distribution carries every file git tracks (when this is a
   git checkout, as in CI), so the suite runs from it, and in any case
   what the suite reads (tests, fixtures, docs, examples, tools, the
@@ -39,6 +40,7 @@ LICENSE_EXPRESSION = "Apache-2.0 AND MPL-2.0 AND MIT AND ISC AND BSD-3-Clause"
 LICENSE_FILES = ("LICENSE", "NOTICE",
                  "src/bellbriar_harness/vendor/axe-core/LICENSE",
                  "src/bellbriar_harness/vendor/axe-core/LICENSE-3RD-PARTY.txt",
+                 "src/bellbriar_harness/LICENSE-whatwg-encoding.txt",
                  "tests/data/wpt-tree-construction/LICENSE.md",
                  "tests/data/wpt-tree-construction/"
                  "LICENSE-html5lib-tests.txt")
@@ -46,7 +48,9 @@ WHEEL_NEEDS = ("bellbriar_harness/rulebook.json",
                "bellbriar_harness/vendor/axe-core/axe.min.js",
                "bellbriar_harness/vendor/axe-core/LICENSE",
                "bellbriar_harness/vendor/axe-core/LICENSE-3RD-PARTY.txt",
-               "bellbriar_harness/vendor/axe-core/README.md")
+               "bellbriar_harness/vendor/axe-core/README.md",
+               "bellbriar_harness/encodings_data.py",
+               "bellbriar_harness/LICENSE-whatwg-encoding.txt")
 SDIST_NEEDS = ("pyproject.toml", "README.md", "LICENSE", "NOTICE",
                "MANIFEST.in", "SECURITY.md", "CONTRIBUTING.md",
                "CHANGELOG.md", "tests/test_part_r3.py", "fixtures/good.html",

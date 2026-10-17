@@ -35,8 +35,9 @@ the rulebook's SHA-256: a release that changes what any rule finds, a
 rule's tier or weight, or which rules run, changes it, and its section
 here says what changed. A verdict is reproduced with the harness and
 rulebook versions that made it, and the libraries its report and bundle
-record (`tool`): where a library's new version changes what matches, the
-package asks pip for the range it was tested with.
+record (`tool`): where a library's later versions change what matches,
+the range the package asks pip for leaves them out, and a run with a
+version outside the declared ranges says so before it starts.
 
 Not stable: the console output (it is for people: parse the JSON), the
 HTML report's layout, and the wording of messages.
@@ -71,7 +72,7 @@ or another tool does, is listed in `docs/ROADMAP.md` ("Not in 1.0"):
 among it the keyboard and focus checks, remote signing, rule packs and
 the judge.
 
-## 1.0.0rc1 — 2026-10-16
+## 1.0.0rc1 — 2026-10-17
 
 A release candidate for 1.0.0, published to rehearse the release:
 CHANGELOG.md's 1.0.0 section lists what it holds. To install it, ask pip

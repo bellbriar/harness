@@ -68,6 +68,7 @@ outright — it has already leaked into shell history and CI logs.
 from __future__ import annotations
 
 import base64
+import contextlib
 import hashlib
 import ipaddress
 import json
@@ -82,7 +83,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 
 from .bundle import (_ADDRESS, _LABEL_DOTS, _ipv4_shorthand, _site,
-                     address_kind, host_scope,
+                     address_kind, host_kind, host_scope,
                      normalize_host, url_host)
 from .model import (MARKS_VERSION, axe_attr, axe_run_attr, capture_attr,
                     hidden_attr, muted_attr, narrow_changed_attr,
@@ -1739,8 +1740,163 @@ _SETTLE_JS = r"""
 """
 
 
+class _DataRequests:
+    """The page's data requests in flight (S5-3): its fetch and XHR
+    requests, from any frame, but not those to a vendor the run lists
+    (KNOWN_VENDOR_DOMAINS, --third-party-origin: analytics, chat and
+    consent widgets poll on their own). A client-rendered page often
+    builds its content when one of these answers, which can take longer
+    than the DOM stays still before it: the settle step waits for them
+    too (_settle). Event handlers, so the page's scripts cannot see or
+    stop them."""
+
+    TYPES = ("fetch", "xhr")
+
+    def __init__(self, page, vendor_domains=(), vendor_origins=()):
+        import time
+        self._clock = time.monotonic
+        self.domains = tuple(d.lower() for d in vendor_domains)
+        self.origins = frozenset(o.lower() for o in vendor_origins)
+        self.pending: dict = {}
+        self.last = self._clock()
+        self.seen = 0
+        page.on("request", self._start)
+        page.on("requestfinished", self._end)
+        page.on("requestfailed", self._end)
+
+    def _vendor(self, url: str) -> bool:
+        try:
+            parts = urllib.parse.urlsplit(url)
+            host = (parts.hostname or "").lower()
+            origin = f"{parts.scheme.lower()}://{parts.netloc.lower()}"
+        except ValueError:
+            return False
+        return origin in self.origins or any(
+            host == d or host.endswith("." + d) for d in self.domains)
+
+    def _start(self, req) -> None:
+        try:
+            if req.resource_type in self.TYPES and not self._vendor(req.url):
+                self.pending[req] = True
+                self.seen += 1
+                self.last = self._clock()
+        except Exception:                               # noqa: BLE001
+            pass
+
+    def _end(self, req) -> None:
+        if self.pending.pop(req, None) is not None:
+            self.last = self._clock()
+
+    def in_flight(self) -> int:
+        return len(self.pending)
+
+    def quiet_for_ms(self) -> int:
+        return int((self._clock() - self.last) * 1000)
+
+
+def _settle(ctx, page, quiet_ms: int, cap_ms: int, data) -> dict:
+    """Wait until the DOM has not changed for `quiet_ms` (_SETTLE_JS) and
+    no data request (_DataRequests) has been in flight for as long, or
+    `cap_ms` has passed in all (S5-3). A response usually changes the DOM,
+    so each wait for the requests is followed by another for the DOM.
+    {"settled", "waited", "in_flight", "data_requests"}: `settled` is the
+    DOM's, `in_flight` how many data requests were still open at the end."""
+    import time
+    started = time.monotonic()
+    deadline = started + cap_ms / 1000
+    dom: dict = {}
+    while True:
+        left = max(1, int((deadline - time.monotonic()) * 1000))
+        got = _in_own_world(ctx, page, _SETTLE_JS, [quiet_ms, left])
+        dom = got if isinstance(got, dict) else {}
+        if data is None:
+            break
+        while data.in_flight() and time.monotonic() < deadline:
+            page.wait_for_timeout(50)
+        if data.in_flight() or time.monotonic() >= deadline:
+            break
+        rest = quiet_ms - data.quiet_for_ms()
+        if rest <= 0 and dom.get("settled"):
+            break
+        if rest > 0:
+            page.wait_for_timeout(min(rest, max(1, int(
+                (deadline - time.monotonic()) * 1000))))
+    open_now = 0
+    if data is not None and data.in_flight():
+        # The requests open at the cap get SETTLE_GRACE_MS more to answer,
+        # and so do any they lead to (one fetch chained to the next): the
+        # wait ends when none has been open for `quiet_ms`, as the settle
+        # step's does, which a page that polls now and then gives it. One
+        # held open (a long poll), or one chained on still, is open at the
+        # end, and counted.
+        until = time.monotonic() + SETTLE_GRACE_MS / 1000
+        while time.monotonic() < until and (
+                data.in_flight() or data.quiet_for_ms() < quiet_ms):
+            page.wait_for_timeout(50)
+        open_now = len(data.pending)
+        if not open_now:
+            # What the answers bring is built after them: the DOM is
+            # waited on again, as after any wait for the requests.
+            got = _in_own_world(ctx, page, _SETTLE_JS,
+                                [quiet_ms, SETTLE_GRACE_MS])
+            dom = got if isinstance(got, dict) else {}
+    return {"settled": bool(dom.get("settled")),
+            "waited": int((time.monotonic() - started) * 1000),
+            "in_flight": open_now,
+            "data_requests": data.seen if data is not None else 0}
+
+
+#: How long the requests open at the settle cap, and those they lead to,
+#: get to answer (_settle); the DOM then gets as long again to settle.
+SETTLE_GRACE_MS = 2000
+
+
+#: Why a page is refused when --wait-for's element never appears.
+WAIT_FOR_MISSING = ("no element matched the --wait-for selector within "
+                    "{seconds:g} s, so the page never showed what the run "
+                    "was told to wait for")
+
+
+#: Why a page is refused when the browser cannot read --wait-for's
+#: selector (one the selector library takes and Chromium does not).
+WAIT_FOR_UNREADABLE = ("the browser could not read the --wait-for selector "
+                       "as CSS, so the run could not wait for it")
+
+
+def _wait_for(page, selector: str, timeout_ms: int) -> None:
+    """Wait for an element `selector` (CSS) matches, in the page or an open
+    shadow root, or raise FetchError: WAIT_FOR_MISSING when none appeared in
+    time, WAIT_FOR_UNREADABLE when the browser refused the selector."""
+    from playwright.sync_api import TimeoutError as PlaywrightTimeout
+    try:
+        page.wait_for_selector(f"css={selector}", state="attached",
+                               timeout=timeout_ms)
+    except PlaywrightTimeout:
+        raise FetchError(WAIT_FOR_MISSING.format(
+            seconds=timeout_ms / 1000)) from None
+    except Exception as exc:                            # noqa: BLE001
+        if _CLOSED.match(str(exc).split(":", 1)[-1].strip()):
+            raise
+        raise FetchError(WAIT_FOR_UNREADABLE) from None
+
+
+#: Why a capture whose data requests never finished is not evaluated.
+STILL_LOADING = ("still loading when captured: {n} of the page's data "
+                 "requests (fetch or XHR) had not answered by the end of the "
+                 "capture's wait (the {cap} ms settle cap, and {grace} ms "
+                 "more for the requests open then and those they led to), so "
+                 "the content they bring may be missing. This is not a pass: "
+                 "give --wait-for an element the page shows once it has "
+                 "loaded")
+
+
 class FetchError(RuntimeError):
     pass
+
+
+class BrowserUnavailable(FetchError):
+    """A run that needs a browser (--render: browser_required) found none,
+    or none that starts: every other page would fail the same way."""
 
 
 #: The isolated world the scroll and settle steps run in (L21): it shares
@@ -1777,6 +1933,13 @@ class _Documents:
         #: The loader ids whose document a service worker answered, not a
         #: server: none while the worker is bypassed, as it is (R5E-5).
         self.worker: set = set()
+        #: {loader id: [(URL, the address its server answered from)]} for
+        #: each redirect on a document's way and its own response, in
+        #: order, as Chromium connected (remoteIPAddress); and {loader id:
+        #: (URL, address)} for its own response alone. A name resolved
+        #: again later can resolve elsewhere (DNS rebinding: S5 re-review).
+        self.peers: dict = {}
+        self.own_peer: dict = {}
         #: Whether the main frame stopped loading since it last started
         #: (Page.frameStoppedLoading): until it has, nothing in it is
         #: read while the page is still loading (_loaded_anyway).
@@ -1811,6 +1974,7 @@ class _Documents:
             self._cdp.on("Network.loadingFailed", self._failed)
             self._cdp.on("Page.frameNavigated", self._navigated)
             self._cdp.on("Network.responseReceived", self._response)
+            self._cdp.on("Network.requestWillBeSent", self._request)
             self._cdp.on("Page.frameStartedLoading",
                          lambda event: self._loading(event, False))
             self._cdp.on("Page.frameStoppedLoading",
@@ -1895,11 +2059,32 @@ class _Documents:
         except Exception:                               # noqa: BLE001
             pass
 
+    def _peer(self, loader, response) -> tuple | None:
+        url, ip = response.get("url"), response.get("remoteIPAddress")
+        if not (isinstance(url, str) and isinstance(ip, str) and ip):
+            return None
+        pairs = self.peers.setdefault(loader, [])
+        if len(pairs) < 100:
+            pairs.append((url, ip))
+        return url, ip
+
+    def _request(self, event) -> None:
+        try:
+            redirect = event.get("redirectResponse")
+            if event.get("type") == "Document" and event.get("loaderId") \
+                    and isinstance(redirect, dict):
+                self._peer(event["loaderId"], redirect)
+        except Exception:                               # noqa: BLE001
+            pass
+
     def _response(self, event) -> None:
         try:
             if event.get("type") != "Document" or not event.get("loaderId"):
                 return
             response = event.get("response") or {}
+            own = self._peer(event["loaderId"], response)
+            if own is not None:
+                self.own_peer[event["loaderId"]] = own
             headers = response.get("headers") or {}
             # Chromium joins the lines of a header sent twice with "\n".
             lines = [line for name, value in headers.items()
@@ -2183,6 +2368,13 @@ class FetchResult:
     #: Literal secrets seen in the URLs, for scrubbing free text. Never
     #: recorded.
     _scrub: tuple = field(default=(), init=False, repr=False, compare=False)
+    #: (URL, address) for the document a rendered capture read and each
+    #: redirect on its way there, as the browser connected to them, where
+    #: it connected to the host itself rather than to a proxy: what
+    #: _refuse_private_page judges, rather than a name resolved again
+    #: (DNS rebinding: S5 re-review). Never recorded.
+    document_peers: list = field(default_factory=list, repr=False,
+                                 compare=False)
     #: The first line of a failed rendered fetch's own error text, cleaned:
     #: printed to the console, never recorded (fetch.render_failure).
     fallback_detail: str | None = field(default=None, repr=False,
@@ -2568,6 +2760,83 @@ def address_class(url: str, peer: str | None = None) -> str:
     return address_record(url, peer)[0]
 
 
+#: The refusal when a run that starts on a public site is led to a page on
+#: a private network (S5-2): a hostile site's redirect, or its script,
+#: would otherwise copy an intranet page into the reports, the snapshots
+#: and the bundle. The check reads the address the fetch connected to,
+#: and otherwise the host's own name and what the system's resolver says
+#: of it; through a proxy that resolves names itself it cannot see more.
+PRIVATE_HOP = ("{start} is on a public site and led to {host}, {note}: a "
+               "run that starts on a public site reads no page on a private "
+               "network; to evaluate that page, run the harness on it "
+               "directly")
+
+
+def _private_kind(host: str, peer: str | None = None):
+    """(class, note) when `host` is loopback or private: by the address a
+    connection went to (`peer`), by its name or literal address
+    (bundle.host_kind), or by an address the system's resolver gives for
+    it. None when none of them says so."""
+    if peer:
+        ip = _address_of(str(peer).strip("[]").split("%", 1)[0])
+        kind = address_kind(ip) if ip is not None else None
+        if kind:
+            return kind
+    kind = host_kind(host) if host else None
+    if kind or not host:
+        return kind
+    import socket
+    try:
+        infos = socket.getaddrinfo(host.strip("[]"), None,
+                                   proto=socket.IPPROTO_TCP)
+    except (OSError, UnicodeError, ValueError):
+        return None
+    for info in infos:
+        ip = _address_of(str(info[4][0]).split("%", 1)[0])
+        kind = address_kind(ip) if ip is not None else None
+        if kind:
+            return kind
+    return None
+
+
+def _refuse_private_page(start: str, result) -> None:
+    """refuse_private_hops for a rendered capture: the documents its
+    navigation went through, and the one it read, whose address class the
+    capture recorded when the browser connected to its host itself. The
+    addresses the browser connected to for the document read and the
+    redirects on its way there (document_peers) are judged as they were
+    then, not only the names resolved again now, which can resolve
+    elsewhere (DNS rebinding: S5 re-review)."""
+    hops = [(u, None) for u in (result.redirects or [])[1:]]
+    hops = list(getattr(result, "document_peers", None) or []) + hops
+    if result.address_basis == "address" and result.address_class in (
+            "loopback", "private") and not _private_kind(host_of(start)):
+        raise FetchError(PRIVATE_HOP.format(
+            start=printable(host_of(start)),
+            host=printable(result.host or ""),
+            note=f"an address of the {result.address_class} kind"))
+    refuse_private_hops(start, None, hops + [(result.final_url, None)])
+
+
+def refuse_private_hops(start: str, start_peer, hops) -> None:
+    """Raise FetchError when `start` is on a public site and one of `hops`
+    ((URL, the address connected to or None), in order) is on a private
+    network (PRIVATE_HOP). A start that is itself loopback or private (a
+    staging server, a --render build server) may go anywhere."""
+    if _private_kind(host_of(start), start_peer):
+        return
+    for url, peer in hops:
+        try:
+            host = host_of(url)
+        except FetchError:
+            continue
+        kind = _private_kind(host, peer)
+        if kind:
+            raise FetchError(PRIVATE_HOP.format(
+                start=printable(host_of(start)), host=printable(host),
+                note=kind[1]))
+
+
 def _address_of(text: str):
     """The address `text` is, read as a browser reads a host (`127.1` and
     `0x7f000001` are 127.0.0.1), or None for a name."""
@@ -2674,17 +2943,63 @@ class _PeerHTTPSHandler(urllib.request.HTTPSHandler):
                             context=self._context)
 
 
+class _RefusedHop(OSError):
+    """A redirect the fetch does not follow (its text is the harness's)."""
+
+
 class _RedirectRecorder(urllib.request.HTTPRedirectHandler):
-    """Records each URL a redirect leads to, so the chain is kept."""
-    def __init__(self, hops: list):
+    """Records each URL a redirect leads to, so the chain is kept. It
+    follows only http and https URLs (urllib's own handler follows ftp
+    too), and, when `start` is on a public site, none to a host on a
+    private network (refuse_private_hops), before connecting to it."""
+    def __init__(self, hops: list, start: str = "", peers: list = None):
         super().__init__()
         self.hops = hops
+        self.start = start
+        self.peers = peers if peers is not None else []
 
     def redirect_request(self, req, fp, code, msg, headers, newurl):
+        target = urllib.parse.urljoin(req.full_url, newurl)
+        why = None
+        if urllib.parse.urlsplit(target).scheme.lower() not in ("http",
+                                                                "https"):
+            why = ("a redirect to a URL that is not http or https is not "
+                   "followed")
+        elif self.start:
+            first = self.peers[0][1] if self.peers else None
+            try:
+                refuse_private_hops(self.start, first, [(target, None)])
+            except FetchError as exc:
+                why = str(exc)
+        if why is not None:
+            # The redirect's own response is not read on: its connection
+            # closes here, not when the garbage collector finds it.
+            with contextlib.suppress(Exception):
+                fp.close()
+            raise _RefusedHop(why)
         new = super().redirect_request(req, fp, code, msg, headers, newurl)
         if new is not None:
             self.hops.append(new.full_url)
         return new
+
+
+class _NoFTP(urllib.request.FTPHandler):
+    """urllib's default opener reads ftp:, file: and data: URLs too: a
+    server fetch reads only http and https ones (check_scheme for the
+    first, _RedirectRecorder for each redirect), and these stay closed
+    whatever reaches them."""
+    def ftp_open(self, req):
+        raise _RefusedHop("only http and https URLs are fetched")
+
+
+class _NoFile(urllib.request.FileHandler):
+    def file_open(self, req):
+        raise _RefusedHop("only http and https URLs are fetched")
+
+
+class _NoData(urllib.request.DataHandler):
+    def data_open(self, req):
+        raise _RefusedHop("only http and https URLs are fetched")
 
 
 def _read_page(opener, req, timeout, stop) -> tuple:
@@ -2887,7 +3202,8 @@ def fetch_bytes(url: str, timeout: int = 30,
     peers: list = []
     hops: list = []
     handlers = [_PeerHTTPHandler(peers), _PeerHTTPSHandler(peers),
-                _RedirectRecorder(hops)]
+                _RedirectRecorder(hops, url, peers), _NoFTP(), _NoFile(),
+                _NoData()]
     if credentials:
         handlers.append(_BasicAuthForOrigin(url_origin(url), *credentials))
     opener = urllib.request.build_opener(*handlers)
@@ -2920,6 +3236,11 @@ def fetch_bytes(url: str, timeout: int = 30,
         raise FetchError(redact_text(f"could not fetch {url}: {failure}",
                                      scrub, keep))
     body, final, status, types = box["page"]
+    # Each connection after the first, by the address it went to: a name
+    # that resolved one way for the check before the redirect and another
+    # for the connection is caught here (S5-2).
+    first = peers[0][1] if peers else None
+    refuse_private_hops(url, first, peers[1:] + [(final, None)])
     return body, final, status, types, hops, peers
 
 
@@ -2973,9 +3294,11 @@ def playwright_available() -> tuple[bool, str]:
     try:
         from playwright.sync_api import sync_playwright  # noqa: F401
     except ImportError:
-        return False, ("playwright is not installed — install the browser "
-                       "extra: pip install 'bellbriar-harness[browser]' && "
-                       "python -m playwright install chromium")
+        return False, ("playwright is not installed — install the harness "
+                       "with its browser extra (pipx install "
+                       "'bellbriar-harness[browser]', or uv tool install "
+                       "'bellbriar-harness[browser]'), then run "
+                       "bellbriar-eval --install-browser")
     return True, ""
 
 
@@ -4012,9 +4335,14 @@ def fetch_rendered(url: str, timeout_ms: int = DEFAULT_TIMEOUT_MS,
                    axe_timeout_ms: int | None = None,
                    narrow: bool = True,
                    require_sandbox: bool = False,
-                   on_stuck=None, deadline_at: float | None = None
+                   on_stuck=None, deadline_at: float | None = None,
+                   wait_for: str | None = None
                    ) -> FetchResult:
-    """Capture the hydrated DOM, instrumented for provenance. With `axe`,
+    """Capture the hydrated DOM, instrumented for provenance. With
+    `wait_for` (a CSS selector, --wait-for), the capture first waits, up to
+    `timeout_ms`, for an element it matches, and refuses the page when none
+    appears (WAIT_FOR_MISSING); the settle step then waits for the DOM and
+    the page's data requests (_settle). With `axe`,
     axe-core runs first, in an isolated world (_AxeSession), and the
     capture records what it found. With `narrow`, after the capture the
     page is narrowed to NARROW_VIEWPORT, where what it hides, what it
@@ -4056,6 +4384,7 @@ def fetch_rendered(url: str, timeout_ms: int = DEFAULT_TIMEOUT_MS,
             ctx = browser.new_context(**context_options)
             page = ctx.new_page()
             page.add_init_script(script)
+            data = _DataRequests(page, vendor_domains, vendor_origins)
             # Each document the tab commits, and what its server sent; the
             # history API commits none (PR3-1), and neither does a
             # navigation to a download (R4G-3).
@@ -4171,6 +4500,8 @@ def fetch_rendered(url: str, timeout_ms: int = DEFAULT_TIMEOUT_MS,
             # What was read is the document the tab showed when the reading
             # began, if it still shows it when the reading ends: its HTML,
             # its URL, and how many documents had committed by then.
+            if wait_for:
+                _wait_for(page, wait_for, timeout_ms)
             captured_at = 0
             for attempt in range(1, MAX_READS + 1):
                 read_from = docs.changes()
@@ -4178,8 +4509,8 @@ def fetch_rendered(url: str, timeout_ms: int = DEFAULT_TIMEOUT_MS,
                     scrolled = (_in_own_world(ctx, page, _SCROLL_JS,
                                               [scroll_pause_ms, scroll_steps])
                                 if scroll_steps > 0 else {"steps": 0})
-                    wait = _in_own_world(ctx, page, _SETTLE_JS,
-                                         [settle_ms, settle_cap_ms])
+                    wait = _settle(ctx, page, settle_ms, settle_cap_ms,
+                                   data)
                     cap, scan_note, provenance_attr, session = _call_capture(
                         ctx, page, capture_prop, capture_token,
                         axe=((lambda cdp, closed: _AxeSession(
@@ -4263,6 +4594,17 @@ def fetch_rendered(url: str, timeout_ms: int = DEFAULT_TIMEOUT_MS,
             done.set()
             browser.close()
 
+    # The addresses the browser connected to for the document it read and
+    # the redirects on its way there, as they were then (S5 re-review). The
+    # document read is the one committed when the capture was taken, or
+    # the first, which the run refuses below, when that one's server
+    # answered with an error.
+    read_loader = None
+    if captured_at:
+        read_loader = (docs.committed[captured_at - 1] if navigated
+                       else docs.committed[0])
+    connected = list(docs.peers.get(read_loader, [])) if read_loader else []
+    own_url, own_peer = docs.own_peer.get(read_loader) or (peer_url, peer)
     # Everything below was measured inside the page, whose scripts can
     # tamper with the clocks and counters it read. Only in-range whole
     # numbers are kept; a bundle must never inherit NaN or 1e300 from a page.
@@ -4274,6 +4616,11 @@ def fetch_rendered(url: str, timeout_ms: int = DEFAULT_TIMEOUT_MS,
             f"DOM was still mutating when the {settle_cap_ms} ms cap was "
             "reached; the capture is a point in time on a page that had not "
             "settled.")
+    if wait.get("in_flight"):
+        notes.append(
+            f"{_page_int(wait.get('in_flight'), 0, 10 ** 9)} of the page's "
+            "data requests (fetch or XHR) had not answered when it was "
+            "captured.")
     if not instrumented:
         # The capture's own note is the harness's words (fixed text and
         # counts), never the page's.
@@ -4351,11 +4698,17 @@ def fetch_rendered(url: str, timeout_ms: int = DEFAULT_TIMEOUT_MS,
         browser={"name": "chromium", "version": version,
                  "sandbox": not unsandboxed},
         viewport=viewport,
-        wait={"strategy": "load+scroll+dom-settle", "quiet_ms": settle_ms,
+        wait={"strategy": "load+scroll+dom-and-data-settle",
+              "quiet_ms": settle_ms,
               "cap_ms": settle_cap_ms,
               "waited_ms": _page_int(wait.get("waited"), 0,
                                      10 * settle_cap_ms),
               "settled": bool(wait.get("settled")),
+              "data_requests": _page_int(wait.get("data_requests", 0), 0,
+                                         10 ** 9),
+              "data_requests_open": _page_int(wait.get("in_flight", 0), 0,
+                                              10 ** 9),
+              "wait_for": wait_for or None,
               "scroll_steps": _page_int(scrolled.get("steps", 0), 0,
                                         scroll_steps)},
         instrumented=instrumented,
@@ -4372,14 +4725,16 @@ def fetch_rendered(url: str, timeout_ms: int = DEFAULT_TIMEOUT_MS,
         narrow=narrow_block,
         notes=notes,
         record_query=tuple(sorted(names(record_query))),
-        redacted=["http-credentials"] if credentials else [])
+        redacted=["http-credentials"] if credentials else [],
+        document_peers=[(u, ip) for u, ip in connected if _direct(u)])
     # The address the page came from counts only when the browser connected
     # to the recorded host itself (no proxy, no later navigation to another
-    # host); the class is the recorded host's (R1B-8).
+    # host); the class is the recorded host's (R1B-8). It is the address
+    # of the document read (S5 re-review).
     result.address_class, result.address_basis = address_record(
         result.final_url,
-        peer if peer_url and result.host
-        and host_of(peer_url.split("#", 1)[0]) == result.host
+        own_peer if own_url and result.host
+        and host_of(own_url.split("#", 1)[0]) == result.host
         and _direct(final) else None)
     return result
 
@@ -4531,13 +4886,80 @@ def _kill_tree(proc) -> None:
 #: names. HTTP credentials reach the child on its stdin, not through these.
 WITHHELD_ENV = {"BELLBRIAR_SIGN_KEY", "BELLBRIAR_HTTP_PASSWORD"}
 
+#: Nor any variable whose name reads as a secret's (S5-2): a word of its
+#: name, split at "_", is one of these, or it is one of the runner's own
+#: (ACTIONS_*, which mint tokens). A renderer that a page takes over runs
+#: as this user, so a CI job's tokens, cloud keys and the SSH agent's
+#: socket stay out of its reach. What the browser needs (PATH, HOME, the
+#: locale, the proxy settings, the CA bundles, PLAYWRIGHT_*) has no such
+#: word. A secret named otherwise, whose value holds no URL with a
+#: password, is not recognized: pass the harness no more environment than
+#: it needs.
+SECRET_NAME_WORDS = frozenset((
+    "TOKEN", "TOKENS", "SECRET", "SECRETS", "PASSWORD", "PASSWORDS",
+    "PASSWD", "PASS", "PASSPHRASE", "CREDENTIAL", "CREDENTIALS", "CREDS",
+    "KEY", "KEYS", "APIKEY", "PAT", "AUTH", "COOKIE", "COOKIES", "DSN",
+    "PRIVATE"))
+SECRET_NAME_PREFIXES = ("ACTIONS_",)
+#: Names that hold a password inside a URL by convention.
+SECRET_NAMES = frozenset(("DATABASE_URL", "REDIS_URL", "MONGODB_URI",
+                          "MONGO_URL", "AMQP_URL", "CONNECTION_STRING"))
+#: A word of a name that ends so is a secret's too: PGPASSWORD,
+#: SYSTEM_ACCESSTOKEN (Azure Pipelines), NGROK_AUTHTOKEN (S5-2).
+SECRET_WORD_ENDINGS = ("TOKEN", "TOKENS", "PASSWORD", "PASSWORDS", "PASSWD",
+                       "SECRET", "SECRETS", "PASSPHRASE", "APIKEY",
+                       "CREDENTIALS")
+#: A name ending in URL, URI or DSN with one of these words before it is a
+#: database's, whose URL carries its password (POSTGRES_URL, MONGO_URI,
+#: JDBC_DATABASE_URL).
+DATABASE_WORDS = frozenset((
+    "DATABASE", "DB", "POSTGRES", "POSTGRESQL", "PG", "MYSQL", "MARIADB",
+    "MONGO", "MONGODB", "REDIS", "AMQP", "RABBITMQ", "JDBC", "SQL", "MSSQL",
+    "ELASTICSEARCH", "CASSANDRA", "CLICKHOUSE", "NEO4J", "SUPABASE",
+    "PRISMA"))
+#: A URL with a user name and a password in it, which a value can hold
+#: whatever its variable is named (pip's index, a deploy hook).
+_CREDENTIALED_URL = re.compile(
+    r"[A-Za-z][A-Za-z0-9+.-]*://[^\s/@:]*:[^\s/@]*@")
+#: The proxy settings, which the browser needs as they are, credentials
+#: and all, to reach any page.
+_PROXY_NAMES = frozenset(("HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY",
+                          "NO_PROXY", "FTP_PROXY"))
 
-def withheld(name: str) -> bool:
+
+def secret_like(name: str, value: str | None = None) -> bool:
+    """Does the environment variable `name` read as a secret's
+    (SECRET_NAME_WORDS, SECRET_WORD_ENDINGS, SECRET_NAME_PREFIXES,
+    SECRET_NAMES, a connection string's, a database's URL), or its `value`
+    hold a URL with a password, the proxy settings' aside? `PWD` and
+    `OLDPWD`, the current folder, are no secret's; `MYSQL_PWD` is."""
+    upper = name.upper()
+    if upper.startswith(SECRET_NAME_PREFIXES) or upper in SECRET_NAMES:
+        return True
+    words = [w for w in upper.split("_") if w]
+    if any(w in SECRET_NAME_WORDS or w.endswith(SECRET_WORD_ENDINGS)
+           or w.startswith("JWT") for w in words):
+        return True
+    if "PWD" in words and len(words) > 1:
+        return True
+    if upper.endswith(("CONNECTION_STRING", "CONNECTIONSTRING")):
+        return True
+    if words and words[-1] in ("URL", "URI", "DSN") and \
+            any(w in DATABASE_WORDS for w in words[:-1]):
+        return True
+    return bool(value) and upper not in _PROXY_NAMES and \
+        _CREDENTIALED_URL.search(value) is not None
+
+
+def withheld(name: str, value: str | None = None) -> bool:
     """Is the environment variable `name` one a child process must not
-    see (WITHHELD_ENV)? On Windows names are compared ignoring case, as
-    the system compares them: there os.environ holds them in upper case,
-    so `--sign-key-env my_key` read MY_KEY and passed it on (R5B-8)."""
+    see (WITHHELD_ENV, or a name, or a `value`, that reads as a secret's:
+    secret_like)? On Windows names are compared ignoring case, as the
+    system compares them: there os.environ holds them in upper case, so
+    `--sign-key-env my_key` read MY_KEY and passed it on (R5B-8)."""
     import os
+    if secret_like(name, value):
+        return True
     if os.name == "nt":
         return name.upper() in {w.upper() for w in WITHHELD_ENV}
     return name in WITHHELD_ENV
@@ -4553,16 +4975,82 @@ def _fetch_rendered_isolated(url: str, deadline_s: float, **kw) -> FetchResult:
 
     The request goes on the child's stdin, which stays open until the
     answer is in: if this process dies first, however it dies, the child
-    sees stdin end and stops the browser itself (OR-9)."""
+    sees stdin end and stops the browser itself (OR-9).
+
+    The capture has a temporary folder of its own (CAPTURE_SCRATCH_PREFIX,
+    the child's TMPDIR): the browser's profile for the page, its cache,
+    cookies and storage, goes there, and the folder is removed once the
+    capture process has ended, by this process or, if this one ended
+    first, by the capture process as it stops (S5 re-review: a capture
+    stopped at its deadline left its profile behind)."""
+    import tempfile
+    scratch = tempfile.mkdtemp(prefix=CAPTURE_SCRATCH_PREFIX)
+    answered = False
+    try:
+        result = _isolated_capture(url, deadline_s, scratch, **kw)
+        answered = True
+        return result
+    finally:
+        # A capture that answered closed its browser itself; one that was
+        # stopped may leave a process that writes a moment longer.
+        remove_capture_scratch(scratch, settle_s=0.0 if answered else 0.5)
+
+
+#: The start of a capture's temporary folder's name (_fetch_rendered_isolated).
+CAPTURE_SCRATCH_PREFIX = "bellbriar-capture-"
+
+
+#: How long remove_capture_scratch keeps trying: a browser process that
+#: started as the capture was stopped (one the stop could not yet see)
+#: writes into the folder until it sees the browser gone, and ends.
+SCRATCH_PATIENCE_S = 10.0
+
+
+def remove_capture_scratch(path, patience_s: float | None = None,
+                           settle_s: float = 0.0) -> bool:
+    """Remove a capture's temporary folder, and nothing else: a path whose
+    name does not start with CAPTURE_SCRATCH_PREFIX, or that is a link, is
+    left as it is. What a browser process still writes into it is removed
+    in turn, for up to `patience_s` (SCRATCH_PATIENCE_S); with `settle_s`,
+    for a capture that was stopped rather than ended, the folder must stay
+    gone that long, as such a process can make it again. Whether it is
+    gone."""
+    import os
+    import shutil
+    import time
+    if not isinstance(path, str) or not os.path.basename(
+            path).startswith(CAPTURE_SCRATCH_PREFIX) or os.path.islink(path):
+        return False
+    until = time.monotonic() + (SCRATCH_PATIENCE_S if patience_s is None
+                                else patience_s)
+    while True:
+        shutil.rmtree(path, ignore_errors=True)
+        if not os.path.lexists(path):
+            if settle_s <= 0:
+                return True
+            time.sleep(settle_s)
+            if not os.path.lexists(path):
+                return True
+        if time.monotonic() >= until:
+            return False
+        time.sleep(0.25)
+
+
+def _isolated_capture(url: str, deadline_s: float, scratch: str,
+                      **kw) -> FetchResult:
     import os
     import pickle
     import subprocess
     import threading
     from pathlib import Path
     package_root = str(Path(__file__).resolve().parents[1])
-    env = {k: v for k, v in os.environ.items() if not withheld(k)}
+    env = {k: v for k, v in os.environ.items() if not withheld(k, v)}
     env["PYTHONPATH"] = os.pathsep.join(
         [package_root] + ([env["PYTHONPATH"]] if env.get("PYTHONPATH") else []))
+    # Where the capture, its browser driver and the browser make their
+    # temporary files (Python, Node and Chromium read these).
+    for name in ("TMPDIR", "TMP", "TEMP"):
+        env[name] = scratch
     popen = {"start_new_session": True} if os.name != "nt" else {
         "creationflags": getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0)}
     # Started from the package's own directory, so nothing in the user's
@@ -4572,8 +5060,8 @@ def _fetch_rendered_isolated(url: str, deadline_s: float, **kw) -> FetchResult:
         [sys.executable, "-m", "bellbriar_harness._render_child"],
         stdin=subprocess.PIPE, stdout=subprocess.PIPE,
         stderr=subprocess.DEVNULL, cwd=package_root, env=env, **popen)
-    request = pickle.dumps({"url": url, "kw": kw, "deadline_s": deadline_s},
-                           protocol=4)
+    request = pickle.dumps({"url": url, "kw": kw, "deadline_s": deadline_s,
+                            "scratch": scratch}, protocol=4)
     box: dict = {}
 
     def read_answer():
@@ -4675,7 +5163,7 @@ def render_failure(exc: BaseException) -> str:
                 "closed or navigated away, while it was read")
     elif m and where.startswith("BrowserType."):
         what = ("the Chromium build Playwright uses is not installed "
-                "(python -m playwright install chromium)"
+                "(bellbriar-eval --install-browser installs it)"
                 if "Executable doesn't exist" in text
                 else "the browser could not be started")
     elif m and where.endswith(_NAVIGATION_METHODS) and net:
@@ -4707,6 +5195,10 @@ def render_failure(exc: BaseException) -> str:
             if rest.startswith("an XML document") else
             "is not a web page (the browser shows it as text, an XML error or "
             "the XML itself, or downloads it)")
+    elif where == "FetchError" and text.startswith(
+            (WAIT_FOR_MISSING.split("{", 1)[0], WAIT_FOR_UNREADABLE)):
+        # The harness's own refusals, which quote no selector (S5-3).
+        what = text.splitlines()[0][:200]
     elif where == "FetchError" and text.startswith("an XML document"):
         what = "an XML document (served as XML)"
     elif where == "FetchError" and text.startswith("not a web page"):
@@ -4762,7 +5254,7 @@ def fetch(url: str, render: bool | None = None, *,
           http_credentials: tuple[str, str] | None = None,
           record_query=(), deadline_s: float | None = None,
           fallback: str = "used server HTML", error_target: str = "refuse",
-          **kw) -> FetchResult:
+          browser_required: bool = False, **kw) -> FetchResult:
     """Fetch a page. `render=None` means render if a browser is available.
     `fallback` says, in a failed capture's reason, what was read instead: a
     --render run's build server sends the file as it is (R4G-11). A page
@@ -4787,6 +5279,11 @@ def fetch(url: str, render: bool | None = None, *,
     rendered capture runs in a process of its own and is stopped after
     `deadline_s` (DEFAULT_RENDER_DEADLINE_S), then falls back as any other
     failure does.
+
+    `browser_required` (a --render run, S5-3): a browser that is missing
+    or cannot start is refused, never fallen back from, since every page
+    would then be read without one; a failure of one page's capture still
+    falls back as `fallback` says.
     """
     check_scheme(url)
     credentials = _check_credentials(http_credentials)
@@ -4808,6 +5305,8 @@ def fetch(url: str, render: bool | None = None, *,
         return r
     ok, why = playwright_available()
     if not ok:
+        if browser_required:
+            raise BrowserUnavailable(why)
         if render is True:
             raise FetchError(why)
         r = server()
@@ -4815,7 +5314,7 @@ def fetch(url: str, render: bool | None = None, *,
         return r
     went_to = ""
     try:
-        return _fetch_rendered_isolated(
+        rendered = _fetch_rendered_isolated(
             url, check_deadline(deadline_s),
             http_credentials=credentials, record_query=keep, **kw)
     except Exception as exc:                      # noqa: BLE001
@@ -4838,8 +5337,16 @@ def fetch(url: str, render: bool | None = None, *,
                       or getattr(exc, "kind", "") in ("StepFailed",
                                                       CAPTURE_PROCESS)
                       else failure_detail(exc, clean))
+    else:
+        # A refusal, not a failure: nothing falls back (S5-2).
+        _refuse_private_page(url, rendered)
+        return rendered
     if refused:
         raise SandboxRefused(refused)
+    if browser_required and failure.startswith("BrowserType."):
+        refusal = BrowserUnavailable(f"rendered fetch failed: {failure}")
+        refusal.detail = detail
+        raise refusal
     # Outside the handler, so nothing raised from here on carries the
     # browser's exception — and the URL it quotes — as its context.
     if render is True:

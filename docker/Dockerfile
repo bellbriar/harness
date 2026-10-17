@@ -2,16 +2,16 @@
 # ghcr.io/bellbriar/harness:<version>, built by .github/workflows/release.yml
 # from the release's own wheel (dist/), never from a laptop.
 #
-#   docker run --rm --init --ipc=host --user "$(id -u):$(id -g)" \
+#   docker run --rm --init --shm-size=2g --user "$(id -u):$(id -g)" \
 #     -v "$PWD:/work" ghcr.io/bellbriar/harness:1 dist --render --html report.html
 #
 # It runs as pwuser, an ordinary user, or as the --user you give it
 # ("$(id -u):$(id -g)" is root only when you are). Even so, Docker's
 # default seccomp profile refuses the user namespaces Chromium's sandbox
 # needs, so the browser runs without it here unless the container gets a
-# profile that allows them (Playwright publishes one) on a host that
-# allows them too (R4A-2). Each capture records whether the sandbox was on,
-# and --require-sandbox refuses a run without it (D9).
+# profile that allows them (docker/seccomp_profile.json, Playwright's) on a
+# host that allows them too (R4A-2). Each capture records whether the
+# sandbox was on, and --require-sandbox refuses a run without it (D9).
 
 # Playwright's Python image: Ubuntu 24.04, Chromium and the libraries and
 # fonts it needs, and an ordinary user, pwuser; for x86-64 and ARM64. The
@@ -22,11 +22,16 @@
 # new versions of both.
 FROM mcr.microsoft.com/playwright/python:v1.63.0-noble@sha256:72bd171a9ffc2b4b59532aaa6210e21014d07093120dc25528870c0b840da1f0
 
+# The harness's dependencies first, each file checked against the hash
+# docker/requirements.txt gives it (tools/hash_requirements.py writes
+# them), then the release's own wheel with nothing more (--no-deps).
 COPY docker/requirements.txt /tmp/requirements.txt
 COPY dist/ /tmp/dist/
-RUN wheel="$(ls /tmp/dist/bellbriar_harness-*-py3-none-any.whl)" \
+RUN python3 -m pip install --no-cache-dir --break-system-packages \
+      --require-hashes --no-deps -r /tmp/requirements.txt \
+ && wheel="$(ls /tmp/dist/bellbriar_harness-*-py3-none-any.whl)" \
  && python3 -m pip install --no-cache-dir --break-system-packages \
-      --constraint /tmp/requirements.txt "${wheel}[browser]" \
+      --no-deps "${wheel}" \
  && rm -rf /tmp/dist /tmp/requirements.txt \
  && bellbriar-eval --version
 

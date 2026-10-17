@@ -698,7 +698,7 @@ class TestHtmlLayout(unittest.TestCase):
     def test_grouped_by_rule_then_by_page(self):
         report, html = report_of(FIXTURES / "bad.html",
                                  FIXTURES / "subtle-bad.html")
-        self.assertNotIn("<caption>Findings</caption>", html)
+        self.assertNotRegex(html, r"<caption[^>]*>Findings</caption>")
         self.assertIn("<h2>Rules with findings</h2>", html)
         self.assertIn('<h2 id="findings">Findings by rule</h2>', html)
         ids = {f["rule_id"] for p in report["pages"] for f in p["findings"]}
@@ -707,7 +707,9 @@ class TestHtmlLayout(unittest.TestCase):
                 self.assertIn(f'<h3 id="rule-{rid}">', html)
                 self.assertIn(f'href="#rule-{rid}"', html)
         # Every table names what it holds: the rule and the page.
-        for cap in re.findall(r"<caption>(.*?)</caption>", html):
+        captions = re.findall(r"<caption[^>]*>(.*?)</caption>", html)
+        self.assertGreaterEqual(len(captions), 3)
+        for cap in captions:
             with self.subTest(caption=cap):
                 self.assertTrue(cap.startswith(("Rules with findings",
                                                 "Pages evaluated", "bb-")))
@@ -1349,9 +1351,9 @@ class TestReviewOfR3Round3(unittest.TestCase):
         (d / "r.json").write_text("{}", encoding="utf-8")
         real = cli._write
 
-        def fail_json(path, data):
+        def fail_json(path, data, *kind):
             return "no space left" if str(path).endswith(".json") and \
-                "b.json" not in str(path) else real(path, data)
+                "b.json" not in str(path) else real(path, data, *kind)
         with mock.patch.object(cli, "_write", side_effect=fail_json):
             code, _out, err = run(FIXTURES / "bad.html", "--json",
                                   d / "r.json", "--html", d / "r.html",

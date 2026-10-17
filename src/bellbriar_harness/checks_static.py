@@ -1857,9 +1857,16 @@ def check_control_role(page: PageContext) -> RuleResult:
     (L19).
 
     Applies to generic elements (<div>, <span>, a custom element) that take
-    keyboard focus (tabindex 0 or more) and carry a role attribute. When no
-    token of it is a role a browser knows (role="buton", an abstract role
-    such as "widget"), the element has no role, and assistive technology
+    keyboard focus (tabindex 0 or more) and carry a role attribute, or carry
+    a click or key handler of their own (onclick, onkeydown, onkeyup,
+    onkeypress: S5-3) and no role a control has, which makes the element
+    read as the control F59 describes: no role attribute, an empty one, or
+    none, presentation or generic as the first role it names (a focusable
+    element keeps its own role for none and presentation, a <div>'s
+    generic one: ARIA's presentational role conflict resolution). When no
+    token of the role is a role a browser knows (role="buton", an abstract
+    role such as "widget"), or there is none, the element has no role, and
+    assistive technology
     cannot say what it is: a FAIL, probable rather than certain (Part R2
     review): W3C failure F59 names a control made with script and given no
     role, and focus alone does not show the element is a control (a
@@ -1883,7 +1890,58 @@ def check_control_role(page: PageContext) -> RuleResult:
                 "ARIA role, so if it is a control, assistive technology "
                 "cannot tell what it is (as W3C failure F59 describes). Use "
                 "the role it was meant to have, or a native element.", el))
+    # No role a control has, with a handler of its own for clicks or keys
+    # (S5-3): the control F59 describes, as its markup writes it (a handler
+    # a script attaches leaves no trace in markup; bellbriar-lint reads the
+    # source's onClick).
+    for el in page.soup.find_all(_HANDLED_GENERIC):
+        if _inert_content(el) or _excluded_from_tree(el):
+            continue
+        ti = _tabindex(el)
+        if ti is None or ti < 0:
+            continue
+        r.applicable = True
+        handler = next(a for a in _CONTROL_HANDLERS if el.has_attr(a))
+        role = el.get("role")
+        said = "" if role is None else (
+            f' (role="{" ".join(role.split())[:60]}" is not a control\'s '
+            "role)")
+        r.findings.append(_f(
+            "bb-control-role", FAIL, SERIOUS,
+            f"Focusable element with an {handler} handler has no role"
+            f"{said}, so "
+            "assistive technology cannot tell what it is (as W3C failure "
+            "F59 describes). Use a native element (a <button>, or a link "
+            "that goes somewhere), or give it the role it is meant to "
+            "have.", el))
     return r
+
+
+#: The handlers of their own that make a focusable generic element read
+#: as a control (check_control_role).
+_CONTROL_HANDLERS = ("onclick", "onkeydown", "onkeyup", "onkeypress")
+
+
+#: First roles that give a focusable generic element no role a control has
+#: (check_control_role).
+_NO_CONTROL_ROLES = ("none", "presentation", "generic")
+
+
+def _handled_generic(el) -> bool:
+    """A generic element with a handler of its own for clicks or keys
+    (_CONTROL_HANDLERS) and no role a control has: no role attribute, an
+    empty one, or one whose first role a browser knows is none,
+    presentation or generic (S5 re-review). An attribute naming no role a
+    browser knows is the rule's other loop's."""
+    if not (isinstance(el, Tag) and _generic(el)
+            and any(el.has_attr(a) for a in _CONTROL_HANDLERS)):
+        return False
+    if not el.has_attr("role"):
+        return True
+    return not _roles(el) or _explicit_role(el) in _NO_CONTROL_ROLES
+
+
+_HANDLED_GENERIC = _handled_generic
 
 
 def check_html_lang(page: PageContext) -> RuleResult:
@@ -4313,9 +4371,9 @@ def check_a11y_statement(page: PageContext) -> RuleResult:
         if "accessibility" in text or "accessibility" in href:
             return r
     r.findings.append(_f("bb-a11y-statement", NEEDS_REVIEW, MINOR,
-                         "No link to an accessibility statement found. Settlements "
-                         "consistently require a statement with a feedback channel; "
-                         "the pack ships a template."))
+                         "No link to an accessibility statement found. A "
+                         "statement with a feedback channel recurs in DOJ and "
+                         "private settlements."))
     return r
 
 
@@ -4393,6 +4451,67 @@ _INERT_CONTAINERS = ("script", "style", "template", "noscript")
 _SHELL_TEXT_MAX = 80
 
 
+#: What a page shows while it loads, or when its scripts fail: a live
+#: region of one of these roles (a status message, an alert, a progress
+#: bar), a region marked busy, a <progress>, or an image or drawing named
+#: or classed as a spinner. A page whose markup holds nothing else is
+#: still a shell (S5-3): a loading message is not the page's content.
+_LOADING_ROLES = frozenset(("status", "progressbar", "alert", "log",
+                            "timer", "marquee"))
+_LOADING_WORDS = re.compile(r"\b(?:loading|please wait|spinner|spin|"
+                            r"spinning|loader|initiali[sz]ing)\b",
+                            re.IGNORECASE)
+#: Roles that alone put nothing a rule reads on a page: a landmark, a group
+#: or a box with no role of its own. A loading shell's mount node often
+#: carries one (`<div id="root" role="main">`): that is no content (S5-3).
+_CONTAINER_ROLES = frozenset((
+    "none", "presentation", "generic", "main", "region", "group",
+    "document", "application", "banner", "contentinfo", "complementary",
+    "navigation", "search", "form", "article", "section"))
+
+
+def _container_only(tag: Tag) -> bool:
+    """Does `tag`'s role (none, or only _CONTAINER_ROLES) make it no
+    content of its own?"""
+    roles = (tag.get("role") or "").strip().lower().split()
+    return all(r in _CONTAINER_ROLES for r in roles)
+
+
+def _loading_indicator(tag: Tag) -> bool:
+    """Is `tag` what a page shows while it loads (_LOADING_ROLES, aria-busy,
+    a progress bar, or a drawing or an image whose words, class or name,
+    its <title> and what aria-labelledby names included, say it loads)?"""
+    roles = (tag.get("role") or "").strip().lower().split()
+    if roles and (roles[0] in _LOADING_ROLES or _LOADING_WORDS.search(
+            re.sub(r"[-_]", " ", " ".join(roles)))):
+        return True               # role="spinner" is no role, and loads
+    if (tag.get("aria-busy") or "").strip().lower() == "true":
+        return True
+    if tag.name == "progress":
+        return True
+    if tag.name in ("img", "svg"):
+        classes = tag.get("class")
+        classes = (" ".join(classes) if isinstance(classes, list)
+                   else str(classes or ""))
+        said = [str(tag.get(a) or "") for a in
+                ("alt", "aria-label", "title", "src", "id")]
+        title = tag.find("title")
+        if isinstance(title, Tag):
+            said.append(title.get_text(" "))
+        ids = str(tag.get("aria-labelledby") or "").split()
+        if ids:
+            root = tag
+            while root.parent is not None:
+                root = root.parent
+            for ref in ids[:8]:
+                named = root.find(id=ref)
+                if isinstance(named, Tag):
+                    said.append(named.get_text(" ")[:200])
+        return bool(_LOADING_WORDS.search(
+            re.sub(r"[-_]", " ", f"{' '.join(said)} {classes}")))
+    return False
+
+
 def detect_app_shell(page: PageContext) -> str:
     """Why this markup cannot be evaluated by the static rules, or "".
 
@@ -4402,46 +4521,58 @@ def detect_app_shell(page: PageContext) -> str:
     the free pass the methodology forbids, on exactly the output most AI app
     builders produce. A page is treated as a shell when it loads script and,
     outside script/template/noscript, holds no element any rule reads and at
-    most a loading message of text. A page with no script is never a shell:
-    an empty static page is simply empty, and fails on its own terms.
+    most a loading message of text. A loading indicator (_LOADING_ROLES:
+    a status or alert region, a progress bar, a spinner image) and what it
+    holds count as such a message, not as content (S5-3). A page with no
+    script is never a shell: an empty static page is simply empty, and
+    fails on its own terms.
     """
     soup = page.soup
     if soup.find("script") is None:
         return ""
     body = soup.body or soup
     text_len = 0
+    loaders: set = set()
     for node in body.descendants:
-        parent_chain = [p.name for p in node.parents if isinstance(p, Tag)]
-        if any(n in _INERT_CONTAINERS for n in parent_chain):
+        parents = [p for p in node.parents if isinstance(p, Tag)]
+        if any(p.name in _INERT_CONTAINERS for p in parents):
             continue
+        in_loader = any(id(p) in loaders for p in parents)
         if isinstance(node, Tag):
-            if node.name in _INERT_CONTAINERS:
+            if node.name in _INERT_CONTAINERS or in_loader:
                 continue
             if node.name == "input" and (node.get("type") or "").lower() == "hidden":
                 continue
-            if node.name in _RULE_TARGETS or node.has_attr("role"):
+            if _loading_indicator(node):
+                loaders.add(id(node))
+                continue
+            if node.name in _RULE_TARGETS or not _container_only(node):
                 return ""
         elif isinstance(node, NavigableString) and not isinstance(
                 node, PreformattedString):          # comments are not content
             text_len += len(_norm(str(node)))
             if text_len > _SHELL_TEXT_MAX:
                 return ""
+    beyond = (" beyond a loading indicator (a status or alert message, a "
+              "progress bar or a spinner)" if loaders else "")
     if page.reader == "dom":
         # Captured after its scripts ran, and still empty (N27): telling
         # this run to render the page would send it in a circle.
         return ("empty when captured: the page's scripts had built no links, "
                 "images, controls, headings or other content the static "
-                f"rules read ({text_len} characters of text). This is not a "
-                "pass: the page may not have finished rendering, its scripts "
-                "may have failed (open it in a browser and check the "
-                "console), or, with --render, the build may expect to be "
+                f"rules read{beyond} ({text_len} characters of text). This "
+                "is not a pass: the page may not have finished rendering "
+                "(give --wait-for an element it shows once it has loaded), "
+                "its scripts may have failed (open it in a browser and check "
+                "the console), or, with --render, the build may expect to be "
                 "served under another path (--render-base).")
     return ("client-rendered app shell: outside its scripts the markup has "
             "no links, images, controls, headings or other content the "
-            f"static rules read ({text_len} characters of text). Its content "
-            "is built by JavaScript, so this file cannot show whether the "
-            "page is accessible. Evaluate the rendered page instead: "
-            "bellbriar-eval <folder> --render, or --url against a server.")
+            f"static rules read{beyond} ({text_len} characters of text). Its "
+            "content is built by JavaScript, so this file cannot show "
+            "whether the page is accessible. Evaluate the rendered page "
+            "instead: bellbriar-eval <folder> --render, or --url against a "
+            "server.")
 
 
 CHECKS = {

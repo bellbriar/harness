@@ -785,10 +785,18 @@ def recorded_path(path, arg=None) -> str:
     parent of the argument it came from (`arg`, the file or directory as
     passed; the file itself by default), so `/home/u/client/dist` gives
     `dist/index.html`. Always with forward slashes. A path with a drive or
-    a root (`/x`, `C:x`, and on Windows `\\x`) is never "relative"."""
+    a root (`/x`, `C:x`, and on Windows `\\x`) is never "relative". Either
+    way, a home directory the name would hold is left out, with what is
+    above it (`home/alice/site`, typed in `/`, gives `site/index.html`:
+    S5 re-review)."""
     p = PurePath(path)
     if not p.anchor and ".." not in p.parts:
-        return name_escaped(_not_a_site(p.as_posix()))
+        rel = p.parts
+        parts = PurePath(os.path.abspath(path)).parts
+        for j in range(max(len(parts) - len(rel), 1), len(parts) - 1):
+            if home_folder(parts, j):
+                rel = parts[j + 1:]
+        return name_escaped(_not_a_site(PurePath(*rel).as_posix()))
     base = os.path.dirname(os.path.abspath(arg if arg is not None else path))
     parts = PurePath(os.path.abspath(path)).parts
     rel = PurePath(os.path.relpath(os.path.abspath(path), base)).parts
@@ -900,6 +908,11 @@ def build_bundle(run: dict, site: dict, paths: list,
                  "list": {"kind": "urls", "max_pages": 1}}
     else:
         fetch = None
+    # What kind of verdict each rule gives (the rulebook's verdict_basis:
+    # sc, heuristic, policy, best-practice, review), in each finding, so
+    # the bundle says it without the rulebook beside it (S5-6).
+    from .engine import verdict_basis
+    basis = verdict_basis(run.get("rulebook") or {})
     pages = []
     for page, pscore in zip(run["pages"], site["pages"]):
         record = getattr(page, "fetch", None)
@@ -916,6 +929,7 @@ def build_bundle(run: dict, site: dict, paths: list,
                 "selector": f.selector,
                 "origin": f.origin, "origin_detail": f.origin_detail,
                 "scored": f.owned,
+                "verdict_basis": basis.get(f.rule_id, ""),
             } for rr in page.results for f in rr.findings],
             "not_applicable_rules": [rr.rule_id for rr in page.results
                                      if not rr.applicable],
@@ -1778,7 +1792,7 @@ RECORD_MEMBERS = {
     "pages[].fetch.viewport": frozenset(("width", "height")),
     "pages[].fetch.wait": frozenset((
         "strategy", "quiet_ms", "cap_ms", "waited_ms", "settled",
-        "scroll_steps")),
+        "data_requests", "data_requests_open", "wait_for", "scroll_steps")),
     "pages[].fetch.attribution": frozenset((
         "policy", "vendor_list_version", "extra_third_party")),
     "pages[].fetch.axe": frozenset((
@@ -1791,7 +1805,7 @@ RECORD_MEMBERS = {
     "pages[].fetch.narrow.viewport": frozenset(("width", "height")),
     "pages[].findings[]": frozenset((
         "rule_id", "verdict", "impact", "message", "line", "snippet",
-        "selector", "origin", "origin_detail", "scored")),
+        "selector", "origin", "origin_detail", "scored", "verdict_basis")),
     "baseline": frozenset(("sha256", "generated_at", "findings",
                            "new_findings", "new_fail_findings")),
 }

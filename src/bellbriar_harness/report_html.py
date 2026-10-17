@@ -44,7 +44,9 @@ overflow-wrap:anywhere}
 .banner{background:var(--amberbg);border:1px solid var(--amber);
 border-radius:6px;padding:14px 16px;margin:20px 0}
 .banner strong{color:var(--amber)}
-table{border-collapse:collapse;width:100%;margin:10px 0 22px;font-size:14px;
+.table-scroll{overflow-x:auto;margin:10px 0 22px}
+.table-scroll:focus{outline:2px solid var(--link);outline-offset:2px}
+table{border-collapse:collapse;width:100%;margin:0;font-size:14px;
 table-layout:fixed}
 caption{text-align:left;font-weight:600;padding:6px 0;overflow-wrap:anywhere}
 th,td{border:1px solid var(--rule);padding:6px 8px;text-align:left;
@@ -74,11 +76,31 @@ details{margin:8px 0 14px}summary{cursor:pointer;font-weight:600}
 dl{display:grid;grid-template-columns:minmax(120px,max-content) 1fr;
 gap:4px 14px;margin:8px 0 18px}dt{font-weight:600}dd{margin:0;
 overflow-wrap:anywhere}
+/* Last, so it wins at phone width (S5-3). */
+@media (max-width:640px){table{table-layout:auto;min-width:600px}
+th,td{overflow-wrap:break-word}}
 """
 
 
 def _e(value) -> str:
     return H.escape("" if value is None else str(value))
+
+
+#: The tables written so far in this report (render resets it): each
+#: table's caption gets the id its scrolling region is named by.
+_TABLES = [0]
+
+
+def _table(caption: str, rest: str) -> str:
+    """A table, in a region of its own that scrolls sideways when the page
+    is narrow (S5-3): at phone width a table of five or six columns splits
+    its words mid-word otherwise. The region takes focus, so a keyboard
+    can scroll it, and is named by the table's caption."""
+    _TABLES[0] += 1
+    tid = f"table-{_TABLES[0]}"
+    return (f"<div class=\"table-scroll\" role=\"region\" tabindex=\"0\" "
+            f"aria-labelledby=\"{tid}\"><table><caption id=\"{tid}\">"
+            f"{caption}</caption>{rest}</table></div>")
 
 
 def _pct(x: float | None) -> str:
@@ -142,7 +164,9 @@ def _locator(f: dict) -> str:
     """A finding's line, and its locator: the selector that finds it, and
     one more per shadow root it is inside (each matched in the shadow root
     of the element the one before it found)."""
-    out = [f"line {f['line']}"] if f.get("line") is not None else []
+    out = ([f"line {f['line']}" + (" of the captured page"
+                                    if f.get("_captured") else "")]
+           if f.get("line") is not None else [])
     steps = f.get("selector") or []
     if steps:
         out.append("<code>" + _e(steps[0]) + "</code>")
@@ -265,8 +289,8 @@ def _findings_table(caption: str, groups: list,
                     + (", " + " and ".join(also) + "," if also else "")
                     + " are not shown; the JSON report lists every one."
                     "</td></tr>")
-    return (f"<table><caption>{caption}</caption><thead><tr>{head}</tr>"
-            f"</thead><tbody>{''.join(rows)}</tbody></table>")
+    return _table(caption, f"<thead><tr>{head}</tr></thead>"
+                           f"<tbody>{''.join(rows)}</tbody>")
 
 
 def _examples(rid: str, name: str) -> str:
@@ -556,6 +580,7 @@ def _listing(run_fetch: dict) -> str:
 
 def render(report: dict) -> str:
     """The HTML report for a JSON report (report.build_report)."""
+    _TABLES[0] = 0
     tool = report["tool"]
     site = report["site"]
     rules = report.get("rules") or {}
@@ -678,11 +703,11 @@ def render(report: dict) -> str:
         parts.append(
             "<section class=\"banner\" aria-label=\"Pages not evaluated\">"
             f"<p><strong>Not evaluated.</strong> "
-            f"{shells} page(s) gave the static rules nothing to read: "
-            "client-rendered app shells, whose content JavaScript builds, "
-            "or pages still empty when captured. They have no pass rate and "
-            "are not counted as clean; each one's reason is in the table of "
-            "pages below.</p></section>")
+            f"{shells} page(s) were not evaluated: client-rendered app "
+            "shells, whose content JavaScript builds, pages still empty when "
+            "captured, or pages still loading their data. They have no pass "
+            "rate and are not counted as clean; each one's reason is in the "
+            "table of pages below.</p></section>")
     third_fails = site.get("total_third_party_fail_findings") or 0
     third_reviews = site.get("total_third_party_needs_review") or 0
     if third_fails or third_reviews:
@@ -736,8 +761,12 @@ def render(report: dict) -> str:
     # Every finding, by rule.
     by_rule: dict = {}
     for i, page in enumerate(pages):
+        # A captured page's lines are those of the DOM the browser built,
+        # not of the file or the server's HTML (S5-3): said so beside each.
+        captured = (page.get("fetch") or {}).get("mode") == "rendered"
         for f in page["findings"]:
-            by_rule.setdefault(f["rule_id"], []).append((i, f))
+            by_rule.setdefault(f["rule_id"], []).append(
+                (i, {**f, "_captured": True} if captured else f))
     order = _rule_order(rules, by_rule)
     if order:
         parts.append("<h2>Rules with findings</h2>")
@@ -760,17 +789,17 @@ def render(report: dict) -> str:
                 f"<td>{own_fail:,}</td><td>{own_review:,}</td>"
                 f"<td>{vendor:,}</td><td>{npages:,}</td></tr>")
         parts.append(
-            "<table><caption>Rules with findings: failures and review items "
-            "in the site's own markup, findings in vendor markup, and pages "
-            "affected</caption><thead><tr>"
-            "<th scope=\"col\" class=\"c-rule\">Rule</th>"
-            "<th scope=\"col\" class=\"c-sc\">WCAG</th>"
-            "<th scope=\"col\" class=\"c-n\">Tier</th>"
-            "<th scope=\"col\" class=\"c-n\">Failures</th>"
-            "<th scope=\"col\" class=\"c-n\">Review items</th>"
-            "<th scope=\"col\" class=\"c-n\">In vendor markup</th>"
-            "<th scope=\"col\" class=\"c-n\">Pages</th></tr></thead><tbody>"
-            + "".join(rows) + "</tbody></table>")
+            _table("Rules with findings: failures and review items in the "
+                   "site's own markup, findings in vendor markup, and pages "
+                   "affected", "<thead><tr>"
+                   "<th scope=\"col\" class=\"c-rule\">Rule</th>"
+                   "<th scope=\"col\" class=\"c-sc\">WCAG</th>"
+                   "<th scope=\"col\" class=\"c-n\">Tier</th>"
+                   "<th scope=\"col\" class=\"c-n\">Failures</th>"
+                   "<th scope=\"col\" class=\"c-n\">Review items</th>"
+                   "<th scope=\"col\" class=\"c-n\">In vendor markup</th>"
+                   "<th scope=\"col\" class=\"c-n\">Pages</th></tr></thead>"
+                   "<tbody>" + "".join(rows) + "</tbody>"))
 
     # The pages.
     parts.append("<h2>Pages</h2>")
@@ -788,16 +817,16 @@ def render(report: dict) -> str:
             f"<td>{_pct(score['weighted_pass_rate'])}</td>"
             f"<td>{score['fail_findings']:,}</td>"
             f"<td>{score['needs_review_findings']:,}</td></tr>")
-    parts.append(
-        "<table><caption>Pages evaluated: how each was read, its Tier-1 "
-        "status, weighted pass rate, failures and review items</caption>"
+    parts.append(_table(
+        "Pages evaluated: how each was read, its Tier-1 status, weighted "
+        "pass rate, failures and review items",
         "<thead><tr><th scope=\"col\" class=\"c-page\">Page</th>"
         "<th scope=\"col\" class=\"c-read\">Read as</th>"
         "<th scope=\"col\" class=\"c-t1\">Tier-1</th>"
         "<th scope=\"col\" class=\"c-n\">Pass rate</th>"
         "<th scope=\"col\" class=\"c-n\">Failures</th>"
         "<th scope=\"col\" class=\"c-n\">Review items</th>"
-        "</tr></thead><tbody>" + "".join(page_rows) + "</tbody></table>")
+        "</tr></thead><tbody>" + "".join(page_rows) + "</tbody>"))
 
     if order:
         parts.append("<h2 id=\"findings\">Findings by rule</h2>")

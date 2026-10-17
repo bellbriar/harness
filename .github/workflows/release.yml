@@ -5,17 +5,20 @@
 # container image to ghcr.io, and both files to the GitHub release.
 #
 # The order makes a failure stop it before anything is published, where
-# it can: the whole test suite (R4A-5); the tag on a commit of the default
-# branch, a version this project releases (R4D-1), with its notes in
-# CHANGELOG.md, and for a final version nothing pending (R6AB-7); the
-# distributions checked; the image built for x86-64 and
-# ARM64, and the x86-64 one run on the fixtures. Then PyPI, which cannot be
-# undone; then the image, pushed under its version alone, pulled back with
-# no credentials and run again; only then its floating tags (1.0, 1,
-# latest), which customers' runners follow (R4D-2); then the GitHub
+# it can: the tag on a commit of the default branch, a version this
+# project releases (R4D-1), with its notes in CHANGELOG.md, and for a final
+# version nothing pending (R6AB-7); the distributions checked, and the
+# wheel installed and run; the whole test suite (R4A-5). Only then is the
+# image built, on an x86-64 runner and on an ARM64 one, with no cache, and
+# each pushed under its digest alone, which no tag names and nothing
+# points to until the version tag, to be pulled back by that digest and
+# run on the fixtures on its own architecture (S5-5). Then PyPI, which
+# cannot be undone; then the version tag, on the two images that ran;
+# pulled back with no credentials on each architecture and run again; only
+# then its floating tags (1.0, 1, latest), which customers' runners follow
+# (R4D-2); then the files' and the image's attestations, and the GitHub
 # release. A step after PyPI that fails can be run again; so can PyPI's
-# own, which skips a file already uploaded (R4D-9). The ARM64 image is
-# built but not run here (the ship list's come-back table).
+# own, which skips a file already uploaded (R4D-9).
 #
 # Before the first release (your accounts; PREPUBLISH.md item 14): on PyPI,
 # add this repository and workflow (release.yml, environment "pypi") as a
@@ -45,6 +48,14 @@ concurrency:
 defaults:
   run:
     shell: bash
+
+env:
+  # The image's description, in its labels and annotations.
+  DESCRIPTION: >-
+    The Bellbriar accessibility harness, its Python dependencies and
+    Chromium, on Playwright's Ubuntu image. Each part keeps its own
+    license; the harness's are in its package metadata (License-Expression)
+    and its NOTICE file
 
 jobs:
   tests:
@@ -99,9 +110,10 @@ jobs:
           # final version is released only when the suite's release check
           # passes: the worked example re-signed, no release blocker left
           # (tests/test_examples.py's RELEASE_BLOCKERS), no decision
-          # pending (R6AB-7), the base image pinned by digest (SB-5). A check that was skipped, not run, stops it
-          # too. It runs in a copy, so the checkout the distributions are
-          # built from stays as git made it.
+          # pending (R6AB-7), the base image pinned by digest (SB-5). A
+          # check that was skipped, not run, stops it too. It runs in a
+          # copy, so the checkout the distributions are built from stays as
+          # git made it.
           case "$VERSION" in
             *a[0-9]*|*b[0-9]*|*rc[0-9]*)
               echo "$VERSION is a pre-release: no release check" ;;
@@ -112,10 +124,27 @@ jobs:
               python -m unittest -v tests.test_examples.TestPublishedExamples.test_nothing_is_pending_for_a_release 2>&1 | tee "$RUNNER_TEMP/release-check.log"
               grep -qx "OK" "$RUNNER_TEMP/release-check.log" || { echo "the release check did not run"; exit 1; } ;;
           esac
+      # The times the files record: the wheel's entries are the commit's
+      # (SOURCE_DATE_EPOCH), and so are the source distribution's copies
+      # of the repository's files (each set to that time here); its
+      # folders, the files the build writes into it (PKG-INFO, the
+      # egg-info) and its gzip header keep this machine's clock (S5-5).
+      # Printed: this job's Python and packages. `python -m build` builds
+      # in an isolated environment of its own, which is not printed: its
+      # setuptools is the one tools/build-constraints.txt pins
+      # (PIP_CONSTRAINT, above).
+      - name: Times from the commit, and the build's own environment
+        run: |
+          epoch=$(git log -1 --format=%ct)
+          echo "SOURCE_DATE_EPOCH=$epoch" >> "$GITHUB_ENV"
+          git ls-files -z | xargs -0 touch -h -d "@$epoch"
+          python -VV
       - run: python -m pip install build "cryptography>=42"
+      - run: python -m pip freeze --all
       - run: python tools/repo_guard.py
       - run: python -m build
       - run: python tools/check_dist.py dist
+      - run: sha256sum dist/*
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: dist
@@ -152,11 +181,24 @@ jobs:
           /tmp/venv/bin/bellbriar-lint fixtures/lint-good.jsx --fail-on error
           /tmp/venv/bin/bellbriar-evidence --help > /dev/null
 
-  image-test:
-    name: Build the container image, and run it on the fixtures
-    needs: build
-    runs-on: ubuntu-latest
+  image-build:
+    name: Build the image on ${{ matrix.platform }}, push it by digest, and run it
+    # Nothing is pushed before the suite has passed and the wheel has run.
+    needs: [build, tests, smoke]
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: 60
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      # Each architecture on its own hardware, with no emulation: the
+      # image that runs here is the one published (S5-5).
+      matrix:
+        include:
+          - platform: linux/amd64
+            runner: ubuntu-24.04
+          - platform: linux/arm64
+            runner: ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -165,10 +207,17 @@ jobs:
         with:
           name: dist
           path: dist/
-      - uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
       - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
-      # The labels and annotations the published image gets, read here
-      # too, so a value buildx refuses fails before PyPI (R4H-12).
+      - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      # The labels and annotations the image gets: it holds Ubuntu,
+      # Python, Chromium and more, each under its own licenses, so it
+      # asserts none (R4D-6), and says where the harness's own are
+      # (R4H-13). The version is the release's, not the tag's v1.0.0
+      # (R4F-8).
       - id: meta
         uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
         env:
@@ -178,35 +227,49 @@ jobs:
           labels: |
             org.opencontainers.image.licenses=NOASSERTION
             org.opencontainers.image.version=${{ needs.build.outputs.version }}
-            org.opencontainers.image.description=The Bellbriar accessibility harness, its Python dependencies and Chromium, on Playwright's Ubuntu image. Each part keeps its own license; the harness's are in its package metadata (License-Expression) and its NOTICE file
+            org.opencontainers.image.description=${{ env.DESCRIPTION }}
           annotations: |
             org.opencontainers.image.licenses=NOASSERTION
             org.opencontainers.image.version=${{ needs.build.outputs.version }}
-            org.opencontainers.image.description=The Bellbriar accessibility harness, its Python dependencies and Chromium, on Playwright's Ubuntu image. Each part keeps its own license; the harness's are in its package metadata (License-Expression) and its NOTICE file
-      # Both architectures build before PyPI (R4D-2); the layers stay in
-      # the cache, for the image job to reuse where the cache holds them.
-      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+            org.opencontainers.image.description=${{ env.DESCRIPTION }}
+      # Under its digest alone: no tag names it until it has run here and
+      # PyPI holds its wheel. No cache: every layer is built in this job,
+      # from the pinned base image and the release's own wheel.
+      - id: push
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: .
           file: docker/Dockerfile
-          platforms: linux/amd64,linux/arm64
-          push: false
+          platforms: ${{ matrix.platform }}
+          outputs: type=image,name=ghcr.io/bellbriar/harness,push-by-digest=true,name-canonical=true,push=true
+          no-cache: true
           labels: ${{ steps.meta.outputs.labels }}
           annotations: ${{ steps.meta.outputs.annotations }}
-          cache-to: type=gha,mode=max
-      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+          provenance: mode=max
+          sbom: true
+      # The pushed image, pulled by its digest, renders the fixtures and
+      # gates them as the package does (R4A-4), on this architecture.
+      - name: The pushed image runs on the fixtures
+        env:
+          DIGEST: ${{ steps.push.outputs.digest }}
+        run: python3 tools/image_check.py "ghcr.io/bellbriar/harness@$DIGEST"
+      - name: Its digest, for the version tag
+        env:
+          DIGEST: ${{ steps.push.outputs.digest }}
+          RUNNER: ${{ matrix.runner }}
+        run: |
+          [[ "$DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]] || { echo "not a digest: $DIGEST"; exit 1; }
+          mkdir -p "$RUNNER_TEMP/digests"
+          echo "$DIGEST" > "$RUNNER_TEMP/digests/$RUNNER"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          context: .
-          file: docker/Dockerfile
-          load: true
-          push: false
-          tags: bellbriar-harness:release-test
-          cache-from: type=gha
-      - run: python3 tools/image_check.py bellbriar-harness:release-test
+          name: digest-${{ matrix.runner }}
+          path: ${{ runner.temp }}/digests/*
+          if-no-files-found: error
 
   pypi:
     name: Publish to PyPI
-    needs: [tests, build, smoke, image-test]
+    needs: [tests, build, smoke, image-build]
     runs-on: ubuntu-latest
     timeout-minutes: 15
     environment:
@@ -236,15 +299,15 @@ jobs:
           skip-existing: true
 
   image:
-    name: Publish the container image, under its version
-    needs: [build, pypi]
+    name: Tag the version on the images that ran
+    needs: [build, pypi, image-build]
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 20
     permissions:
       contents: read
       packages: write
     outputs:
-      digest: ${{ steps.push.outputs.digest }}
+      digest: ${{ steps.index.outputs.digest }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -253,58 +316,54 @@ jobs:
         with:
           name: dist
           path: dist/
-      - name: The image's wheel is the one PyPI holds
+      # The images were built from these files: PyPI holds them now.
+      - name: The images' wheel is the one PyPI holds
         env:
           VERSION: ${{ needs.build.outputs.version }}
         run: python3 tools/pypi_files.py --all "$VERSION" dist
-      - uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: digest-*
+          path: ${{ runner.temp }}/digests
+          merge-multiple: true
       - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
       - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - id: meta
-        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
+      # Its version only: the floating tags wait for the run below. The
+      # index carries the labels' words too, which GitHub's package page
+      # reads (R4F-8).
+      - id: index
+        name: The version tag, on both images
         env:
-          # On the index too, which GitHub's package page reads (R4F-8).
-          DOCKER_METADATA_ANNOTATIONS_LEVELS: manifest,index
-        with:
-          # The image the README and the Action name (H2: confirm it).
-          images: ghcr.io/bellbriar/harness
-          # The image holds Ubuntu, Python, Chromium and more, each under
-          # its own licenses, so it asserts none (R4D-6), and says where
-          # the harness's own are (R4H-13). The version is the release's,
-          # not the tag's v1.0.0. image-test sets the same (R4H-12).
-          labels: |
-            org.opencontainers.image.licenses=NOASSERTION
-            org.opencontainers.image.version=${{ needs.build.outputs.version }}
-            org.opencontainers.image.description=The Bellbriar accessibility harness, its Python dependencies and Chromium, on Playwright's Ubuntu image. Each part keeps its own license; the harness's are in its package metadata (License-Expression) and its NOTICE file
-          annotations: |
-            org.opencontainers.image.licenses=NOASSERTION
-            org.opencontainers.image.version=${{ needs.build.outputs.version }}
-            org.opencontainers.image.description=The Bellbriar accessibility harness, its Python dependencies and Chromium, on Playwright's Ubuntu image. Each part keeps its own license; the harness's are in its package metadata (License-Expression) and its NOTICE file
-      - id: push
-        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
-        with:
-          context: .
-          file: docker/Dockerfile
-          # For x86-64 and ARM64 runners and machines (R4A-11).
-          platforms: linux/amd64,linux/arm64
-          push: true
-          # Its version only: the floating tags wait for the run below.
-          tags: ghcr.io/bellbriar/harness:${{ needs.build.outputs.version }}
-          labels: ${{ steps.meta.outputs.labels }}
-          annotations: ${{ steps.meta.outputs.annotations }}
-          cache-from: type=gha
-          provenance: mode=max
-          sbom: true
+          VERSION: ${{ needs.build.outputs.version }}
+        run: |
+          refs=()
+          for f in "$RUNNER_TEMP"/digests/*; do
+            digest=$(cat "$f")
+            [[ "$digest" =~ ^sha256:[0-9a-f]{64}$ ]] || { echo "not a digest: $digest"; exit 1; }
+            refs+=("ghcr.io/bellbriar/harness@$digest")
+          done
+          [ "${#refs[@]}" -eq 2 ] || { echo "expected two images, found ${#refs[@]}"; exit 1; }
+          docker buildx imagetools create \
+            --annotation "index:org.opencontainers.image.licenses=NOASSERTION" \
+            --annotation "index:org.opencontainers.image.version=$VERSION" \
+            --annotation "index:org.opencontainers.image.description=$DESCRIPTION" \
+            -t "ghcr.io/bellbriar/harness:$VERSION" "${refs[@]}"
+          digest=$(docker buildx imagetools inspect "ghcr.io/bellbriar/harness:$VERSION" --format '{{json .Manifest}}' | python3 -c 'import json, sys; print(json.load(sys.stdin)["digest"])')
+          [[ "$digest" =~ ^sha256:[0-9a-f]{64}$ ]] || { echo "not a digest: $digest"; exit 1; }
+          echo "digest=$digest" >> "$GITHUB_OUTPUT"
 
   public:
-    name: Anyone can pull the image, and it runs
+    name: Anyone can pull the image on ${{ matrix.runner }}, and it runs
     needs: [build, image]
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: 20
+    strategy:
+      matrix:
+        runner: [ubuntu-24.04, ubuntu-24.04-arm]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -355,15 +414,66 @@ jobs:
           FLOATING: ${{ steps.tags.outputs.floating }}
           DIGEST: ${{ needs.image.outputs.digest }}
         run: |
-          [ -n "$FLOATING" ] || { echo "no floating tags for this release"; exit 0; }
+          floating="$FLOATING"
+          dry=()
+          if [ -z "$floating" ]; then
+            # A pre-release moves no floating tag. The same lines run, with
+            # --dry-run, which reads the image and pushes nothing, and a tag
+            # that no release is given, so that a release candidate
+            # rehearses them (S5-5).
+            floating="ghcr.io/bellbriar/harness:rehearsal"
+            dry=(--dry-run)
+          fi
           args=()
-          IFS=, read -r -a floating <<< "$FLOATING"
-          for tag in "${floating[@]}"; do args+=(-t "$tag"); done
-          docker buildx imagetools create "${args[@]}" "ghcr.io/bellbriar/harness@$DIGEST"
+          IFS=, read -r -a tags <<< "$floating"
+          for tag in "${tags[@]}"; do args+=(-t "$tag"); done
+          docker buildx imagetools create "${dry[@]}" "${args[@]}" "ghcr.io/bellbriar/harness@$DIGEST"
+          if [ "${#dry[@]}" -gt 0 ]; then
+            echo "no floating tags for this release: their command ran with --dry-run, which pushed nothing"
+          fi
+
+  attest:
+    name: Attest the files and the image
+    needs: [build, pypi, image, public]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # The second job with an identity token, the publishing job being the
+    # first: it runs the attestation action, which signs what this run
+    # built (Sigstore), for `gh attestation verify`, and nothing else of
+    # its own (S5-5).
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+      packages: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: dist
+          path: dist/
+      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: dist/*
+      # The image's attestation is pushed beside it, which needs the
+      # registry's login.
+      - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      # No storage record (GitHub's linked artifacts, for organizations):
+      # the attestation is all this asks for, and the job has no
+      # artifact-metadata permission.
+      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-name: ghcr.io/bellbriar/harness
+          subject-digest: ${{ needs.image.outputs.digest }}
+          push-to-registry: true
+          create-storage-record: false
 
   release:
     name: GitHub release
-    needs: [build, pypi, image, public, tags]
+    needs: [build, pypi, image, public, tags, attest]
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -386,7 +496,7 @@ jobs:
           # The files attached are the ones PyPI holds (SB-2).
           python3 tools/pypi_files.py --all "$VERSION" dist
           python3 tools/release_notes.py "$VERSION" > notes.md
-          printf '\nPyPI: https://pypi.org/project/bellbriar-harness/%s/\nImage: ghcr.io/bellbriar/harness:%s, digest %s (give the Action this digest as its version for runs that must never change)\n' "$VERSION" "$VERSION" "$DIGEST" >> notes.md
+          printf '\nPyPI: https://pypi.org/project/bellbriar-harness/%s/\nImage: ghcr.io/bellbriar/harness:%s, digest %s (give the Action this digest as its version for runs that must never change)\nProvenance: gh attestation verify <file> --repo %s, or oci://ghcr.io/bellbriar/harness:%s in place of the file\n' "$VERSION" "$VERSION" "$DIGEST" "$GITHUB_REPOSITORY" "$VERSION" >> notes.md
           flags=()
           case "$VERSION" in *a*|*b*|*rc*) flags+=(--prerelease) ;; esac
           # GitHub's "Latest" only for the newest release, as the image's

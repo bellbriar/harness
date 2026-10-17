@@ -3497,6 +3497,28 @@ def _skip_escape(text: str, i: int) -> int:
     return m.end() if m else i + 1
 
 
+#: CSS's white space: no other character is (U+00A0 is a name's, R6D-6).
+_CSS_WS = " \t\n\r\f"
+
+
+def _css_strip(text: str) -> str:
+    """`text` without the CSS white space around it: not str.strip(),
+    which takes U+00A0 and the like too, and never a space an escape ends
+    with (`#a\\ `, `\\41 `), which is a name's (S5-4)."""
+    i, n, start, end = 0, len(text), None, 0
+    while i < n:
+        if text[i] == "\\":
+            j = _skip_escape(text, i)
+            start = i if start is None else start
+            end = i = j
+            continue
+        if text[i] not in _CSS_WS:
+            start = i if start is None else start
+            end = i + 1
+        i += 1
+    return "" if start is None else text[start:end]
+
+
 def _scope_as_root(selector: str, root: str = ":root") -> str:
     """`:scope` outside quotes, and `&` outside a rule that nests it
     (_amps), as `root`: in a document's stylesheet, outside @scope, each
@@ -3509,8 +3531,10 @@ def _scope_as_root(selector: str, root: str = ":root") -> str:
 
 
 def _scope_as(selector: str, root: str) -> str:
-    """`:scope` outside quotes, as `root`."""
-    if ":scope" not in selector.lower():
+    """`:scope` outside quotes, as `root`, however its name is spelled:
+    `:SCOPE`, or with escapes (`:\\73 cope`), which CSS reads as :scope
+    too (S5-4)."""
+    if ":scope" not in selector.lower() and "\\" not in selector:
         return selector
     out, i, quote, n = [], 0, None, len(selector)
     while i < n:
@@ -3525,11 +3549,13 @@ def _scope_as(selector: str, root: str) -> str:
                 quote = None
         elif ch in "\"'":
             quote = ch
-        elif (ch == ":" and selector[i + 1:i + 6].lower() == "scope"
-              and not re.match(r"[-\w]", selector[i + 6:i + 7])):
-            out.append(root)
-            i += 6
-            continue
+        elif ch == ":" and ":" not in (selector[i + 1:i + 2],
+                                       selector[i - 1:i] if i else ""):
+            m = _IDENT_RE.match(selector, i + 1)
+            if m and _css_unescape(m.group(0)).lower() == "scope":
+                out.append(root)
+                i = m.end()
+                continue
         out.append(ch)
         i += 1
     return "".join(out)
@@ -3539,14 +3565,25 @@ def _scope_as(selector: str, root: str) -> str:
 _TYPE_PREFIX = re.compile(r"(?:" + _NAME + r"|\*)?\|(?![|=])")
 
 
-def _rightmost_key(selector: str):
-    """The id, class or tag the rightmost compound of `selector` requires,
-    lowercased, as (kind, value); None when it requires none of them (`*`,
-    `[aria-hidden]`, `:is(.a, .b)`). An element that lacks the key cannot
-    match, so a rule is tried only on elements that have it, as a browser's
-    rule hash does."""
+#: How many `:is()`/`:where()` deep _rightmost_key looks for a key: each
+#: level scans the compound again, and a page can nest them hundreds deep
+#: (R6H-10). One level is what stylesheets write (Tailwind's typography:
+#: `.prose :where(h1)`); a rule that names its key only deeper has none,
+#: and is tried on every element, as `*` is: slower, never wrong.
+_KEY_DEPTH = 1
+
+
+def _rightmost_key(selector: str, _depth: int = 0):
+    """The id, class, tag or attribute the rightmost compound of `selector`
+    requires, lowercased, as (kind, value): an attribute ("attr", its name)
+    only when the compound requires no id, class or tag; None when it
+    requires none of them (`*`, `:is(.a, .b)`, `[ns|href]`), or names one
+    only inside `:is()`/`:where()` more than _KEY_DEPTH deep. An element
+    that lacks the key cannot match, so a rule is tried only on elements
+    that have it, as a browser's rule hash does."""
     depth, quote, last, i = 0, None, 0, 0
-    n = len(selector)
+    # An argument _single_is_arguments returns is one compound already.
+    n = len(selector) if _depth == 0 else 0
     while i < n:
         ch = selector[i]
         if ch == "\\":
@@ -3564,8 +3601,8 @@ def _rightmost_key(selector: str):
         elif depth == 0 and ch in " \t\n\r\f>+~":
             last = i + 1
         i += 1
-    compound = selector[last:].strip()
-    found = {"id": None, "class": None, "tag": None}
+    compound = _css_strip(selector[last:])
+    found = {"id": None, "class": None, "tag": None, "attr": None}
     depth = 0
     # A namespace prefix (`svg|a`, `*|a`, `|a`) is no tag: the name after
     # it is (R6J-2).
@@ -3587,6 +3624,16 @@ def _rightmost_key(selector: str):
                 quote = None
         elif ch in "\"'":
             quote = ch
+        elif ch == "[" and depth == 0:
+            # `[name]`, `[name=v]`, `[name|=v]`: an attribute in no
+            # namespace's form (`[ns|name]`, `[*|name]` and `[|name]` are
+            # left unindexed).
+            m = _IDENT_RE.match(compound, i + 1)
+            if m and found["attr"] is None:
+                after = compound[m.end():m.end() + 2]
+                if not after.startswith("|") or after == "|=":
+                    found["attr"] = _css_unescape(m.group(0)).lower()
+            depth += 1
         elif ch in "([":
             depth += 1
         elif ch in ")]":
@@ -3600,10 +3647,217 @@ def _rightmost_key(selector: str):
                 i = m.end()
                 continue
         i += 1
-    for kind in ("id", "class", "tag"):
+    for kind in ("id", "class", "tag", "attr"):
         if found[kind]:
             return kind, found[kind]
+    # `:where(h1)`, `:is(.btn)`: one compound in the argument requires what
+    # it requires (Tailwind's typography: `.prose :where(h1):not(...)`).
+    if _depth >= _KEY_DEPTH:
+        return None
+    lower = compound.lower()
+    if ":is(" not in lower and ":where(" not in lower and "\\" not in lower:
+        return None
+    for arg in _single_is_arguments(compound):
+        key = _rightmost_key(arg, _depth + 1)
+        if key is not None:
+            return key
     return None
+
+
+def _single_is_arguments(compound: str) -> list[str]:
+    """The arguments of the compound's top-level `:is()` and `:where()`
+    that are one compound each: no comma, no combinator."""
+    out = []
+    lower = compound.lower()
+    depth, quote, i, n = 0, None, 0, len(compound)
+    while i < n:
+        ch = compound[i]
+        if ch == "\\":
+            i = _skip_escape(compound, i)
+            continue
+        if quote:
+            if ch == quote:
+                quote = None
+        elif ch in "\"'":
+            quote = ch
+        elif depth == 0 and ch == ":" and (lower.startswith(":is(", i)
+                                          or lower.startswith(":where(", i)):
+            start = compound.index("(", i) + 1
+            end = _closing_paren(compound, start)
+            if end is None:
+                return out
+            arg = _css_strip(compound[start:end])
+            if arg and _one_compound(arg):
+                out.append(arg)
+            i = end + 1
+            continue
+        elif ch in "([":
+            depth += 1
+        elif ch in ")]":
+            depth = max(0, depth - 1)
+        i += 1
+    return out
+
+
+def _closing_paren(text: str, start: int):
+    """The index of the ")" that closes the "(" before `start`, or None."""
+    depth, quote, i = 1, None, start
+    while i < len(text):
+        ch = text[i]
+        if ch == "\\":
+            i = _skip_escape(text, i)
+            continue
+        if quote:
+            if ch == quote:
+                quote = None
+        elif ch in "\"'":
+            quote = ch
+        elif ch in "([":
+            depth += 1
+        elif ch in ")]":
+            depth -= 1
+            if depth == 0:
+                return i
+        i += 1
+    return None
+
+
+def _one_compound(text: str) -> bool:
+    """No comma and no combinator at the top level of `text`."""
+    depth, quote, i = 0, None, 0
+    while i < len(text):
+        ch = text[i]
+        if ch == "\\":
+            i = _skip_escape(text, i)
+            continue
+        if quote:
+            if ch == quote:
+                quote = None
+        elif ch in "\"'":
+            quote = ch
+        elif ch in "([":
+            depth += 1
+        elif ch in ")]":
+            depth = max(0, depth - 1)
+        elif depth == 0 and ch in ", \t\n\r\f>+~":
+            return False
+        i += 1
+    return True
+
+
+def _last_sibling_split(selector: str):
+    """(left, right) where the rightmost combinator of `selector`, at its
+    top level, is `~` (`A ~ B`); None otherwise, or when the selector
+    holds `&` or `:scope` (an escaped one too), whose meaning a split
+    would change. Only CSS white space is a combinator's or the
+    selector's own (_css_strip)."""
+    if "&" in selector or ":scope" in _css_unescape(selector).lower():
+        return None
+    text = _css_strip(selector)
+    depth, quote, i, n = 0, None, 0, len(text)
+    last = None
+    while i < n:
+        ch = text[i]
+        if ch == "\\":
+            i = _skip_escape(text, i)
+            continue
+        if quote:
+            if ch == quote:
+                quote = None
+        elif ch in "\"'":
+            quote = ch
+        elif ch in "([":
+            depth += 1
+        elif ch in ")]":
+            depth = max(0, depth - 1)
+        elif depth == 0 and ch in " \t\n\r\f>+~":
+            j, kind = i, " "
+            while j < n and text[j] in " \t\n\r\f>+~":
+                if text[j] in ">+~":
+                    kind = text[j]
+                j += 1
+            last = (i, j, kind)
+            i = j
+            continue
+        i += 1
+    if last is None or last[2] != "~":
+        return None
+    # The run around the combinator is CSS white space and the combinator
+    # alone: what is on either side of it is the selector's, as written.
+    left, right = text[:last[0]], text[last[1]:]
+    return (left, right) if left and right else None
+
+
+class _SiblingPattern:
+    """A compiled `LEFT ~ RIGHT`, matched as soupsieve matches it: `el`
+    matches RIGHT and an element sibling before it matches LEFT.
+    soupsieve walks every earlier sibling for each element, quadratic in
+    the list (Tailwind 3's space-y and divide-y: `.space-y-4 >
+    :not([hidden]) ~ :not([hidden])`); this walks each parent's children
+    once for each rule, and only as far as it needs: for each parent it
+    remembers how far its children were tried and the place of the first
+    that matches LEFT (one number), and each element's place among its
+    parent's children is remembered once for the page (`places`, which a
+    page's patterns share: _Places), so what is remembered grows with the
+    parents a rule tries, not with the elements (S5 re-review)."""
+
+    __slots__ = ("left", "right", "_first", "_places")
+
+    def __init__(self, left, right, places=None):
+        self.left, self.right = left, right
+        # id(parent): the place of its first child element that matches
+        # LEFT (0 or more), or, while none has, -(how many were tried) - 1.
+        # Each parent is held by `places`, so its id is not another's
+        # while this lives.
+        self._first: dict[int, int] = {}
+        self._places = _Places() if places is None else places
+
+    def match(self, el) -> bool:
+        if not self.right.match(el):
+            return False
+        got = self._places.of(el)
+        if got is None:
+            return False
+        children, place = got
+        key = id(el.parent)
+        state = self._first.get(key, -1)
+        if state >= 0:
+            return state < place
+        tried = -state - 1
+        for i in range(tried, place):
+            if self.left.match(children[i]):
+                self._first[key] = i
+                return True
+        self._first[key] = -max(tried, place) - 1
+        return False
+
+
+class _Places:
+    """Each element's place among its parent's child elements, worked out
+    once for each parent a page's sibling rules try (_SiblingPattern):
+    {id(parent): (parent, its child elements, {id(child): place})}. The
+    parent is held, so its id is not another's while this lives."""
+
+    __slots__ = ("_known",)
+
+    def __init__(self):
+        self._known: dict[int, tuple] = {}
+
+    def of(self, el):
+        """(the child elements of `el`'s parent, `el`'s place among them),
+        or None for an element with no parent."""
+        parent = el.parent
+        if parent is None:
+            return None
+        known = self._known.get(id(parent))
+        if known is None or known[0] is not parent:
+            from bs4.element import Tag
+            children = [c for c in parent.children if isinstance(c, Tag)]
+            known = (parent, children,
+                     {id(c): i for i, c in enumerate(children)})
+            self._known[id(parent)] = known
+        place = known[2].get(id(el))
+        return None if place is None else (known[1], place)
 
 
 #: Where a declaration stands in the cascade (CSS Cascade 5), as far as
@@ -3957,9 +4211,12 @@ class PageStyles:
     (R5I-2).
 
     Rules are matched against an element when a rule asks about it, and
-    only the rules whose rightmost id, class or tag the element has
-    (_rightmost_key): a page with 2,000 rules and 8,000 elements no longer
-    runs every rule over every element (P2-12).
+    only the rules whose rightmost id, class, tag or attribute the element
+    has (_rightmost_key): a page with 2,000 rules and 8,000 elements no
+    longer runs every rule over every element (P2-12). A rule whose
+    rightmost combinator is `~` walks a list of siblings once, not once
+    for each of them, remembering a number for each parent it tries
+    rather than one for each element (_SiblingPattern, S5-4).
 
     `scope(el)` names the tree an element is in (the document, or a shadow
     root): a <style> applies only to elements of its own tree, as a shadow
@@ -3975,6 +4232,8 @@ class PageStyles:
         self._by: dict[tuple[str, str], list] = {}
         self._any: list = []
         self._cache: dict[int, frozenset] = {}
+        # Each element's place among its siblings, for the `~` rules.
+        self._places = _Places()
         self._scope = scope or (lambda el: None)
         self._host: dict[int, list] = {}        # id(root wrapper) -> rules
         self._slotted: dict[int, list] = {}
@@ -4053,6 +4312,17 @@ class PageStyles:
                 if pseudo and _pieces_read(_without_pseudos(sel)):
                     continue
                 return
+            split = _last_sibling_split(sel)
+            if split is not None:
+                try:
+                    pattern = _SiblingPattern(
+                        soupsieve.compile(split[0],
+                                          namespaces=namespaces or None),
+                        soupsieve.compile(split[1],
+                                          namespaces=namespaces or None),
+                        self._places)
+                except Exception:                      # noqa: BLE001
+                    pass             # matched whole, as it compiled
             key = _rightmost_key(sel)
             found.append((self._any if key is None else self._by, key,
                           (pattern, keys, tree)))
@@ -4080,9 +4350,15 @@ class PageStyles:
                 candidates += self._by.get(("class", c), ())
             if el.name:
                 candidates += self._by.get(("tag", el.name.lower()), ())
+            for name in el.attrs:
+                if isinstance(name, str):
+                    candidates += self._by.get(("attr", name.lower()), ())
         out = set()
         tree = self._scope(el)
-        for pattern, keys, where in candidates:
+        from .budget import check
+        for n, (pattern, keys, where) in enumerate(candidates):
+            if not n % 64:
+                check()                  # the page's budget (S5-4)
             if keys <= out or where is not tree:
                 continue
             try:

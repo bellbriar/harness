@@ -9,6 +9,21 @@ Mozilla Public License 2.0; the code axe-core bundles is under the MIT and
 ISC licenses. See src/bellbriar_harness/vendor/axe-core/ (README.md,
 LICENSE, LICENSE-3RD-PARTY.txt), where its source code is also named.
 
+src/bellbriar_harness/encodings_data.py holds the labels and single-byte
+indexes of the WHATWG Encoding Standard (https://encoding.spec.whatwg.org/),
+Copyright (c) WHATWG (Apple, Google, Mozilla, Microsoft), written as Python.
+The standard is licensed under the Creative Commons Attribution 4.0
+International License, and the portions of it incorporated into source
+code, as these are, under the 3-Clause BSD License instead
+(src/bellbriar_harness/LICENSE-whatwg-encoding.txt, the standard's LICENSE
+file).
+
+docker/seccomp_profile.json, and its copy in action/, is Playwright's
+(https://github.com/microsoft/playwright, utils/docker/seccomp_profile.json
+at v1.63.0), Copyright (c) Microsoft Corporation, under the Apache License
+2.0; it is derived from Docker's default seccomp profile (Moby, Apache
+License 2.0).
+
 The source distribution also includes, for the tests only, HTML parsing
 test data from web-platform-tests (https://github.com/web-platform-tests/wpt),
 Copyright (c) web-platform-tests contributors, under the 3-Clause BSD

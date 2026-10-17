@@ -1,6 +1,6 @@
 {
   "bundle_format": "bellbriar-evidence/1",
-  "created_at": "2026-10-15T00:41:07.383046+00:00",
+  "created_at": "2026-10-17T01:00:45.414678+00:00",
   "tool": {
     "name": "bellbriar-harness",
     "version": "1.0.0rc1",
@@ -13,7 +13,7 @@
     }
   },
   "rulebook_version": "1.0.0",
-  "rulebook_sha256": "060ab534d96c642860241808abc559b84689358fd0d17699f702d5afb5494886",
+  "rulebook_sha256": "bcd1499723002b80b6b6112601f16cc5b70499d791cb56c1e61fdb6c239be8e8",
   "domain": "cornerbakery.example",
   "pack": null,
   "inputs": [
@@ -28,7 +28,7 @@
     {
       "layer": "static-dom",
       "status": "executed",
-      "note": "Deterministic DOM rules on parsed markup (ACT-mapped)."
+      "note": "Deterministic DOM rules on parsed markup (ACT-mapped where an ACT rule exists)."
     },
     {
       "layer": "accessibility-tree",
@@ -51,7 +51,7 @@
       "note": "Not in this release: grading whether alt text and link text are adequate needs a judge calibrated against human-labeled pages, and none exists yet, so the rules of this layer are not evaluated."
     }
   ],
-  "coverage_note": "This run covers the static DOM layer only. Keyboard operability, focus visibility, contrast, reflow, screen-reader announcements, and content adequacy were NOT evaluated. A passing result here is necessary, not sufficient, and is not a determination of WCAG conformance or legal compliance.",
+  "coverage_note": "This run covers the static DOM layer only. Keyboard operability, focus visibility, contrast, reflow, screen-reader announcements, and content adequacy were NOT evaluated. A passing result here is not sufficient, and is not a determination of WCAG conformance or legal compliance.",
   "site": {
     "site_weighted_pass_rate": 1.0,
     "pct_pages_tier1_clean": 1.0,
@@ -112,11 +112,11 @@
     "key_id": "04db99f6ed92cfac",
     "statement": {
       "statement_format": "bellbriar-signature/1",
-      "bundle_digest_sha256": "c5511c552c81d27b2c5d58f93cfade68cd22b155e579dbc75969d50105093489",
+      "bundle_digest_sha256": "c93d9f7d06ff69c4ae5bc7946db84e5bd6593ab23205965efc6c02ff684a83cc",
       "attestation_class": "self-signed",
       "key_id": "04db99f6ed92cfac",
       "signer": "worked example (demonstration key)",
-      "signed_at": "2026-10-15T00:41:07+00:00",
+      "signed_at": "2026-10-17T01:00:45+00:00",
       "bundle_format": "bellbriar-evidence/1",
       "domain": "cornerbakery.example",
       "host": null,
@@ -124,8 +124,8 @@
       "pack_version": null,
       "pack_sha256": null,
       "rulebook_version": "1.0.0",
-      "rulebook_sha256": "060ab534d96c642860241808abc559b84689358fd0d17699f702d5afb5494886"
+      "rulebook_sha256": "bcd1499723002b80b6b6112601f16cc5b70499d791cb56c1e61fdb6c239be8e8"
     },
-    "signature_b64": "OqpbEbeOeijRcwVwOoKDJDQ0lwy7mlYmnWFEuuWYSowhJ3pUUY2xGjhmi4xFjm/V8BUPkJ2Q6RGjwD21KBXpAQ=="
+    "signature_b64": "kpkfLi/BCuDtnSPWA0sHruLcI+B3w3T4tmKzGH4PNFkHCtitm6afeBlL1AwgcCVCbB1Fv9jHY/jhTLGsJKXkAA=="
   }
 }

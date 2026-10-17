@@ -22,7 +22,8 @@ inputs:
   version:
     description: >-
       The harness version to run: a release (1.0.0), a major version (1),
-      which follows the newest release of that major version, or an image
+      which follows the newest release of that major version, a
+      pre-release (1.0.0rc1), which no major version follows, or an image
       digest (sha256:…), which never changes.
     required: false
     default: "1"
@@ -33,6 +34,17 @@ inputs:
       --sign-key-env names. Set them in the step's env, from secrets.
     required: false
     default: ""
+  sandbox:
+    description: >-
+      "off" (the default) runs Chromium without its sandbox, as Docker's
+      default security profile requires, and each capture records it.
+      "required" gives the container Playwright's seccomp profile
+      (seccomp_profile.json beside this file) and refuses a run whose
+      browser could not start its sandbox (--require-sandbox): the runner
+      must allow unprivileged user namespaces (on Ubuntu 24.04, an earlier
+      step running `sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0`).
+    required: false
+    default: "off"
 runs:
   using: composite
   steps:
@@ -42,6 +54,7 @@ runs:
         BB_ARGS: ${{ inputs.args }}
         BB_VERSION: ${{ inputs.version }}
         BB_PASS_ENV: ${{ inputs.pass-env }}
+        BB_SANDBOX: ${{ inputs.sandbox }}
       run: |
         set -euo pipefail
         set -f        # no wildcard in an input is ever expanded
@@ -68,11 +81,12 @@ runs:
         if [[ "$BB_VERSION" =~ ^sha256:[0-9a-f]{64}$ ]]; then
           image="ghcr.io/bellbriar/harness@$BB_VERSION"
           pull=missing              # a digest names one image for good
-        elif [[ "$BB_VERSION" =~ ^[0-9]+(\.[0-9]+){0,2}$ ]]; then
+        elif [[ "$BB_VERSION" =~ ^[0-9]+(\.[0-9]+){0,2}$ ]] || \
+             [[ "$BB_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(a|b|rc)[0-9]+$ ]]; then
           image="ghcr.io/bellbriar/harness:$BB_VERSION"
           pull=always
         else
-          echo "::error::version must be a version number such as 1 or 1.0.0, or an image digest (sha256:…), not '$BB_VERSION'"
+          echo "::error::version must be a version number such as 1, 1.0.0 or 1.0.0rc1, or an image digest (sha256:…), not '$BB_VERSION'"
           exit 2
         fi
         # The arguments, never through a shell: one per line when there
@@ -99,6 +113,15 @@ runs:
           echo "::error::args is empty: give the bellbriar-eval arguments, such as: dist --render --fail-on tier1"
           exit 2
         fi
+        case "${BB_SANDBOX:-off}" in
+          off) sandbox=() ;;
+          required)
+            sandbox=(--security-opt "seccomp=$GITHUB_ACTION_PATH/seccomp_profile.json")
+            argv+=(--require-sandbox) ;;
+          *)
+            echo "::error::sandbox must be off or required, not '$BB_SANDBOX'"
+            exit 2 ;;
+        esac
         envs=()
         for name in $BB_PASS_ENV; do
           if ! [[ "$name" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]]; then
@@ -109,11 +132,20 @@ runs:
         done
         # The workspace as /work, written as the runner's own user (so the
         # reports belong to it), and the runner's network (so a preview
-        # server the job started on localhost is reachable). A version
+        # server the job started on localhost is reachable). Its .git is
+        # mounted read-only: without its sandbox, a browser a page takes
+        # over could otherwise write a hook or a config line that a later
+        # git command in the job runs (S5-2). Shared memory of its own
+        # (--shm-size) rather than the host's IPC namespace. A version
         # such as 1 is pulled each run: it names whatever the registry
         # holds now, not what this runner pulled before (R4A-13). Arrays
         # are expanded so bash before 4.4 takes them empty (R4D-13).
-        exec docker run --rm --init --ipc=host --network host --pull "$pull" \
+        gitro=()
+        if [ -e "$GITHUB_WORKSPACE/.git" ]; then
+          gitro=(-v "$GITHUB_WORKSPACE/.git:/work/.git:ro")
+        fi
+        exec docker run --rm --init --shm-size=2g --network host --pull "$pull" \
+          ${sandbox[@]+"${sandbox[@]}"} \
           --user "$(id -u):$(id -g)" -e HOME=/tmp ${envs[@]+"${envs[@]}"} \
-          -v "$GITHUB_WORKSPACE:/work" -w /work \
+          -v "$GITHUB_WORKSPACE:/work" ${gitro[@]+"${gitro[@]}"} -w /work \
           "$image" "${argv[@]}"

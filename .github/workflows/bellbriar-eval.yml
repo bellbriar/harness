@@ -56,7 +56,7 @@ jobs:
       matrix:
         # Not Windows, where the commands stop (support.py; L141).
         os: [ubuntu-latest, macos-latest]
-        python-version: ["3.11", "3.12", "3.13", "3.14"]
+        python-version: ["3.11", "3.12", "3.13", "3.14", "3.15"]
         include:
           # An Intel Mac: cryptography 49 and later publish no wheels for
           # it, so the package keeps it below 49 there (pyproject.toml).
@@ -130,9 +130,14 @@ jobs:
           python -m unittest discover -s tests -t . -v
 
   image:
-    name: Container image (built, then run on the fixtures)
-    runs-on: ubuntu-latest
+    name: Container image on ${{ matrix.runner }} (built, then run on the fixtures)
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        # Each architecture the release publishes, on its own hardware.
+        runner: [ubuntu-latest, ubuntu-24.04-arm]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -150,6 +155,13 @@ jobs:
           load: true
           push: false
           tags: bellbriar-harness:ci
+      # Chromium's sandbox needs unprivileged user namespaces, which
+      # Ubuntu 24.04 restricts (AppArmor): allowed on this runner, so the
+      # check's sandbox run says what a host that allows them gets.
+      - run: |
+          if sysctl -n kernel.apparmor_restrict_unprivileged_userns > /dev/null 2>&1; then
+            sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+          fi
       # The browser the image ships renders the fixtures and gates them as
       # the package does (R4A-4).
       - run: python tools/image_check.py bellbriar-harness:ci

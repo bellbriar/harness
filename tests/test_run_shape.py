@@ -530,16 +530,24 @@ class TestRenderTheBuild(unittest.TestCase):
                            "never")
         self.assertEqual(code, 2)
 
-    def test_without_a_browser_the_files_are_read_as_they_are(self):
+    def test_without_a_browser_no_page_is_read(self):
+        """S5-3: --render asks for a browser; without one the files were
+        read as they are, and a build of app shells was judged on its
+        shells. No page is read now, and the browser is tried once."""
         dist = make_build(self.d)
         with mock.patch.object(F, "playwright_available",
                                lambda: (False, "no browser here")):
             code, _, err = run(dist, "--render", "--json", self.d / "r.json",
                                "--fail-on", "never")
-        self.assertEqual(code, 2)                    # empty shells, loudly
-        self.assertIn("not rendered, read as the file it is", err)
+        self.assertEqual(code, 2, err)
+        self.assertNotIn("read as the file it is", err)
+        self.assertEqual(err.count("error: dist/about/index.html: no browser "
+                                   "here"), 1, err)
+        self.assertIn("--render needs a browser that starts, so the other 1 "
+                      "page(s) were not tried either", err)
         report = json.loads((self.d / "r.json").read_text(encoding="utf-8"))
-        self.assertIn("could not render the files", report["coverage_note"])
+        self.assertIn("evaluated no page", report["coverage_note"])
+        self.assertFalse([f for p in report["pages"] for f in p["findings"]])
         with mock.patch.object(F, "playwright_available",
                                lambda: (False, "no browser here")):
             code, _, err = run(dist, "--render", "--require-render")

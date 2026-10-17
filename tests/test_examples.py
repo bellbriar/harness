@@ -605,7 +605,20 @@ class TestDocsMatchTheCode(unittest.TestCase):
         self.assertIn(f"{planned} rules that are specified", guide)
         self.assertIn(f"{t1x} of {t1} Tier-1 rules are deterministic: {t1s} "
                       "run on the markup", guide)
-        self.assertIn(f"({t1x} of {t1} today: {t1s} in a file run)", readme)
+        def never(layers):
+            return sum(1 for r in rb["rules"] if r.get("tier") == 1
+                       and r.get("status") == "implemented"
+                       and r.get("layer") in layers
+                       and r.get("verdict_basis") in ("policy",
+                                                      "best-practice",
+                                                      "review"))
+        # README gives one count for both runs: they must agree.
+        self.assertEqual(never(("static-dom",)),
+                         never(("static-dom", "rendered")))
+        never = never(("static-dom",))
+        self.assertIn(f"({t1x} of {t1} today: {t1s} in a file run; {never} "
+                      "of those only report for review and never fail)",
+                      readme)
         self.assertIn(f"{static + rendered} deterministic rules that run today "
                       f"({static} on the markup, {rendered} in the browser)",
                       readme)

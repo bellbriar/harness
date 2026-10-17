@@ -17,7 +17,8 @@ import re
 # discipline lives here: a run must say what it did NOT evaluate.
 LAYERS = (
     ("static-dom", "executed",
-     "Deterministic DOM rules on parsed markup (ACT-mapped)."),
+     "Deterministic DOM rules on parsed markup (ACT-mapped where an ACT "
+     "rule exists)."),
     ("accessibility-tree", "skipped",
      "Not in this release: assertions on the roles, states and names a "
      "browser's accessibility tree exposes are not built (docs/ROADMAP.md)."),
@@ -80,9 +81,8 @@ BUILD_STATIC_SENTENCE = (
 COVERAGE_SENTENCE = (
     "This run covers the static DOM layer only. Keyboard operability, focus "
     "visibility, contrast, reflow, screen-reader announcements, and content "
-    "adequacy were NOT evaluated. A passing result here is necessary, not "
-    "sufficient, and is not a determination of WCAG conformance or legal "
-    "compliance."
+    "adequacy were NOT evaluated. A passing result here is not sufficient, "
+    "and is not a determination of WCAG conformance or legal compliance."
 )
 
 #: The coverage sentence when no page of the run could be read (R3C-4).
@@ -96,8 +96,8 @@ NOTHING_READ_SENTENCE = (
 #: {what} names them and the pages; {missing} is what was NOT evaluated.
 RENDERED_COVERAGE_SENTENCE = (
     "This run covers the static DOM layer and {what}. {missing} were NOT "
-    "evaluated. A passing result here is necessary, not sufficient, and is "
-    "not a determination of WCAG conformance or legal compliance."
+    "evaluated. A passing result here is not sufficient, and is not a "
+    "determination of WCAG conformance or legal compliance."
 )
 
 #: How many of the rules checked in the browser axe-core decides: every
