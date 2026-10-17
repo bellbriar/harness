@@ -78,9 +78,9 @@ def main(argv=None) -> int:
     with tempfile.TemporaryDirectory() as out:
         env = dict(os.environ)
         if pull:
-            # No credentials: what anyone can pull. The first push leaves a
-            # package private until it is made public (PREPUBLISH.md); a
-            # missing tag, the network or a rate limit fail here too, so
+            # No credentials: what anyone can pull. A private package fails
+            # here (it takes its repository's visibility: PREPUBLISH.md item
+            # 14), and so do a missing tag, the network or a rate limit, so
             # docker's own words are shown (R4D-10).
             env["DOCKER_CONFIG"] = out
             got = subprocess.run(["docker", "pull", image], env=env,

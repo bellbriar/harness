@@ -23,9 +23,9 @@
 # Before the first release (your accounts; PREPUBLISH.md item 14): on PyPI,
 # add this repository and workflow (release.yml, environment "pypi") as a
 # trusted publisher of bellbriar-harness; on GitHub, create the environment
-# "pypi" with a deployment rule allowing only tags v*, protect v* tags with
-# a ruleset, and after the first image push make the ghcr.io package
-# public.
+# "pypi" with a deployment rule allowing only tags v*, and protect v* tags
+# with a ruleset. The image's package takes this repository's visibility,
+# so it is public from its first push (1.0.0rc1 showed it).
 #
 # Every action is pinned to a commit (R4A-7); the comment names its release.
 # Each job has a time limit (R4F-4).
@@ -368,9 +368,10 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      # Pulled with no credentials, as a customer's runner pulls it: the
-      # first push leaves the package private until it is made public
-      # (R4A-3). Re-run this job once it is.
+      # Pulled with no credentials, as a customer's runner pulls it
+      # (R4A-3). The package takes the repository's visibility, so it is
+      # public from the first push; were it private, this job would fail
+      # until it is made public, and then be re-run.
       - env:
           VERSION: ${{ needs.build.outputs.version }}
         run: python3 tools/image_check.py "ghcr.io/bellbriar/harness:$VERSION" --pull

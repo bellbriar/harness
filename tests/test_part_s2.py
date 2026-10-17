@@ -300,8 +300,10 @@ class TestRehearsalSteps(unittest.TestCase):
         self.assertIn('README\'s quote of what `verify` says of the example '
                       '("Verify something in thirty seconds"), which names '
                       'the version twice', item)
-        self.assertIn("git fetch origin && git tag -s v1.0.0rc1 origin/main "
-                      "&& git push origin v1.0.0rc1", item)
+        self.assertIn("git fetch origin && git tag -a v1.0.0rc1 -m v1.0.0rc1 "
+                      "origin/main && git push origin v1.0.0rc1`, as "
+                      "bellbriar-ops, an annotated tag, not a signed one "
+                      "(L147)", item)
         self.assertIn("`pack_sha256`", item)
 
 

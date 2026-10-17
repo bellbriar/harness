@@ -1,9 +1,9 @@
 {
   "bundle_format": "bellbriar-evidence/1",
-  "created_at": "2026-10-17T01:00:45.414678+00:00",
+  "created_at": "2026-10-17T17:14:27.152751+00:00",
   "tool": {
     "name": "bellbriar-harness",
-    "version": "1.0.0rc1",
+    "version": "1.0.0",
     "python": "3.15.0",
     "libraries": {
       "justhtml": "3.13.0",
@@ -112,11 +112,11 @@
     "key_id": "04db99f6ed92cfac",
     "statement": {
       "statement_format": "bellbriar-signature/1",
-      "bundle_digest_sha256": "c93d9f7d06ff69c4ae5bc7946db84e5bd6593ab23205965efc6c02ff684a83cc",
+      "bundle_digest_sha256": "90ae3c72dc19b55c93a73baf23c1d5fdb56aba2352db8e3e78f0cecdc269f61a",
       "attestation_class": "self-signed",
       "key_id": "04db99f6ed92cfac",
       "signer": "worked example (demonstration key)",
-      "signed_at": "2026-10-17T01:00:45+00:00",
+      "signed_at": "2026-10-17T17:14:27+00:00",
       "bundle_format": "bellbriar-evidence/1",
       "domain": "cornerbakery.example",
       "host": null,
@@ -126,6 +126,6 @@
       "rulebook_version": "1.0.0",
       "rulebook_sha256": "bcd1499723002b80b6b6112601f16cc5b70499d791cb56c1e61fdb6c239be8e8"
     },
-    "signature_b64": "kpkfLi/BCuDtnSPWA0sHruLcI+B3w3T4tmKzGH4PNFkHCtitm6afeBlL1AwgcCVCbB1Fv9jHY/jhTLGsJKXkAA=="
+    "signature_b64": "pGpzj6SNs8CS1q0Qlr20Yre2waYGjAIeymGU03L2JPlQ+x5d9/rxWuTuiPHWUmBnft9y9mGdgJa8NUTKdKWYBw=="
   }
 }
