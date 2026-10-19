@@ -275,6 +275,46 @@ class TestRedundantLinksIgnoresPlaceholders(unittest.TestCase):
         self.assertEqual(len(self.findings(items)), 1)
 
 
+class TestRedundantLinksImpactFollowsTheShape(unittest.TestCase):
+    """1.0.1: the moderate (strict-gated) impact is for the H2 shape — an
+    image link and a title link in one card. Two sites built from scratch
+    were strict-failed on shapes that are not that: a footer's logo link
+    followed by its <nav>'s Home link (common ancestor a <div>, so the
+    landmark test never saw the <nav>), and two mentions of an email
+    address forty lines apart in a privacy notice wrapped in a <div>."""
+
+    def findings(self, body):
+        page = E.run_page('<!doctype html><html lang="en"><head><title>T</title>'
+                          f'</head><body>{body}</body></html>', "p.html",
+                          E.load_rulebook())
+        return [f for rr in page.results if rr.rule_id == "bb-redundant-links"
+                for f in rr.findings]
+
+    def test_card_shape_is_moderate(self):
+        body = ('<main><h1>T</h1><div class="card"><a href="/bread/rye">'
+                '<img src="rye.png" alt=""></a><h2><a href="/bread/rye">Rye'
+                '</a></h2></div></main>')
+        f = self.findings(body)
+        self.assertEqual([x.impact for x in f], ["moderate"])
+
+    def test_logo_then_nav_home_in_a_footer_div_is_minor(self):
+        body = ('<main><h1>T</h1></main><footer><div class="row"><div>'
+                '<a href="index.html" aria-label="Acme, home"><svg aria-hidden="true">'
+                '</svg></a></div><nav aria-label="Footer"><ul><li><a href="index.html">'
+                'Home</a></li></ul></nav></div></footer>')
+        f = self.findings(body)
+        self.assertEqual([x.impact for x in f], ["minor"])
+
+    def test_two_mentions_in_prose_are_minor(self):
+        body = ('<main><div class="prose"><h1>Privacy</h1><p>Write to '
+                '<a href="mailto:hi@example.com">hi@example.com</a> to ask.</p>'
+                '<h2>Cookies</h2><p>' + 'We use cookies to remember your choices. ' * 4
+                + '</p><h2>Accessibility</h2><p>If you find a problem, email '
+                '<a href="mailto:hi@example.com">hi@example.com</a>.</p></div></main>')
+        f = self.findings(body)
+        self.assertEqual([x.impact for x in f], ["minor"])
+
+
 class TestNeverFailRulesAreReportedNotScored(unittest.TestCase):
     """A rule that cannot fail would be a free pass in the rate: weight 0,
     whatever its tier."""

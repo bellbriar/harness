@@ -44,8 +44,9 @@ HTML report's layout, and the wording of messages.
 
 ## 1.0.1 — unreleased
 
-One verdict correction, otherwise wording and documentation: no option,
-exit status or format changes. The rulebook stays 1.0.0.
+Two verdict corrections to one rule, otherwise wording and
+documentation: no option, exit status or format changes. The rulebook
+stays 1.0.0.
 
 - `bb-redundant-links` no longer reviews adjacent links whose shared
   `href` is a placeholder: `#!` and `#/` join `#`. A template footer of
@@ -54,6 +55,18 @@ exit status or format changes. The rulebook stays 1.0.0.
   `--strict` gated; the links go nowhere yet, which is a different
   problem and not this rule's. A site that passed the strict gate before
   still passes; one that failed only on this can now pass.
+- `bb-redundant-links` reports the moderate (strict-gated) impact only
+  for the H2 shape — an image link and a title link in one card. It
+  judged the shape by the two links' nearest common ancestor alone, so a
+  footer's logo link followed by its `<nav>`'s Home link (common ancestor
+  a `<div>`, the `<nav>` never seen) and two mentions of an email address
+  forty lines apart in a notice wrapped in a `<div>` were both strict-
+  gated. Two of three sites built from scratch for the build-mode
+  benchmark failed `--strict` on nothing else. The impact is now minor
+  when either link has a landmark (`header`, `nav`, `main`, `footer`,
+  `aside`, `section`, `form`, or a landmark role) below the common
+  ancestor, or when a heading or more than 120 characters of text lies
+  between the two links. The pairs are still reported.
 - `bellbriar-lint`: `bl-tabindex-noninteractive` no longer warns on a
   `<div tabindex="0">` that carries both a `role` and an accessible name
   (`aria-label` or `aria-labelledby`): a scrolling table wrapper built as
