@@ -1439,6 +1439,48 @@ def _adjacent_siblings(a: Tag, b: Tag) -> bool:
     return sib is b
 
 
+_LANDMARK_ROLES = {"banner", "navigation", "main", "contentinfo",
+                   "complementary", "region", "form", "search"}
+_HEADINGS = {"h1", "h2", "h3", "h4", "h5", "h6"}
+
+
+def _landmarks_below(el: Tag, stop: Tag | None) -> list[str]:
+    """The landmark elements between `el` and `stop` (exclusive), nearest
+    first: a link inside a <nav> that its neighbour is not inside sits
+    across a landmark boundary even when their common ancestor is a <div>."""
+    out = []
+    for anc in el.parents:
+        if anc is stop or anc is None:
+            break
+        role = str(anc.get("role") or "").strip().lower()
+        if anc.name in _LANDMARK_BOUNDARY or role in _LANDMARK_ROLES:
+            out.append(anc.name + ("[" + role + "]" if role else ""))
+    return out
+
+
+def _content_between(a: Tag, b: Tag) -> tuple[int, bool]:
+    """(characters of text, a heading?) between the end of `a` and the start
+    of `b` in document order, not counting either link's own content. Two
+    mentions of an email address forty lines apart in a notice are not
+    the H2 shape, whatever wraps them."""
+    chars, heading = 0, False
+    inside_a = set(id(x) for x in a.descendants)
+    for node in a.next_elements:
+        if node is b:
+            break
+        if id(node) in inside_a:
+            continue
+        if isinstance(node, Tag):
+            if node.name in _HEADINGS and b not in node.descendants:
+                heading = True
+            continue
+        if type(node) is NavigableString:   # not comments, CDATA, doctype
+            if any(p is b for p in node.parents):
+                break
+            chars += len(str(node).strip())
+    return chars, heading
+
+
 #: hrefs a template leaves on links that have no destination yet. `#` is
 #: the classic; Bootstrap themes ship `#!`; `#/` is an empty client route.
 _PLACEHOLDER_HREFS = frozenset({"#", "#!", "#/"})
@@ -1471,9 +1513,18 @@ def check_redundant_links(page: PageContext) -> RuleResult:
             # destinations: two links to them are unfinished, not redundant.
             if href and href not in _PLACEHOLDER_HREFS and href == _norm(el.get("href")):
                 nca = _nearest_common_ancestor(prev, el)
+                chars, heading = _content_between(prev, el)
+                # The H2 shape: siblings, or a shared container below
+                # landmark level with neither link in a landmark of its own
+                # (a footer's logo, then its <nav>'s Home, is the minor
+                # shape whatever <div> wraps them) and no heading or run of
+                # text in between (two mentions of an address in a notice).
                 unambiguous = (_adjacent_siblings(prev, el)
                                or (nca is not None
-                                   and nca.name not in _LANDMARK_BOUNDARY))
+                                   and nca.name not in _LANDMARK_BOUNDARY
+                                   and not _landmarks_below(prev, nca)
+                                   and not _landmarks_below(el, nca)
+                                   and not heading and chars <= 120))
                 if unambiguous:
                     r.findings.append(_f(
                         "bb-redundant-links", NEEDS_REVIEW, MODERATE,
