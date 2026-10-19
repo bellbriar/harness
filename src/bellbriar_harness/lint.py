@@ -1427,7 +1427,11 @@ def _tag_findings(text: str, path: str, tags: list) -> list[Finding]:
 
         if name in ("div", "span"):
             tabindex = _attr(t, "tab[Ii]ndex")
-            if tabindex is not None and re.match(r'\s*0\b', tabindex[1]):
+            # A focusable region with a role and a name (a scrolling table
+            # wrapper: role="region" aria-labelledby=…) is what the rule
+            # asks for, not what it warns about (1.0.1).
+            if (tabindex is not None and re.match(r'\s*0\b', tabindex[1])
+                    and not (_has(t, "role") and _has(t, "aria-label(?:ledby)?"))):
                 add("bl-tabindex-noninteractive", WARN,
                     f"tabindex=0 on <{name}> — focusable but roleless and "
                     "nameless; use a native control or complete the custom-"

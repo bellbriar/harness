@@ -104,6 +104,14 @@ class TestRules(unittest.TestCase):
 
 
 class TestPrecision(unittest.TestCase):
+    def test_named_region_with_tabindex_is_not_flagged(self):
+        """1.0.1: a scrolling table wrapper with role and name is the fix,
+        not the finding; a bare focusable div still is."""
+        ok = ('<div class="table-wrap" tabindex="0" role="region" aria-labelledby="cap">'
+              '<table><caption id="cap">Plans</caption></table></div>')
+        self.assertNotIn("bl-tabindex-noninteractive", ids(run(ok, "x.html")))
+        self.assertIn("bl-tabindex-noninteractive", ids(run('<div tabindex="0">x</div>', "x.html")))
+
     """False positives found in review, each paired with the true positive
     that must keep firing. A lint that blocks correct code at `error`
     teaches people to disable it."""

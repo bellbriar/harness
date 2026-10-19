@@ -54,6 +54,11 @@ exit status or format changes. The rulebook stays 1.0.0.
   `--strict` gated; the links go nowhere yet, which is a different
   problem and not this rule's. A site that passed the strict gate before
   still passes; one that failed only on this can now pass.
+- `bellbriar-lint`: `bl-tabindex-noninteractive` no longer warns on a
+  `<div tabindex="0">` that carries both a `role` and an accessible name
+  (`aria-label` or `aria-labelledby`): a scrolling table wrapper built as
+  the rule's own message asks for was reported as "roleless and
+  nameless".
 
 - CHANGELOG: the 1.0.0 section's "Since 1.0.0rc1" paragraph was false
   (the macOS runner fix was already in rc1) and is corrected above; the
