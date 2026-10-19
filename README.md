@@ -38,7 +38,9 @@ Without the `browser` extra and Chromium, file runs still work, on the
 markup only, and a `--url` run reads the HTML the server sends and says
 so. On Linux, Chromium also needs system libraries:
 `--install-browser` says when they are missing, and Playwright's
-`install-deps chromium` (run as root) installs them.
+`install-deps chromium` (run as root) installs them. Playwright's
+Chromium needs macOS 14 or later: on an older Mac the three commands run,
+without the browser, and the container image below runs it.
 
 **In a container**, with Python, Chromium and its fonts installed:
 
@@ -52,7 +54,7 @@ records that: Docker's default security profile refuses the user
 namespaces the sandbox needs. Give the container a seccomp profile that
 allows them (`--security-opt seccomp=docker/seccomp_profile.json`, a copy
 of the one Playwright publishes) on a host that allows them too (on Ubuntu
-24.04, `sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0`),
+24.04 and 26.04, `sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0`),
 and the sandbox starts, as this project's CI shows on x86-64 and ARM64
 runners (docs/ROADMAP.md, L81); `--require-sandbox` refuses a run without
 it.

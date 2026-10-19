@@ -41,8 +41,8 @@ inputs:
       "required" gives the container Playwright's seccomp profile
       (seccomp_profile.json beside this file) and refuses a run whose
       browser could not start its sandbox (--require-sandbox): the runner
-      must allow unprivileged user namespaces (on Ubuntu 24.04, an earlier
-      step running `sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0`).
+      must allow unprivileged user namespaces (on Ubuntu 24.04 and 26.04, an
+      earlier step running `sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0`).
     required: false
     default: "off"
 runs:
