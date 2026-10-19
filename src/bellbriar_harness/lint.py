@@ -96,13 +96,13 @@ _P = [
      "practice; not a WCAG failure on its own.", "AGT-1"),
     ("bl-marquee-blink", ERROR, MARKUP_EXTS,
      re.compile(r'<\s*marquee\b', re.I),
-     "Auto-moving content with no pause control.", "WGT-5"),
+     "Auto-moving content with no pause control.", "VIS-8"),
     # W3C made its failure for <blink> (F47) obsolete: no current browser
     # makes the element blink, so it moves nothing.
     ("bl-marquee-blink", WARN, MARKUP_EXTS,
      re.compile(r'<\s*blink\b', re.I),
      "<blink> is obsolete and no current browser makes it blink, so it is "
-     "plain text — remove it.", "WGT-5"),
+     "plain text — remove it.", "VIS-8"),
     ("bl-junk-alt-src", ERROR, MARKUP_EXTS,
      re.compile(r'alt\s*=\s*["\'][^"\']*\.(jpe?g|png|gif|webp|avif)\b'
                 r'|alt\s*=\s*\{[^}]*\.\s*(src|image|img|file(?:name)?)\s*[})]'),
@@ -124,11 +124,11 @@ _P = [
     ("bl-dangerous-html", WARN, CODE_EXTS,
      re.compile(r'dangerouslySetInnerHTML|v-html\s*='),
      "Injected HTML is outside compile-time control — run the eval gate "
-     "against the rendered output, not just source.", "SPA-6"),
+     "against the rendered output, not just source.", "SPA-5"),
     ("bl-autofocus", WARN, MARKUP_EXTS,
      re.compile(r'\bautoFocus\b|<[^>]{0,200}\bautofocus\b', re.S),
      "autofocus skips the skip link and disorients screen-reader users; "
-     "reserve for true single-purpose views.", "SPA-6"),
+     "reserve for true single-purpose views.", "SPA-5"),
     ("bl-doc-link", WARN, MARKUP_EXTS,
      re.compile(r'href\s*=\s*["\'][^"\']*\.(pdf|docx?|xlsx?|pptx?)["\']', re.I),
      "Links to a document file — essential content ships as HTML; the "

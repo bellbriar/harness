@@ -48,8 +48,8 @@ Inputs:
   container Playwright's seccomp profile (`seccomp_profile.json`, shipped
   with the Action) and passes `--require-sandbox`, so the step fails (exit
   2) when Chromium's sandbox cannot start; the runner must allow
-  unprivileged user namespaces, which Ubuntu 24.04 restricts: an earlier
-  step can run `sudo sysctl -w
+  unprivileged user namespaces, which Ubuntu 24.04 and 26.04 restrict: an
+  earlier step can run `sudo sysctl -w
   kernel.apparmor_restrict_unprivileged_userns=0`. The harness's CI
   shows the sandbox starting so, on x86-64 and ARM64 runners (L81 in its
   [roadmap](https://github.com/bellbriar/harness/blob/main/docs/ROADMAP.md)).

@@ -42,6 +42,32 @@ version outside the declared ranges says so before it starts.
 Not stable: the console output (it is for people: parse the JSON), the
 HTML report's layout, and the wording of messages.
 
+## 1.0.1 — unreleased
+
+One verdict correction, otherwise wording and documentation: no option,
+exit status or format changes. The rulebook stays 1.0.0.
+
+- `bb-redundant-links` no longer reviews adjacent links whose shared
+  `href` is a placeholder: `#!` and `#/` join `#`. A template footer of
+  `#!` links (every Start Bootstrap theme) reviewed as "adjacent links to
+  the same destination" on every pair, at moderate impact, which
+  `--strict` gated; the links go nowhere yet, which is a different
+  problem and not this rule's. A site that passed the strict gate before
+  still passes; one that failed only on this can now pass.
+
+- CHANGELOG: the 1.0.0 section's "Since 1.0.0rc1" paragraph was false
+  (the macOS runner fix was already in rc1) and is corrected above; the
+  v1.0.0 GitHub release notes were corrected by hand on 2026-10-18.
+- `bellbriar-lint`: three findings cited the wrong section of Bellbriar's
+  WCAG pack in their `ref`: `bl-marquee-blink` (WGT-5 → VIS-8),
+  `bl-autofocus` and `bl-dangerous-html` (SPA-6 → SPA-5). The ids and
+  messages are unchanged.
+- README and the Action's README: the sysctl line that lets Chromium's
+  sandbox start applies to Ubuntu 26.04 as well as 24.04 (GitHub moves
+  `ubuntu-latest` to 26.04 between 2026-10-19 and 2026-11-19); README
+  says that Playwright's Chromium needs macOS 14 or later, and what runs
+  without it.
+
 ## 1.0.0 — 2026-10-17
 
 The first release. It needs Python 3.11 or later. It runs on Linux and
@@ -72,11 +98,12 @@ or another tool does, is listed in `docs/ROADMAP.md` ("Not in 1.0"):
 among it the keyboard and focus checks, remote signing, rule packs and
 the judge.
 
-Since 1.0.0rc1: a page that sends the browser on to one that never
-arrives is refused in words of its own before a `--render-deadline`
-shorter than the load timeout, even on a slower machine; on macOS
-runners, 1.0.0rc1 let the deadline come first and blamed a script on
-the page.
+Since 1.0.0rc1, the code is unchanged but for its version number: README
+and the Action's README now say that this project's CI shows Chromium's
+sandbox starting under the seccomp profile on x86-64 and ARM64, and the
+worked example is re-signed with 1.0.0. (This paragraph was corrected in
+1.0.1: the 1.0.0 release notes and sdist carry the earlier wording, which
+wrongly placed the macOS runner fix after rc1; rc1 already held it.)
 
 ## 1.0.0rc1 — 2026-10-17
 

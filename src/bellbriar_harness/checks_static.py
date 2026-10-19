@@ -1439,6 +1439,11 @@ def _adjacent_siblings(a: Tag, b: Tag) -> bool:
     return sib is b
 
 
+#: hrefs a template leaves on links that have no destination yet. `#` is
+#: the classic; Bootstrap themes ship `#!`; `#/` is an empty client route.
+_PLACEHOLDER_HREFS = frozenset({"#", "#!", "#/"})
+
+
 def check_redundant_links(page: PageContext) -> RuleResult:
     """2.4.4 (pled pattern; fix per technique H2) — adjacent links to the
     same destination.
@@ -1462,7 +1467,9 @@ def check_redundant_links(page: PageContext) -> RuleResult:
         if (prev is not None and prev.name == "a" and el.name == "a"
                 and prev.has_attr("href") and el.has_attr("href")):
             href = _norm(prev.get("href"))
-            if href and href != "#" and href == _norm(el.get("href")):
+            # "#" and the template placeholders "#!" and "#/" are not
+            # destinations: two links to them are unfinished, not redundant.
+            if href and href not in _PLACEHOLDER_HREFS and href == _norm(el.get("href")):
                 nca = _nearest_common_ancestor(prev, el)
                 unambiguous = (_adjacent_siblings(prev, el)
                                or (nca is not None

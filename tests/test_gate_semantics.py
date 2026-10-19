@@ -245,6 +245,36 @@ class TestStrict(unittest.TestCase):
         self.assertIn("failing the gate (--strict)", out)
 
 
+class TestRedundantLinksIgnoresPlaceholders(unittest.TestCase):
+    """1.0.1: a footer of `#!` links (every Start Bootstrap theme) reviewed
+    as adjacent links to the same destination, strict-gated, on every
+    pair. `#`, `#!` and `#/` are placeholders, not destinations."""
+
+    PAGE = ('<!doctype html><html lang="en"><head><title>T</title></head>'
+            '<body><main><h1>T</h1></main><footer><ul>{}</ul></footer>'
+            '</body></html>')
+
+    def findings(self, items):
+        page = E.run_page(self.PAGE.format(items), "p.html", E.load_rulebook())
+        return [f for rr in page.results if rr.rule_id == "bb-redundant-links"
+                for f in rr.findings]
+
+    def test_placeholders_do_not_review(self):
+        for href in ("#", "#!", "#/"):
+            items = ''.join(f'<li><a href="{href}">{t}</a></li>'
+                            for t in ("About", "Contact", "Terms"))
+            self.assertEqual(self.findings(items), [], href)
+
+    def test_a_real_shared_destination_still_reviews(self):
+        items = ('<li><a href="/about">About</a></li>'
+                 '<li><a href="/about">About us</a></li>')
+        self.assertEqual(len(self.findings(items)), 1)
+        # A client route under the placeholder prefix is a destination.
+        items = ('<li><a href="#/about">About</a></li>'
+                 '<li><a href="#/about">About us</a></li>')
+        self.assertEqual(len(self.findings(items)), 1)
+
+
 class TestNeverFailRulesAreReportedNotScored(unittest.TestCase):
     """A rule that cannot fail would be a free pass in the rate: weight 0,
     whatever its tier."""
