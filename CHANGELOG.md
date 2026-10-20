@@ -45,8 +45,11 @@ HTML report's layout, and the wording of messages.
 ## 1.0.1 — unreleased
 
 Two verdict corrections to one rule, otherwise wording and
-documentation: no option, exit status or format changes. The rulebook
-stays 1.0.0.
+documentation: no option, exit status or format changes. Because
+`bb-redundant-links` finds differently, the rulebook version becomes
+1.0.1 in the release commit (with `docs/RULES.md` and the signed example
+bundle regenerated, as the version bump requires), so a report says
+which rule semantics made it.
 
 - `bb-redundant-links` no longer reviews adjacent links whose shared
   `href` is a placeholder: `#!` and `#/` join `#`. A template footer of
