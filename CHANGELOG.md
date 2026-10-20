@@ -42,14 +42,14 @@ version outside the declared ranges says so before it starts.
 Not stable: the console output (it is for people: parse the JSON), the
 HTML report's layout, and the wording of messages.
 
-## 1.0.1 — unreleased
+## 1.0.1 — 2026-10-20
 
-Two verdict corrections to one rule, otherwise wording and
-documentation: no option, exit status or format changes. Because
-`bb-redundant-links` finds differently, the rulebook version becomes
-1.0.1 in the release commit (with `docs/RULES.md` and the signed example
-bundle regenerated, as the version bump requires), so a report says
-which rule semantics made it.
+Two verdict corrections to one rule and one to a lint rule, otherwise
+wording and documentation: no option, exit status or format changes.
+Because `bb-redundant-links` finds differently, the rulebook version is
+now 1.0.1 (`docs/RULES.md`, the canonicalization vectors and the signed
+example bundle are regenerated with it), so a report says which rule
+semantics made it.
 
 - `bb-redundant-links` no longer reviews adjacent links whose shared
   `href` is a placeholder: `#!` and `#/` join `#`. A template footer of

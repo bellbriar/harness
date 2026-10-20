@@ -1,5 +1,5 @@
 {
-  "rulebook_version": "1.0.0",
+  "rulebook_version": "1.0.1",
   "conformance_target": "WCAG 2.1 AA (a rule for a criterion WCAG 2.2 added at A or AA reports for review and is not graded)",
   "tier_weights": {
     "1": 5,
