@@ -1,7 +1,7 @@
 # Roadmap — what is not built, and what "built" will mean
 
 Everything in items 1 to 8 below, but item 1 (built, struck out) and
-the part of item 2 it says is built, is **[not built]** at harness 1.0.0.
+the part of item 2 it says is built, is **[not built]** at harness 1.0.1.
 Nothing here carries a date, because a date in a public repository is a
 promise and we make promises only about what ships. Each item states its
 acceptance criteria so that "done" is checkable rather than announced.

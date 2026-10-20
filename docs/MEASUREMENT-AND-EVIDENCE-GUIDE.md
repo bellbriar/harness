@@ -7,7 +7,7 @@ much weight a Bellbriar report deserves. Everything here is publishable —
 the harness is open source and the measurement system only works if
 outsiders can understand and check it.*
 
-*Status convention: this guide describes the harness at version 1.0.0.
+*Status convention: this guide describes the harness at version 1.0.1.
 Anything not yet built is marked **[not built]** and listed in
 `docs/ROADMAP.md`. If a sentence here reads as present tense and the
 capability does not exist, the sentence is wrong and should be fixed —
@@ -57,7 +57,7 @@ captured it (L53). Two reports are
 comparable only when all of these match. The rulebook's
 version changes whenever a verdict can change.
 
-At harness 1.0.0 the rulebook (version 1.0.0) holds 78 rules: 32
+At harness 1.0.1 the rulebook (version 1.0.1) holds 78 rules: 32
 deterministic rules that run on the markup, 30 that run in the browser
 (29 of them axe-core's, one Bellbriar's own: *What the browser checks*,
 below), 3 judged rules (adequacy questions graded by a language model),
@@ -159,7 +159,7 @@ patterns before launch.
 ### The numbers a report shows
 
 1. **Tier-1 clean** (per page): zero failures among the Tier-1 rules that
-   *ran*. Every report prints how many that is — at 1.0.0, 17 of 27
+   *ran*. Every report prints how many that is — at 1.0.1, 17 of 27
    Tier-1 rules are deterministic: 16 run on the markup, and contrast runs
    in the browser, so a file run executes 16 and a `--url` or `--render`
    run 17. The other 10 (keyboard walks and traps, modal and menu
@@ -928,7 +928,7 @@ phrase is the product.
 
 ### What exists today
 
-| Capability | Status at 1.0.0 |
+| Capability | Status at 1.0.1 |
 |---|---|
 | Evidence bundle (`bellbriar-evidence/1`) | Built. Any run can produce one, including a URL run of one page or many (its input manifest is each captured snapshot's hash) and a `--render` run (the files, and every file the server sent). Each finding carries a locator. |
 | Rendered capture of a live page | Built. Default for `--url`, `--urls` and `--sitemap` with the browser extra, and for a build with `--render`; records browser, viewport, wait, status, redirects and snapshot hash per page; includes shadow roots and scroll-revealed content; attributes findings to known vendors (reported, not scored) or to the site (scored); records what the page hides at its own width and at 320 CSS pixels. |

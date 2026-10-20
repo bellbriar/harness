@@ -95,7 +95,7 @@ replaces a manual audit.
 
 ## What this is not
 
-- **Not a conformance checker.** Version 1.0.0 executes the **static DOM
+- **Not a conformance checker.** Version 1.0.1 executes the **static DOM
   layer** and, on pages a browser captures (a `--url` or `--render` run),
   the **rendered checks**: contrast, target size and 27 more WCAG A/AA
   rules that axe-core checks in the browser, and reflow at 320 CSS pixels.
@@ -593,9 +593,9 @@ bellbriar-evidence verify examples/evidence/signed-bundle-example.json \
 #   statement and that the bundle has not changed since; not that its results are correct or
 #   unedited); every bound field matches; no fetched host is recorded: the domain
 #   'cornerbakery.example' is the operator's statement, and nothing was fetched from it; the
-#   bundle records rulebook '1.0.0' (sha256 bcd1499723002b80…), the digest of the one
-#   bellbriar-harness 1.0.0 ships; its attestation text is the one bellbriar-harness
-#   1.0.0 writes. DEMONSTRATION KEY: it signs only the harness's worked example and is in
+#   bundle records rulebook '1.0.1' (sha256 1650d0a3b85160c8…), the digest of the one
+#   bellbriar-harness 1.0.1 ships; its attestation text is the one bellbriar-harness
+#   1.0.1 writes. DEMONSTRATION KEY: it signs only the harness's worked example and is in
 #   no trust path; this signature is not evidence from any production signer
 ```
 
@@ -708,7 +708,7 @@ pull request.
 
 ## Layers
 
-| Layer | 1.0.0 status | Covers |
+| Layer | 1.0.1 status | Covers |
 |---|---|---|
 | static-dom | **executed** | Names, labels, lang, titles, ARIA validity and references, skip links, viewport zoom, heading and table structure, autoplay, captions/media flags — on the hydrated DOM for `--url` runs |
 | accessibility-tree | not built | Spec-faithful accessible names, live roles and states |
