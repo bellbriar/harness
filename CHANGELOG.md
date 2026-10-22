@@ -42,7 +42,7 @@ version outside the declared ranges says so before it starts.
 Not stable: the console output (it is for people: parse the JSON), the
 HTML report's layout, and the wording of messages.
 
-## 1.0.1 — 2026-10-20
+## 1.0.1 — 2026-10-22
 
 Two verdict corrections to one rule and one to a lint rule, otherwise
 wording and documentation: no option, exit status or format changes.
