@@ -20,7 +20,7 @@
 # (tests/test_part_r4.py checks). A release pins the image's digest too
 # (PREPUBLISH.md): a tag can be moved, a digest cannot. Dependabot proposes
 # new versions of both.
-FROM mcr.microsoft.com/playwright/python:v1.63.0-noble@sha256:72bd171a9ffc2b4b59532aaa6210e21014d07093120dc25528870c0b840da1f0
+FROM mcr.microsoft.com/playwright/python:v1.64.1-noble@sha256:330d401ae23c905896a0c26c66c36fc971b621519e7b11b435a8328d7bf6e031
 
 # The harness's dependencies first, each file checked against the hash
 # docker/requirements.txt gives it (tools/hash_requirements.py writes
